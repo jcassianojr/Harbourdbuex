@@ -1,0 +1,231 @@
+# Pastas de inclusão c
+-cflag=-Ic:\harbour\hb3rd\mysql-x64\include
+#-cflag=-Ic:\harbour\hb3rd\pgsql-x64\include
+
+# Pastas de inclusão
+-incpath=c:\harbour\hb3rd\mysql-x64\include
+#-incpath=c:\harbour\hb3rd\pgsql-x64\include
+
+# Pastas de bibliotecas
+-Lc:\harbour\hb3rd\mysql-x64\lib
+#-Lc:\harbour\hb3rd\pgsql-x64\lib
+
+# Dependências (libs)
+-llibmysql
+#-llibpq
+-lbcrypt
+
+-dUSE_SDD_MYSQL
+-cflag=-dUSE_SDD_MYSQL
+-dUSE_SR_MYSQL
+-cflag=-dUSE_SR_MYSQL
+
+
+# flasgs compilacao
+-gtwvg
+-gui
+-lng=pt_BR
+-inc
+-workdir=.hbmk/dbu64my
+
+#
+#      --- apoio,auxiliares
+#
+hbct.hbc
+hbwin.hbc
+hbtip.hbc
+xhb.hbc
+gtwvg.hbc
+hbmemio.hbc
+hbziparc.hbc
+rddado.hbc
+sqlrddpp-mysql.hbc
+dbfcdxex.hbc
+rddado.hbc
+adoxb.hbc
+
+
+#
+#      --- ads adt adi adm
+#
+rddads.hbc
+
+#
+#      --- RDDBM
+#
+rddbm.hbc
+
+#
+#      --- sqlit3
+#
+hbsqlit3.hbc
+
+#
+#      ---  mysql
+#
+hbmysql.hbc
+
+#
+#      --- odbc
+#
+hbodbc.hbc
+
+#
+#      --- exportacao
+#
+hbmxml.hbc
+hbxlsxml.hbc
+
+#
+#      ---  sqlmix
+#
+rddsql.hbc
+sddodbc.hbc
+sddmy.hbc
+sddsqlt3.hbc
+#sddoci.hbc
+
+#
+#      --- LETO
+#
+letodb.hbc
+
+#
+#      --- Firebird
+#
+#hbfbird.hbc
+#sddfb.hbc
+
+#
+#      --- postgre
+#
+#hbpgsql.hbc
+#sddpg.hbc
+
+#
+#      --- sqlrddpp
+#
+#sqlrddpp.hbc
+
+#tdbclass.hbc
+
+#
+#      --- dbu
+#
+\develop\harbour\dbu\DBU.PRG  
+\develop\harbour\dbu\dbucnvmemo.prg 
+\develop\harbour\dbu\dbucopy.prg
+\develop\harbour\dbu\dbudoc.prg    
+\develop\harbour\dbu\dbuedi.prg
+\develop\harbour\dbu\dbuedit.prg
+\develop\harbour\dbu\dbuindx.prg
+\develop\harbour\dbu\dbulib.prg 
+\develop\harbour\dbu\dbustru.prg
+\develop\harbour\dbu\dbuutil.prg
+\develop\harbour\dbu\dbuver.prg
+\develop\harbour\dbu\dbuview.prg
+\develop\harbour\dbu\dbusincdbf.prg
+\develop\harbour\dbu\dbudialeto.prg
+
+#
+#      --- exportacao
+#
+\develop\harbour\dbu\dbuxml.prg
+\develop\harbour\dbu\dbuXLSclass.prg
+\develop\harbourPRIV\dbu\XLSXClass.prg
+\develop\harbour\dbu\dbuxlsxml.prg
+\develop\harbour\dbu\dbumddbml.prg
+\develop\harbour\dbu\dbucrypto.prg
+
+
+#
+#      --- paradox ODBC extend
+#
+\develop\harbour\dbu\dbumypdx.prg
+
+#
+#      ---    sqlite compilado com fontes C nativo
+#
+\develop\harbour\dbu\dbusqlite.prg 
+
+#
+#      ---    ADO ODBC MDB,ACCESS,ACCDB,SQLITE,MYSQL,POSTGRESQL
+#
+\develop\harbour\dbu\dburddado.prg 
+#\develop\harbour\dbu\adordd.prg
+
+#
+#      ---    mysql libmysql
+#
+\develop\harbour\dbu\dbumy.prg  
+\develop\harbour\dbu\dbumyexp.prg 
+\develop\harbourPRIV\dbu\mysqlrdd.prg 
+
+#
+#      ---    dbumix
+#
+\develop\harbour\dbu\dbumix.prg
+
+#
+#      --- contrib odbc
+#
+\develop\harbour\dbu\dbuodbc.prg
+#
+#      --- ADOX ODBC MDB,ACCESS,ACCDB,SQLITE,MYSQL,POSTGRESQL
+#
+#\develop\harbour\dbu\adoxb.prg
+\develop\harbour\dbu\dbuadox.prg 
+#
+#      --- LETO
+#
+\develop\harbour\dbu\dbuleto.prg 
+
+#
+#      --- auxiliares apoio
+#
+\develop\harbour\objmgw\netdbf.prg
+\develop\harbour\objmgw\comp.prg  
+\develop\harbour\objmgw\disk54.prg
+\develop\harbour\objmgw\disk53.prg
+\develop\harbour\objmgw\disk56.prg
+\develop\harbour\objmgw\f_mmopac.prg
+\develop\harbour\objmgw\disk55.prg 
+\develop\harbour\objmgw\disk57.prg
+\develop\harbour\objmgw\disk66.prg
+\develop\harbour\objmgw\disk72.prg
+\develop\harbour\objmgw\disk70.prg
+\develop\harbour\objmgw\f_tempfi.prg
+\develop\harbour\objmgw\f_encode.prg
+\develop\harbour\objmgw\f_freadl.prg
+\develop\harbour\objmgw\f_makedb.prg       
+\develop\harbour\objmgw\f_ismemo.prg       
+\develop\harbour\objmgw\mmousen.prg
+\develop\harbour\objmgw\mlib06.prg
+\develop\harbour\objmgw\xhberr_mode.prg
+\develop\harbour\objmgw\wvgini.prg
+\develop\harbour\objmgw\adofix.prg
+\develop\harbour\objmgw\adoerror.prg
+\develop\harbour\objmgw\modeseguranca.prg
+\develop\harbour\objmgw\escolherpasta.prg
+
+#
+#      ---    postgresql libpg
+#
+#\develop\harbour\dbu\dbupg.prg
+#\develop\harbour\dbu\dbupgexp 
+#\develop\harbour\dbu\pgrdd.prg
+\develop\harbour\dbu\dumypg.prg
+
+\develop\harbour\dbu\dumyfb.prg
+\develop\harbour\dbu\dumysd.prg
+\develop\harbour\dbu\dumytD.prg
+c:\develop\harbour\dbu\dumyOCI.prg
+
+
+#
+#       ---   tbclass   ---
+#
+#c:\develop\harbour\dbu\dbutclass.prg
+#c:\develop\harbour\dbu\tclass\Tdbclass.prg
+#c:\develop\harbour\dbu\tclass\cocoa_mysql.c
+#c:\develop\harbour\dbu\tclass\cocoa_pgsql.c

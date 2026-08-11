@@ -1,0 +1,184 @@
+# Pastas de inclusão c
+-cflag=-Ic:\harbour\hb3rd\pgsql\include
+
+# Pastas de inclusão
+-incpath=c:\harbour\hb3rd\pgsql\include
+
+# Pastas de bibliotecas (essencial para evitar o erro de 'cannot find')
+-Lc:\harbour\hb3rd\pgsql\lib
+
+# Dependências (libs)
+-llibpq
+-lbcrypt
+
+-dUSE_SDD_POSTGRES
+-cflag=-USE_SDD_POSTGRES
+-dUSE_SR_POSTGRES
+-cflag=-USE_SR_POSTGRES
+
+
+-gtwvg
+-gui
+-lng=pt_BR
+
+
+\develop\harbour\dbu\dbu.rc
+
+-m -n -w0 -es2 -ge1
+-inc
+-workdir=.hbmk/dbucompg
+
+hbct.hbc
+hbwin.hbc
+hbtip.hbc
+xhb.hbc
+hbmemio.hbc
+hbziparc.hbc
+hbmxml.hbc
+hbxlsxml.hbc
+sqlrddpp-postgresql.hbc
+dbfcdxex.hbc
+
+#
+#  adt adi adm ads
+#
+rddads.hbc
+#
+#  dbf com dbm
+#
+rddbm.hbc
+#
+#  nativas sqlite,libpg,odbc
+#
+hbsqlit3.hbc
+hbpgsql.hbc
+hbodbc.hbc
+rddado.hbc
+adoxb.hbc
+
+#
+# sqlmix
+#
+rddsql.hbc
+sddodbc.hbc
+sddpg.hbc
+sddsqlt3.hbc
+
+# 
+# leto
+#
+letodb.hbc
+
+#
+# dbu
+#
+
+\develop\harbour\dbu\DBU.PRG  
+\develop\harbour\dbu\dbucnvmemo.prg 
+\develop\harbour\dbu\dbucopy.prg
+\develop\harbour\dbu\dbuedi.prg
+\develop\harbour\dbu\dbuedit.prg
+\develop\harbour\dbu\dbuindx.prg
+\develop\harbour\dbu\dbulib.prg 
+\develop\harbour\dbu\dbustru.prg
+\develop\harbour\dbu\dbuutil.prg 
+\develop\harbour\dbu\dbuver.prg
+\develop\harbour\dbu\dbuview.prg
+\develop\harbour\dbu\dbusincdbf.prg
+\develop\harbour\dbu\dbudialeto.prg
+
+#
+# exportacao formatos
+#
+\develop\harbour\dbu\dbuXLSclass.prg
+\develop\harbourPRIV\dbu\XLSXClass.prg
+\develop\harbour\dbu\dbudoc.prg  
+\develop\harbour\dbu\dbuxml.prg
+\develop\harbour\dbu\dbuxlsxml.prg
+\develop\harbour\dbu\dbumddbml.prg
+\develop\harbour\dbu\dbucrypto.prg
+
+#
+# paradox
+#
+
+\develop\harbour\dbu\dbumypdx.prg
+
+#
+# sqlite
+#
+
+\develop\harbour\dbu\dbusqlite.prg 
+
+#
+# ADO ODBC MDB,ACCESS,ACCDB,SQLITE,POSTGRESQL
+#
+
+\develop\harbour\dbu\dburddado.prg
+
+
+#
+#       ---    postgresql libpg
+#
+\develop\harbour\dbu\dbupg.prg
+\develop\harbour\dbu\dbupgexp
+\develop\harbourpriv\dbu\pgrdd.prg
+
+#
+\develop\harbour\dbu\dbumix.prg
+#
+#       ---    odbc
+#
+\develop\harbour\dbu\dbuodbc.prg 
+#
+#       ---    adox
+#
+#\develop\harbour\dbu\adoxb.prg   
+\develop\harbour\dbu\dbuadox.prg 
+#
+#       ---   leto
+#
+\develop\harbour\dbu\dbuleto.prg 
+
+#
+\develop\harbour\dbu\dumyfb.prg
+\develop\harbour\dbu\dumytd.prg
+\develop\harbour\dbu\dumymy.prg
+\develop\harbour\dbu\dbusqlrdd.prg
+\develop\harbour\dbu\dumyOCI.prg
+
+#
+# funcoes de apoio
+#
+\develop\harbour\objmgw\netdbf.prg
+\develop\harbour\objmgw\comp.prg  
+\develop\harbour\objmgw\disk54.prg
+\develop\harbour\objmgw\disk53.prg
+\develop\harbour\objmgw\disk56.prg
+\develop\harbour\objmgw\f_mmopac.prg
+\develop\harbour\objmgw\disk55.prg 
+\develop\harbour\objmgw\disk57.prg
+\develop\harbour\objmgw\disk66.prg
+\develop\harbour\objmgw\disk72.prg
+\develop\harbour\objmgw\disk70.prg
+\develop\harbour\objmgw\f_tempfi.prg
+\develop\harbour\objmgw\f_encode.prg
+\develop\harbour\objmgw\f_freadl.prg
+\develop\harbour\objmgw\f_makedb.prg  
+\develop\harbour\objmgw\f_ismemo.prg       
+\develop\harbour\objmgw\mmousen.prg
+\develop\harbour\objmgw\mlib06.prg
+\develop\harbour\objmgw\xhberr_mode.prg
+\develop\harbour\objmgw\wvgini.prg
+\develop\harbour\objmgw\adofix.prg
+\develop\harbour\objmgw\adoerror.prg
+\develop\harbour\objmgw\modeseguranca.prg
+\develop\harbour\objmgw\escolherpasta.prg
+
+#
+#       ---   tbclass   ---
+#
+#c:\develop\harbour\dbu\dbutclass.prg
+#c:\develop\harbour\dbu\tclass\Tdbclass.prg
+#c:\develop\harbour\dbu\tclass\cocoa_mysql.c
+#c:\develop\harbour\dbu\tclass\cocoa_pgsql.c

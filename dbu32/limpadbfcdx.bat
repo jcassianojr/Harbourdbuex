@@ -1,0 +1,14 @@
+del *.dbf
+del *.cdx
+del *.dbe
+del *.fpt
+del *.sql
+del *.dbml
+del *.xlsx
+del *.xml
+del *.md
+del *.sqlite
+del *.log
+del *.csv
+del *.txt
+del *.zip
