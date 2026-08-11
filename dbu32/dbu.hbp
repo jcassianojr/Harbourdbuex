@@ -76,7 +76,7 @@ sqlrddpp.hbc
 \develop\harbour\dbu\dbuver.prg
 \develop\harbour\dbu\dbuview.prg
 \develop\harbour\dbu\dbuXLSclass.prg
-\develop\harbourpriv\dbu\XLSXClass.prg
+\develop\harbour\privado\dbu\XLSXClass.prg
 \develop\harbour\dbu\dbusincdbf.prg
 \develop\harbour\dbu\dbudialeto.prg 
 \develop\harbour\dbu\dbuxlsxml.prg
@@ -126,30 +126,30 @@ c:\develop\harbour\dbu\dumyOCI.prg
 c:\develop\harbour\dbu\dumySD.prg
 
 
-\develop\harbour\objmgw\netdbf.prg
-\develop\harbour\objmgw\comp.prg  
-\develop\harbour\objmgw\disk54.prg
-\develop\harbour\objmgw\disk53.prg
-\develop\harbour\objmgw\disk56.prg
-\develop\harbour\objmgw\f_mmopac.prg
-\develop\harbour\objmgw\disk55.prg 
-\develop\harbour\objmgw\disk57.prg
-\develop\harbour\objmgw\disk66.prg
-\develop\harbour\objmgw\disk72.prg
-\develop\harbour\objmgw\disk70.prg
-\develop\harbour\objmgw\f_tempfi.prg
-\develop\harbour\objmgw\f_encode.prg
-\develop\harbour\objmgw\f_freadl.prg
-\develop\harbour\objmgw\f_makedb.prg  
-\develop\harbour\objmgw\f_ismemo.prg       
-\develop\harbour\objmgw\mmousen.prg
-\develop\harbour\objmgw\mlib06.prg
-\develop\harbour\objmgw\xhberr_mode.prg
-\develop\harbour\objmgw\wvgini.prg
-\develop\harbour\objmgw\adofix.prg
-\develop\harbour\objmgw\adoerror.prg
-\develop\harbour\objmgw\modeseguranca.prg
-\develop\harbour\objmgw\escolherpasta.prg
+\develop\harbour\diversos\objmgw\netdbf.prg
+\develop\harbour\diversos\objmgw\comp.prg  
+\develop\harbour\diversos\objmgw\disk54.prg
+\develop\harbour\diversos\objmgw\disk53.prg
+\develop\harbour\diversos\objmgw\disk56.prg
+\develop\harbour\diversos\objmgw\f_mmopac.prg
+\develop\harbour\diversos\objmgw\disk55.prg 
+\develop\harbour\diversos\objmgw\disk57.prg
+\develop\harbour\diversos\objmgw\disk66.prg
+\develop\harbour\diversos\objmgw\disk72.prg
+\develop\harbour\diversos\objmgw\disk70.prg
+\develop\harbour\diversos\objmgw\f_tempfi.prg
+\develop\harbour\diversos\objmgw\f_encode.prg
+\develop\harbour\diversos\objmgw\f_freadl.prg
+\develop\harbour\diversos\objmgw\f_makedb.prg  
+\develop\harbour\diversos\objmgw\f_ismemo.prg       
+\develop\harbour\diversos\objmgw\mmousen.prg
+\develop\harbour\diversos\objmgw\mlib06.prg
+\develop\harbour\diversos\objmgw\xhberr_mode.prg
+\develop\harbour\diversos\objmgw\wvgini.prg
+\develop\harbour\diversos\objmgw\adofix.prg
+\develop\harbour\diversos\objmgw\adoerror.prg
+\develop\harbour\diversos\objmgw\modeseguranca.prg
+\develop\harbour\diversos\objmgw\escolherpasta.prg
 
 # necessarias se compilar com tclass nao usando tclass.hbc
 #c:\develop\harbour\dbu\tclass\Tdbclass.prg

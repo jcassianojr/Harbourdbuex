@@ -423,7 +423,9 @@ cCOMANDO:=""
       CASE cSQLDIALETO="PGSQL" .OR. cSQLDIALETO="PGSQL64" .OR. cSQLDIALETO="POSTGRESQL"
            cCOMANDO ="NULL"
       CASE cSQLDIALETO="ORACLE" .OR. cSQLDIALETO="OCI"
-           cCOMANDO ="NULL"               
+           cCOMANDO ="NULL"  
+      CASE cSQLDIALETO == "DUCKDB"
+          cCOMANDO := "NULL"                  
    ENDCASE
 return cCOMANDO  
 
@@ -459,8 +461,8 @@ cCOMANDO:=""
            cCOMANDO ="select LAST_INSERT_ID()  AS LAST_ID;"  
        CASE cTIPOSQL == "CUBRID"   
           cCOMANDO := "SELECT LAST_INSERT_ID()" 
-       CASE cTIPOSQL == "DUCKDB"
-   cCOMANDO := "SELECT last_insert_rowid() AS LAST_ID;" // Ou via sequência      
+      // CASE cTIPOSQL == "DUCKDB" sem sql usa SEQUENCES
+       //    cCOMANDO := "" //    
    ENDCASE
 return cCOMANDO
 
@@ -500,8 +502,11 @@ FUNCTION Dialeto_ShowDatabases(cTipo)
       // No Firebird, por arquitetura, ele não lista outros bancos nativamente via SQL (cada arquivo FDB é isolado).
       // O padrão para retornar o alias do banco conectado na sessão atual é:
       cCOMANDO := "SELECT RDB$GET_CONTEXT('SYSTEM', 'DB_NAME') AS DB_NAME FROM RDB$DATABASE;"
-   ENDCASE
+   
+   CASE cTipo == "DUCKDB"
+       cCOMANDO := "SELECT schema_name AS DB_NAME FROM information_schema.schemata;"
 
+ENDCASE
 RETURN cCOMANDO
 
 
@@ -565,8 +570,8 @@ cCOMANDO:=""
            cCOMANDO =""
        CASE cTIPOSQL="ORACLE" .OR. cTIPOSQL="OCI"
            cCOMANDO ="select SQL%ROWCOUNT"     
-      CASE cTIPOSQL == "DUCKDB"
-           cCOMANDO := "SELECT last_rows_affected()"     
+   //   CASE cTIPOSQL == "DUCKDB" sem sql por funcao duckdb_rows_changed
+   //        cCOMANDO := ""     
    ENDCASE
 return cCOMANDO
 
@@ -780,12 +785,26 @@ FUNCTION Dialeto_SQL( cSQLCNV )
       cSQLCNV := StrTran( cSQLCNV, "IFNULL(", "COALESCE(" ) // O SQLite usa IFNULL, o Pos
      
      
-  CASE cTIPOSQL == "DUCKDB"
-   cSQLCNV := StrTran( cSQLCNV, "TODAY()", "CURRENT_DATE" )
-   cSQLCNV := StrTran( cSQLCNV, "LEN(", "LENGTH(" )
-   cSQLCNV := StrTran( cSQLCNV, "ALLTRIM(", "TRIM(" )
-   cSQLCNV := StrTran( cSQLCNV, "IIF(", "CASE WHEN " ) // Necessita expandir o IIF
-   cSQLCNV := StrTran( cSQLCNV, "CHR(", "CHR(" )   
+ CASE cTIPOSQL == "DUCKDB"
+      // Datas
+      cSQLCNV := StrTran( cSQLCNV, "TODAY()", "CURRENT_DATE" )
+      
+      // Strings e Limpeza
+      cSQLCNV := StrTran( cSQLCNV, "LEN(", "LENGTH(" )
+      cSQLCNV := StrTran( cSQLCNV, "ALLTRIM(", "TRIM(" )
+      cSQLCNV := StrTran( cSQLCNV, "TRIM(", "RTRIM(" )
+      
+      // Caracteres e ASCII
+      cSQLCNV := StrTran( cSQLCNV, "CHR(", "CHR(" )
+      cSQLCNV := StrTran( cSQLCNV, "ASC(", "ASCII(" )
+      
+      // Substrings
+      cSQLCNV := StrTran( cSQLCNV, "SUBSTR(", "SUBSTRING(" )
+      
+      // Datas Extraídas
+      cSQLCNV := StrTran( cSQLCNV, "YEAR(", "EXTRACT('YEAR' FROM " )
+      cSQLCNV := StrTran( cSQLCNV, "MONTH(", "EXTRACT('MONTH' FROM " )
+      cSQLCNV := StrTran( cSQLCNV, "DAY(", "EXTRACT('DAY' FROM " )
       
    CASE cTIPOSQL = "MSSQL" .OR. cTIPOSQL = "SQLSERVER"
       cSQLCNV := StrTran( cSQLCNV, "TODAY()", "GETDATE() " )
@@ -1202,7 +1221,9 @@ FUNCTION SqliteCreateTable( cTablename, aStruct, cTIPOSQL, lINDEX ,lPK,lINCSR)
         	//SR_DELETED CHAR(1) NOT NULL,
 	        //CONSTRAINT INTEG_5 UNIQUE (SR_RECNO)
             //CREATE UNIQUE INDEX RDB$3 ON TEST (SR_RECNO);
-            
+        // Campo Auto-incremento / SR_RECNO para DuckDB
+        CASE mFldType = "+"  .and. cTIPOSQL == "DUCKDB"      
+             MSql += " BIGINT "    
             
          // Caracter (C)
          CASE mFldType = "C" .AND. ( cTIPOSQL = "ORACLE" .OR. cTIPOSQL = "OCI" )
@@ -2416,6 +2437,15 @@ DO CASE
                   "JOIN RDB$FIELDS T ON F.RDB$FIELD_SOURCE = T.RDB$FIELD_NAME " + ;
                   "WHERE F.RDB$RELATION_NAME = '" + Upper(cTabela) + "' " + ;
                   "ORDER BY F.RDB$FIELD_POSITION;"
+    CASE cTargerdb == "DUCKDB"
+        cSchemaSQL := iif( Empty(cUsuario), "main", Lower(cUsuario) )
+        cCOMANDO := "SELECT column_name AS FIELD_NAME, data_type AS DATA_TYPE, " + ;
+               "COALESCE(character_maximum_length, numeric_precision) AS FIELD_LEN, " + ;
+               "COALESCE(numeric_scale, 0) AS FIELD_DEC " + ;
+               "FROM information_schema.columns " + ;
+               "WHERE table_name = '" + cTabela + "' AND table_schema = '" + cSchemaSQL + "' " + ;
+               "ORDER BY ordinal_position;"                 
+                  
 ENDCASE
 RETURN cCOMANDO
 
