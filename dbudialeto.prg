@@ -2408,13 +2408,6 @@ DO CASE
                   "FROM INFORMATION_SCHEMA.COLUMNS " + ;
                   "WHERE TABLE_NAME = '" + cTabela + "' AND TABLE_SCHEMA = '" + cSchemaSQL + "' " + ;
                   "ORDER BY ORDINAL_POSITION;"
-  CASE cTargerdb == "DUCKDB"
-     cSchemaSQL := iif( Empty(cUsuario), "main", Lower(cUsuario) )
-     cCOMANDO := "SELECT column_name AS FIELD_NAME, data_type AS DATA_TYPE, " + ;
-                 "column_size AS FIELD_LEN, decimal_digits AS FIELD_DEC " + ;
-                 "FROM duckdb_columns " + ;
-                 "WHERE table_name = '" + cTabela + "' AND schema_name = '" + cSchemaSQL + "' " + ;
-                 "ORDER BY column_index;"
    CASE cTargerdb == "ORACLE" .OR. cTargerdb == "OCI"
       cUserOracle := iif( Empty(cUsuario), "USER_TAB_COLUMNS", "ALL_TAB_COLUMNS" )
       cCOMANDO := "SELECT COLUMN_NAME AS FIELD_NAME, DATA_TYPE AS DATA_TYPE, " + ;

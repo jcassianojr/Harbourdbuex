@@ -1276,11 +1276,11 @@ IF cTIPOINFO = "TABELA"
              cCOMANDO := "SELECT table_name AS TABLE_NAME FROM all_tables WHERE owner = '" + Upper(cOwnerx) + "' ORDER BY TABLE_NAME;"
           endif
       CASE cTIPOSQL == "DUCKDB"
-         if Empty( cOwnerx )
-            cCOMANDO := "SELECT table_name AS TABLE_NAME FROM duckdb_tables WHERE schema_name = 'main' ORDER BY table_name;"
-         else
-            cCOMANDO := "SELECT table_name AS TABLE_NAME FROM duckdb_tables WHERE schema_name = '" + Lower(cOwnerx) + "' ORDER BY table_name;"
-         endif    
+           if Empty( cOwnerx )
+              cCOMANDO := "SELECT table_name AS TABLE_NAME FROM duckdb_tables WHERE schema_name = 'main' ORDER BY table_name;"
+           else
+              cCOMANDO := "SELECT table_name AS TABLE_NAME FROM duckdb_tables WHERE schema_name = '" + Lower(cOwnerx) + "' ORDER BY table_name;"
+           endif
 
        CASE lFDB 
           // RDB$SYSTEM_FLAG = 0 traz apenas tabelas criadas pelo usuário (ignora tabelas do sistema do Firebird)
@@ -1301,92 +1301,6 @@ IF cTIPOINFO = "TABELA"
 ENDIF
 IF cTIPOINFO = "ESTRUTURA"
    cCOMANDO :=DIALETO_Estrutura(cTIPOSQL,cTABELA,cOwnerx)
-   /*
-   DO CASE
-   CASE lARQMDBACCDB  
-      //Implantado abaixo com  catalogx
-   CASE cTIPOSQL="INFORMIX"   
-      cCOMANDO := "select t.tabname,c.colname AS FIELD_NAME,c.coltype AS FIELD_NAME,c.collength AS FIELD_LEN,c.colno " + ;
-            "from systables t,syscolumns c " + ;
-            "where t.tabid > 0 " + ;
-            "and t.tabid = c.tabid " + ;
-            "order by 1,5 " 
-  
-   CASE cTIPOSQL == "SQLITE" .OR. At( ".SQLITE", Upper( cdatabaseX ) ) > 0
-      // PRAGMA table_info retorna: cid, name, type, notnull, dflt_value, pk
-      // Como o SQLite não aceita aliases em PRAGMAs diretamente, a sua camada de dados
-      // deverá ler os campos nativos do pragma ("name", "type") ou usamos uma query vazia de metadados:
-      cCOMANDO := "SELECT name AS FIELD_NAME, type AS DATA_TYPE, 0 AS FIELD_LEN, 0 AS FIELD_DEC FROM pragma_table_info('" + cTabela + "');"
-
-   CASE cTIPOSQL == "MYSQL" .OR. cTIPOSQL == "MYSQL64" .OR. cTIPOSQL == "MARIADB"
-      // Em vez de SHOW COLUMNS (que gera colunas dinâmicas), usamos a information_schema para fixar os aliases
-      if Empty( cOwnerx )
-         cCOMANDO := "SELECT COLUMN_NAME AS FIELD_NAME, DATA_TYPE AS DATA_TYPE, " + ;
-                     "COALESCE(CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION) AS FIELD_LEN, " + ;
-                     "COALESCE(NUMERIC_SCALE, 0) AS FIELD_DEC " + ;
-                     "FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '" + cTabela + "' AND TABLE_SCHEMA = DATABASE() ORDER BY ORDINAL_POSITION;"
-      else
-         cCOMANDO := "SELECT COLUMN_NAME AS FIELD_NAME, DATA_TYPE AS DATA_TYPE, " + ;
-                     "COALESCE(CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION) AS FIELD_LEN, " + ;
-                     "COALESCE(NUMERIC_SCALE, 0) AS FIELD_DEC " + ;
-                     "FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '" + cTabela + "' AND TABLE_SCHEMA = '" + cOwnerx + "' ORDER BY ORDINAL_POSITION;"
-      endif
-
-   CASE cTIPOSQL == "PGSQL" .OR. cTIPOSQL == "PGSQL64" .OR. cTIPOSQL == "POSTGRESQL"
-      // PostgreSQL diferencia maiúsculas de minúsculas. Geralmente tabelas ficam em minúsculo no Postgres.
-      // udt_name ou data_type mapeados perfeitamente
-       //nome tabela em maiusculo postgresql e case sensitive
-      //udt_name melhor retorno mas tambem tras data_type caso necesario
-      //where table_schema='public'  tras todas as tabelas do usurio(public)
-   
-      
-      cSchema := iif( Empty(cOwnerx), "public", cOwnerx )
-      cCOMANDO := "SELECT column_name AS FIELD_NAME, udt_name AS DATA_TYPE, " + ;
-                  "COALESCE(character_maximum_length, numeric_precision) AS FIELD_LEN, " + ;
-                  "COALESCE(numeric_scale, 0) AS FIELD_DEC " + ;
-                  "FROM information_schema.columns " + ;
-                  "WHERE LOWER(table_name) = '" + Lower(cTabela) + "' AND table_schema = '" + cSchema + "' " + ;
-                  "ORDER BY ordinal_position;"
-
-   CASE cTIPOSQL == "MSSQL" .OR. cTIPOSQL == "SQLSERVER"
-      cSchemaSQL := iif( Empty(cOwnerx), "dbo", cOwnerx )
-      cCOMANDO := "SELECT COLUMN_NAME AS FIELD_NAME, DATA_TYPE AS DATA_TYPE, " + ;
-                  "ISNULL(CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION) AS FIELD_LEN, " + ;
-                  "ISNULL(NUMERIC_SCALE, 0) AS FIELD_DEC " + ;
-                  "FROM INFORMATION_SCHEMA.COLUMNS " + ;
-                  "WHERE TABLE_NAME = '" + cTabela + "' AND TABLE_SCHEMA = '" + cSchemaSQL + "' " + ;
-                  "ORDER BY ORDINAL_POSITION;"
-CASE cTIPOSQL == "DUCKDB"
-   cSchemaSQL := iif( Empty(cOwnerx), "main", Lower(cOwnerx) )
-   cCOMANDO := "SELECT column_name AS FIELD_NAME, data_type AS DATA_TYPE, " + ;
-               "column_size AS FIELD_LEN, decimal_digits AS FIELD_DEC " + ;
-               "FROM duckdb_columns " + ;
-               "WHERE table_name = '" + cTabela + "' AND schema_name = '" + cSchemaSQL + "' " + ;
-               "ORDER BY column_index;"
-   CASE cTIPOSQL == "ORACLE" .OR. cTIPOSQL == "OCI"
-      cUserOracle := iif( Empty(cOwnerx), "USER_TAB_COLUMNS", "ALL_TAB_COLUMNS" )
-      cCOMANDO := "SELECT COLUMN_NAME AS FIELD_NAME, DATA_TYPE AS DATA_TYPE, " + ;
-                  "DATA_LENGTH AS FIELD_LEN, COALESCE(DATA_SCALE, 0) AS FIELD_DEC " + ;
-                  "FROM " + cUserOracle + " WHERE TABLE_NAME = '" + Upper(cTabela) + "' " + ;
-                  iif( !Empty(cOwnerx), "AND OWNER = '" + Upper(cOwnerx) + "' ", "" ) + ;
-                  "ORDER BY COLUMN_ID;"
-
-   CASE lFDB 
-      // O Firebird exige um JOIN complexo no catálogo do sistema para extrair os tipos amigáveis
-      cCOMANDO := "SELECT TRIM(F.RDB$FIELD_NAME) AS FIELD_NAME, " + ;
-                  "CASE T.RDB$FIELD_TYPE " + ;
-                  "  WHEN 7 THEN 'SMALLINT' WHEN 8 THEN 'INTEGER' WHEN 16 THEN 'BIGINT' " + ;
-                  "  WHEN 10 THEN 'FLOAT' WHEN 27 THEN 'DOUBLE PRECISION' " + ;
-                  "  WHEN 14 THEN 'CHAR' WHEN 37 THEN 'VARCHAR' WHEN 40 THEN 'CSTRING' " + ;
-                  "  WHEN 12 THEN 'DATE' WHEN 13 THEN 'TIME' WHEN 35 THEN 'TIMESTAMP' " + ;
-                  "  WHEN 261 THEN 'BLOB' END AS DATA_TYPE, " + ;
-                  "T.RDB$FIELD_LENGTH AS FIELD_LEN, COALESCE(T.RDB$FIELD_SCALE, 0) * -1 AS FIELD_DEC " + ;
-                  "FROM RDB$RELATION_FIELDS F " + ;
-                  "JOIN RDB$FIELDS T ON F.RDB$FIELD_SOURCE = T.RDB$FIELD_NAME " + ;
-                  "WHERE F.RDB$RELATION_NAME = '" + Upper(cTabela) + "' " + ;
-                  "ORDER BY F.RDB$FIELD_POSITION;"
-   ENDCASE
-   */
 ENDIF
 IF cTIPOINFO = "CCAMPOSQL"
    cCOMANDO := cCAMPOSQL
@@ -1434,6 +1348,14 @@ IF cTIPOINFO = "__INDEX__"
       // o mais seguro é ler os metadados diretamente da tabela sqlite_master caso queira a query pura,
       // mas o comando pragma nativo é: "PRAGMA index_list('" + cTabela + "')"
       cCOMANDO := "SELECT name AS INDEX_NAME, '' AS COLUMN_NAME FROM sqlite_master WHERE type='index' AND tbl_name='" + cTabela + "';"
+      
+CASE cTIPOSQL == "DUCKDB"
+   cSchemaDK := iif( Empty(cOwnerx), "main", Lower(cOwnerx) )
+   cCOMANDO := "SELECT index_name AS INDEX_NAME, expressions AS COLUMN_NAME " + ;
+               "FROM duckdb_indexes " + ;
+               "WHERE table_name = '" + cTabela + "' AND schema_name = '" + cSchemaDK + "' " + ;
+               "ORDER BY index_name;"      
+      
    ENDCASE
 ENDIF
 IF cTIPOINFO = "__VERSION__"
