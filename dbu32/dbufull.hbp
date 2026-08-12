@@ -1,11 +1,3 @@
-# Pastas de inclusão c necessarias se compilar com fontes tclass nao usando tclass.hbc
-#-cflag=-Ic:\harbour\hb3rd\mysql\include
-#-cflag=-Ic:\harbour\hb3rd\pgsql\include
-
-# Pastas de inclusão necessarias se compilar com fintes tclass nao usando tclass.hbc
-#-incpath=c:\harbour\hb3rd\mysql\include
-#-incpath=c:\harbour\hb3rd\pgsql\include
-
 # Pastas de bibliotecas requerida pela tclass
 -Lc:\harbour\hb3rd\mysql\lib
 -Lc:\harbour\hb3rd\pgsql\lib
@@ -16,23 +8,24 @@
 -lfbclient
 -lbcrypt
 
--dUSE_SDD_MYSQL
--cflag=-dUSE_SDD_MYSQL
--dUSE_SR_MYSQL
--cflag=-dUSE_SR_MYSQL
+#erro  compilacao comentadas por enquanto
+#-dUSE_SDD_MYSQL
+#-cflag=-dUSE_SDD_MYSQL
+#-dUSE_SR_MYSQL
+#-cflag=-dUSE_SR_MYSQL
 
 
 -dUSE_SDD_POSTGRES
--cflag=-USE_SDD_POSTGRES
+#-cflag=-USE_SDD_POSTGRES
 -dUSE_SR_POSTGRES
--cflag=-USE_SR_POSTGRES
+#-cflag=-USE_SR_POSTGRES
 
 
 # nao definindo aqui porem esta com problemas 64 bits abortando 
-#-dUSE_SDD_FIREBIRD
-#-cflag=-USE_SDD_FIREBIRD
+-dUSE_SDD_FIREBIRD5
+#-cflag=-USE_SDD_FIREBIRD5
 -dUSE_SR_FIREBIRD
--cflag=-USE_SR_FIREBIRD
+#-cflag=-USE_SR_FIREBIRD
 
 
 # oracle implantacao futura comentado aqui para nao chamar
@@ -87,12 +80,12 @@ hbodbc.hbc
 rddsql.hbc
 sddodbc.hbc
 sddmy.hbc
-sddfb.hbc
+sddfb5.hbc
 sddpg.hbc
 sddsqlt3.hbc
 letodb.hbc
 #sddoci.hbc
-hbfbird.hbc
+hbfbird5.hbc
 
 Tdbclass.hbc
 
@@ -116,7 +109,6 @@ sqlrddpp.hbc
 \develop\harbour\dbu\dbusincdbf.prg
 \develop\harbour\dbu\dbudialeto.prg 
 \develop\harbour\dbu\dbuxlsxml.prg
-#\develop\harbour\dbu\dbu2md.prg
 \develop\harbour\dbu\dbufire.prg 
 \develop\harbour\dbu\dbumypdx.prg
 \develop\harbour\dbu\dbumddbml.prg
