@@ -337,13 +337,15 @@ FUNCTION sqlrdd_createdatabase()
        CASE cTIPOMIX = "MARIADB" 
        CASE cTIPOMIX = "MYSQL" .OR. cTIPOMIX = "MYSQL64"
        CASE cTIPOMIX = "PGSQL" .OR. cTIPOMIX = "PGSQL64"
-       CASE cTIPOSQL = "FIREBIRD"
-            cDATABASEX:=""
-           cARQORI := win_GetsaveFileName(,"Firebase Files",HB_CWD(),"Firebase",;
-                                         {{'Firebird fdb','*.fdb'},{'Firebird gdb','*.gdb'},{'Firebird ib','*.ib'},;
-                                         {'All Files','*.*'}},1)  
-           SR_FIREBIRD5():CreateDatabase(cARQORI, cUSERX, cPASSX, NIL, NIL, NIL)
-           cDATABASEX:=cARQORI
+       #ifdef USE_SR_FIREBIRD
+           CASE cTIPOSQL = "FIREBIRD"
+                cDATABASEX:=""
+               cARQORI := win_GetsaveFileName(,"Firebase Files",HB_CWD(),"Firebase",;
+                                             {{'Firebird fdb','*.fdb'},{'Firebird gdb','*.gdb'},{'Firebird ib','*.ib'},;
+                                             {'All Files','*.*'}},1)  
+               SR_FIREBIRD5():CreateDatabase(cARQORI, cUSERX, cPASSX, NIL, NIL, NIL)
+               cDATABASEX:=cARQORI
+       #endif        
        CASE cTIPOMIX = "ORACLE"
        CASE cTIPOSQL = "SQLITE"
            cDATABASEX:=""

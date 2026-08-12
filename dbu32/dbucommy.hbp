@@ -27,7 +27,7 @@
 \develop\harbour\dbu\dbu.rc
 
 -m -n -w0 -es2 -ge1
--inc
+#-inc
 -workdir=.hbmk/dbucommy
 
 hbct.hbc

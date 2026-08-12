@@ -36,6 +36,7 @@
 // +--------------------------------------------------------------------
 // +
 
+/*
 #require "rddsql"
 #require "sddodbc"
 #require "sddsqlt3"
@@ -62,7 +63,7 @@
 #ifdef USE_SDD_ORACLE
     #require "sddoci"
 #endif    
-
+*/
 
 #include "dbinfo.ch"
 #include "error.ch"

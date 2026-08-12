@@ -65,7 +65,7 @@ letodb.hbc
 #hbfbird.hbc
 
 adoxb.hbc
-Tdbclass.hbc
+#Tdbclass.hbc
 
 \develop\harbour\dbu\DBU.PRG  
 \develop\harbour\dbu\dbucnvmemo.prg 
