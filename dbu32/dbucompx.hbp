@@ -5,7 +5,8 @@
 
 # Setado para testes sqlrdd em firebird
 -dUSE_PXRDD
--cflag=-USE_PXRDD
+#-cflag=-USE_PXRDD
+-dUSE_MENU_PARADOX
 
 -gtwvg
 -gui

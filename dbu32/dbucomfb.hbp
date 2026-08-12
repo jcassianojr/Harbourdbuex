@@ -1,3 +1,4 @@
+-dUSE_MENU_FIREBIRD5
 
 # nao definindo aqui porem esta com problemas 64 bits 
 #-dUSE_SDD_FIREBIRD

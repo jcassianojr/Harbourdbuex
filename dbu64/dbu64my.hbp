@@ -20,6 +20,8 @@
 #-dUSE_SR_MYSQL
 #-cflag=-dUSE_SR_MYSQL
 
+-dUSE_MENU_MYSQL
+
 
 # flasgs compilacao
 -gtwvg

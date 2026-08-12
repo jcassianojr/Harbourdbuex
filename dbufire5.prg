@@ -32,9 +32,9 @@
 
 
 // +--------------------------------------------------------------------
-// +    Function firebirdmenu()
+// +    Function firebirdmenu5()
 // +--------------------------------------------------------------------
-FUNCTION Firebirdmenu()
+FUNCTION Firebirdmenu5()
 
 LOCAL aAMBIENTE
 LOCAL KEY

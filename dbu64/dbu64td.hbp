@@ -10,7 +10,7 @@
 #-Lc:\harbour\hb3rd\mysql-x64\lib
 #-Lc:\harbour\hb3rd\pgsql-x64\lib
 
-
+-dUSE_MENU_TD
 
 # Dependências (libs) requerida pela tclass
 -llibmysql

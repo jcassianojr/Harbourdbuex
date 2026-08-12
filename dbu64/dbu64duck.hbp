@@ -9,6 +9,7 @@
 -lng=pt_BR
 -inc
 -workdir=.hbmk/dbu64duck
+-dUSE_MENU_DUCKDB
 
 #
 #      --- apoio,auxiliares

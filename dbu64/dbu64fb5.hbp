@@ -2,13 +2,9 @@
 -lfbclient
 -lbcrypt
 
-
-# nao definindo aqui porem esta com problemas 64 bits
-#-dUSE_SDD_FIREBIRD
-#-cflag=-USE_SDD_FIREBIRD
-
+-dUSE_MENU_FIREBIRD5
+-dUSE_SDD_FB5
 -dUSE_SR_FIREBIRD
--cflag=-USE_SR_FIREBIRD
 
 -gtwvg
 -gui

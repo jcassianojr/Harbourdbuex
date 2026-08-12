@@ -8,7 +8,8 @@
 #-cflag=-USE_SDD_FIREBIRD
 
 -dUSE_SR_FIREBIRD
--cflag=-USE_SR_FIREBIRD
+#-cflag=-USE_SR_FIREBIRD
+-dUSE_MENU_FIREBIRD
 
 -gtwvg
 -gui

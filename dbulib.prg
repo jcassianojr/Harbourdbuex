@@ -181,34 +181,51 @@ WHILE .T.
    
    KEY := menu(1,0)
    DO CASE
-   CASE KEY = 1 .AND. cTIPOSQL = "PGSQL"
-      pgsqlmenu()
-   CASE KEY = 1 .AND. cTIPOSQL = "MYSQL"
-      mysqlmenu()
-   CASE KEY = 1 .AND. cTIPOSQL = "SQLITE"
-      sqlitemenu()
-   CASE KEY = 1 .AND. cTIPOSQL = "FIREBIRD"
-      Firebirdmenu()
-   CASE KEY = 1 .AND. cTIPOSQL = "PARADOX"
-      paradoxmenu()
-   CASE KEY = 1 .AND. cTIPOSQL = "DUCKDB"
-      Duckdbmenu()
-   CASE KEY = 1
-      MDT("Sem clientelib para "+cTIPOSQL)
-   CASE KEY = 2
-      mdbmenu(cTIPOSQL)  //ADORDD engine e ODBC
-   CASE KEY = 3 
-      mixmenu(cTIPOSQL)  //SQLMIX RDD SDD engine e odbc
-   CASE KEY = 4
-      ODBCmenu(cTIPOSQL) //odbc e dsn
-   CASE KEY = 5
-      adoxmenu(cTIPOSQL)  //adox engine e odbc e dsn
-  CASE KEY = 6
-      tclassmenu(cTIPOSQL)   //ao entrar trato os tipo que funcionam
-  CASE KEY = 7
-      sqlrddmenu(cTIPOSQL)   //sqlrdd engines odbc e dsn
-   OTHERWISE
-      RETURN
+       CASE KEY = 1 .AND. cTIPOSQL = "SQLITE"
+          sqlitemenu()
+      #ifdef USE_MENU_PGSQL
+         CASE KEY = 1 .AND. cTIPOSQL = "PGSQL"
+              pgsqlmenu()
+      #endif         
+      #ifdef USE_MENU_MYSQL    
+         CASE KEY = 1 .AND. cTIPOSQL = "MYSQL"
+              mysqlmenu()
+      #endif         
+       #ifdef USE_MENU_FIREBIRD   
+         CASE KEY = 1 .AND. cTIPOSQL = "FIREBIRD"
+            Firebirdmenu()
+       #endif  
+       #ifdef USE_MENU_FIREBIRD5   
+         CASE KEY = 1 .AND. cTIPOSQL = "FIREBIRD"
+            Firebirdmenu5()
+       #endif       
+     
+       #ifdef USE_MENU_PARADOX
+         CASE KEY = 1 .AND. cTIPOSQL = "PARADOX"
+            paradoxmenu()
+       #endif      
+       #ifdef USE_MENU_DUCKDB 
+         CASE KEY = 1 .AND. cTIPOSQL = "DUCKDB"
+            Duckdbmenu()
+       #endif      
+       CASE KEY = 1
+          MDT("Sem clientelib para "+cTIPOSQL)
+       CASE KEY = 2
+          mdbmenu(cTIPOSQL)  //ADORDD engine e ODBC
+       CASE KEY = 3 
+          mixmenu(cTIPOSQL)  //SQLMIX RDD SDD engine e odbc
+       CASE KEY = 4
+          ODBCmenu(cTIPOSQL) //odbc e dsn
+       CASE KEY = 5
+          adoxmenu(cTIPOSQL)  //adox engine e odbc e dsn
+      CASE KEY = 6
+          #ifdef USE_MENU_TD
+            tclassmenu(cTIPOSQL)   //ao entrar trato os tipo que funcionam
+          #endif  
+      CASE KEY = 7
+          sqlrddmenu(cTIPOSQL)   //sqlrdd engines odbc e dsn
+       OTHERWISE
+          RETURN
    ENDCASE
 ENDDO
 HB_dispbox(3,22,22,55,B_DOUBLE+" ")

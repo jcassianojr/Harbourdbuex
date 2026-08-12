@@ -15,6 +15,7 @@
 -llibpq
 -lbcrypt
 
+-dUSE_MENU_PGSQL
 
 -dUSE_SDD_POSTGRES
 -cflag=-USE_SDD_POSTGRES

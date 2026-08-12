@@ -12,9 +12,10 @@
 -lbcrypt
 
 -dUSE_SDD_POSTGRES
--cflag=-USE_SDD_POSTGRES
+#-cflag=-USE_SDD_POSTGRES
 -dUSE_SR_POSTGRES
--cflag=-USE_SR_POSTGRES
+#-cflag=-USE_SR_POSTGRES
+-dUSE_MENU_PGSQL
 
 
 -gtwvg

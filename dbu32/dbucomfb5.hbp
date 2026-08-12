@@ -1,4 +1,4 @@
-
+-dUSE_MENU_FIREBIRD5
 -dUSE_SDD_FB5
 #-cflag=-USE_SDD_FB5
 
