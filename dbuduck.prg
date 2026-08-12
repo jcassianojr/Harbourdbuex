@@ -11,6 +11,7 @@
 #include "dbstruct.ch"
 #include "directry.ch"
 
+
 // +--------------------------------------------------------------------
 // +    Function duckdbmenu()
 // +--------------------------------------------------------------------
@@ -34,7 +35,7 @@ FUNCTION Duckdbmenu()
    lACCDB     := .F. 
    lFDB       := .F.
 
-   cOLDRDD     := RDDSETDEFAULT("") 
+   cOLDRDD     := RDDSETDEFAULT("DUCKDB") 
    nOLDTIPORDD := TIPODBF 
    cTIPOSQL    := "DUCKDB"  // Define a global para as funções de dialeto
 

@@ -191,6 +191,8 @@ WHILE .T.
       Firebirdmenu()
    CASE KEY = 1 .AND. cTIPOSQL = "PARADOX"
       paradoxmenu()
+   CASE KEY = 1 .AND. cTIPOSQL = "DUCKDB"
+      Duckdbmenu()
    CASE KEY = 1
       MDT("Sem clientelib para "+cTIPOSQL)
    CASE KEY = 2
