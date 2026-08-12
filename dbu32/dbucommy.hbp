@@ -13,11 +13,11 @@
 #-llibpq
 #-lfbclient
 
--dUSE_SDD_MYSQL
--cflag=-dUSE_SDD_MYSQL
+#-dUSE_SDD_MYSQL
+#-cflag=-dUSE_SDD_MYSQL
 
--dUSE_SR_MYSQL
--cflag=-dUSE_SR_MYSQL
+#-dUSE_SR_MYSQL
+#-cflag=-dUSE_SR_MYSQL
 
 
 -gtwvg
@@ -39,7 +39,7 @@ hbziparc.hbc
 hbmxml.hbc
 hbxlsxml.hbc
 rddado.hbc
-sqlrddpp-mysql.hbc
+#sqlrddpp-mysql.hbc
 dbfcdxex.hbc
 adoxb.hbc
 hbmysql.hbc
