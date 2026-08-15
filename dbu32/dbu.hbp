@@ -118,11 +118,11 @@ sqlrddpp.hbc
 \develop\harbour\dbu\dbuleto.prg 
 #
 #c:\develop\harbour\dbu\dbutclass.prg
-c:\develop\harbour\dbu\dumypg.prg
-c:\develop\harbour\dbu\dumyfb.prg
-c:\develop\harbour\dbu\dumytd.prg
-c:\develop\harbour\dbu\dumymy.prg
-c:\develop\harbour\dbu\dumyOCI.prg
+#c:\develop\harbour\dbu\dumypg.prg
+#c:\develop\harbour\dbu\dumyfb.prg
+#c:\develop\harbour\dbu\dumytd.prg
+#c:\develop\harbour\dbu\dumymy.prg
+#c:\develop\harbour\dbu\dumyOCI.prg
 c:\develop\harbour\dbu\dumySD.prg
 
 

@@ -103,7 +103,7 @@ WHILE .T.
    KEY := menu(1,0) 
    DO CASE
    CASE KEY = 1
-      firecreate()
+      firecreate5()
    CASE KEY = 2
           pegcfgbanco() //escolhe novamente    
    CASE KEY = 3
@@ -137,7 +137,7 @@ RETURN .T.
 // +--------------------------------------------------------------------
 // +    Function firecreate()
 // +--------------------------------------------------------------------
-function firecreate(lUSASQL)
+function firecreate5(lUSASQL)
 LOCAL cCOMANDO
 LOCAL cARQORI
 

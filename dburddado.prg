@@ -637,7 +637,12 @@ function mdbcria()
 LOCAL cCONN
 cCONN:=""
 if  lFDB //usando nativa erro com catalgo nao suportado
-   firecreate() //Pergunta se quer usar sql ou fbcreate
+    #ifdef USE_MENU_FIREBIRD   
+        firecreate()
+    #endif  
+    #ifdef USE_MENU_FIREBIRD5   
+        firecreate5()
+    #endif  
     return
 endif
 DO CASE
