@@ -312,8 +312,9 @@ OPCAO(09,35,"B&MDBFCDX DBF CXD FPT ",77)  //M 16 BMDBFCDX DBFCDX DBFFPT
 OPCAO(10,35,"BMDBFNSX  DBF NSX FPT ",49)  //1 17 BMDBFNSX DBFNSX DBFFPT
 OPCAO(11,35,"BMDBFNTX  DBF NTX FPT ",50)  //2 18 BMDBFNTX DBFNTX DBFFPT 
 OPCAO(12,35,"DBFCDXEX  DBF CDX FPT ",51)  //2 19 Crypto   DBFCDXEX   -lbcrypt
+OPCAO(13,35,"FCSVRDD   CSV         ",51)   //2 20 FCSVRDD csv
 #ifdef USE_PXRDD
-   OPCAO(13,35,"PARADOX   DB  PX  MB  ",51)   //-20 Carrega a RDD do Paradox pxrdd
+   OPCAO(14,35,"PARADOX   DB  PX  MB  ",51)   //-21 Carrega a RDD do Paradox pxrdd
 #endif
 
 KEY := menu(2,0)
@@ -414,8 +415,11 @@ do case
        USOVIA := "DBFCDXEX"
        rddSetDefault("DBFCDXEX")   
        DbfcdxexSetup( "aes256", zSENHACDX )
+   case nTIPODBF = 20
+       USOVIA := "FCSVRDD"
+       rddSetDefault("FCSVRDD")     
 #ifdef USE_PXRDD
-    case nTIPODBF = 20
+    case nTIPODBF = 21
         TABLEEXT :="DB"
         USOVIA := "PXRDD"
         rddSetDefault("PXRDD")
