@@ -320,8 +320,11 @@ OPCAO(10,35,"BMDBFNSX  DBF NSX FPT ",49)  //1 17 BMDBFNSX DBFNSX DBFFPT
 OPCAO(11,35,"BMDBFNTX  DBF NTX FPT ",50)  //2 18 BMDBFNTX DBFNTX DBFFPT 
 OPCAO(12,35,"DBFCDXEX  DBF CDX FPT ",51)  //2 19 Crypto   DBFCDXEX   -lbcrypt
 OPCAO(13,35,"FCSVRDD   CSV         ",51)   //2 20 FCSVRDD csv
+OPCAO(13,35,"JSONRDD   JSON        ",51)   //2 21 JSONRDD json RDD
+
+
 #ifdef USE_PXRDD
-   OPCAO(14,35,"PARADOX   DB  PX  MB  ",51)   //-21 Carrega a RDD do Paradox pxrdd
+   OPCAO(14,35,"PARADOX   DB  PX  MB  ",51)   //-22 Carrega a RDD do Paradox pxrdd
 #endif
 
 KEY := menu(2,0)
@@ -425,9 +428,14 @@ do case
    case nTIPODBF = 20
        TABLEEXT :="CSV"
        USOVIA := "FCSVRDD"
-       rddSetDefault("FCSVRDD")     
+       rddSetDefault("FCSVRDD") 
+   case nTIPODBF = 21
+       TABLEEXT :="JSON"
+       USOVIA := "JSONRDD"
+       rddSetDefault("JSONRDD")      
+           
 #ifdef USE_PXRDD
-    case nTIPODBF = 21
+    case nTIPODBF = 22
         TABLEEXT :="DB"
         USOVIA := "PXRDD"
         rddSetDefault("PXRDD")
