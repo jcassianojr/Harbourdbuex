@@ -453,7 +453,7 @@ afill(field_list,"")
 menu_deflt := array(9)
 afill(menu_deflt,1)
 
-LAYOUT()
+//LAYOUT() abaixo apos criacao das matrices
 
 //Menus que Saem
 exit_str := "3569"
@@ -546,6 +546,8 @@ DECLARE vew_list[adir("*.vew")+20]
 array_dir("*."+TABLEEXT,dbf_list)
 array_dir("*"+XEXT(),ntx_list)
 array_dir("*.vew",vew_list)
+
+LAYOUT()
 
 local_func := 0
 local_sel  := 1

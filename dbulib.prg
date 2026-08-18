@@ -77,7 +77,14 @@ TRY
 END
 @ MAXROW() - 2,0 say "Exportar Para("+ZEXPOREXT+") Delimitador("+ZDELIMITE+") Oem Ansi("+ZCNVCHAR+")"                                                                                               
 @ MAXROW() - 1,0 say "Sepador Decimal("+ZDECSIM+") Separador Registro("+Zregsep+")"+" Ano("+ALLTRIM(ZANOFOR)+ZANOSEP+ZANOTAM+") Logico("+zSEPLOGIC+")"         
-
+TRY
+ criar_m[3]:=TABLEEXT+"->EXP"
+ setar_m[6]:="Tipo "+TABLEEXT
+ util_m[3]:="Sort "+TABLEEXT
+ util_m[6]:="DBEs->"+TABLEEXT
+ util_m[9]:="Sinc "+TABLEEXT
+ util_m[11]:="Format->"+TABLEEXT
+END
 return .T.
 
 
@@ -416,6 +423,7 @@ do case
        rddSetDefault("DBFCDXEX")   
        DbfcdxexSetup( "aes256", zSENHACDX )
    case nTIPODBF = 20
+       TABLEEXT :="CSV"
        USOVIA := "FCSVRDD"
        rddSetDefault("FCSVRDD")     
 #ifdef USE_PXRDD
