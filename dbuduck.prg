@@ -45,7 +45,7 @@ FUNCTION Duckdbmenu()
    ENDIF
 
    WHILE .T.
-      hb_DispBox(3,18,18,55,B_DOUBLE+" ") 
+      hb_DispBox(3,18,20,55,B_DOUBLE+" ") 
       @ 03,24 SAY "DUCKDB " + ALLTRIM(cDATABASEX) 
       
       OPCAO( 4, 24, "&Criar Database            ", 67 )   // C 1
@@ -63,7 +63,7 @@ FUNCTION Duckdbmenu()
       OPCAO(16, 24, "&Gravar arquivo JSON       ", 79 )   // O 13  
       OPCAO(17, 24, "L&er arquivo Parquet       ", 69 )   // 14
       OPCAO(18, 24, "G&ravar arquivo Parquet    ", 71 )   // 15
-      
+      OPCAO(19, 24, "G&ravar arquivo excel      ", 71 )   // 15
       
       KEY := menu(1,0) 
       DO CASE
@@ -90,9 +90,9 @@ FUNCTION Duckdbmenu()
       CASE KEY = 9
          duckExecArqSql()
       CASE KEY = 10
-         duckChamaLerCSV() // Função de interface intermediária (opcional)
+         duckChamaLerCSV() 
       CASE KEY = 11
-         duckChamaGravarCSV() // Função de interface intermediária (opcional)   
+         duckChamaGravarCSV()   
       CASE KEY = 12
          duckChamaLerJSON()
       CASE KEY = 13
@@ -101,6 +101,8 @@ FUNCTION Duckdbmenu()
          duckChamaLerParquet()
       CASE KEY = 15
          duckChamaGravarParquet()    
+      CASE KEY = 16
+         duckChamaGravarExcel()   
       OTHERWISE
          EXIT 
       ENDCASE
@@ -600,35 +602,6 @@ FUNCTION duckTABELAS( lNATIVE )
 RETURN .T.
 
 // +--------------------------------------------------------------------
-// +    Function duckTABELAS()
-// +--------------------------------------------------------------------
-FUNCTION duckTABELAS( lNATIVE )
-   LOCAL oServer, aTABELAS := {}
-
-   IF VALTYPE( lNATIVE ) <> "L"
-      lNATIVE := .T.
-   ENDIF
-
-   IF lNATIVE
-      oServer := duckconnect()
-      IF oServer != NIL
-         aTABELAS := oServer:ListTables()
-         
-         IF !Empty( aTABELAS )
-            mdbtabela( aTABELAS ) 
-         ELSE
-            MDT( "Nenhuma tabela encontrada." )
-         ENDIF
-         
-         oServer:Close()
-      ENDIF
-   ELSE
-      mdbtabela( cDATABASEX )
-   ENDIF
-   
-RETURN .T.
-
-// +--------------------------------------------------------------------
 // +    Function duckimpdbf()
 // +--------------------------------------------------------------------
 FUNCTION duckimpdbf()
@@ -950,6 +923,72 @@ FUNCTION duckexecuteSQL( eCOMANDO, lTRANS )
    
    oServer:Close()
 RETURN lRet
+
+
+// +--------------------------------------------------------------------
+// +    Interface: Gravar Excel
+// +--------------------------------------------------------------------
+FUNCTION duckChamaGravarExcel()
+   LOCAL cArqDestino
+
+   // Seleciona tabela atual
+   duckTABELAS() 
+   
+   IF Empty( cTABELAX )
+      Alert( "Operacao cancelada. Selecione uma tabela primeiro!" )
+      RETURN .F.
+   ENDIF
+
+   // Pede ao usuario o local e nome para salvar o XLSX
+   cArqDestino := win_GetSaveFileName( , "Salvar arquivo Excel como", HB_CWD(), "Excel Files", ;
+      {{'Arquivos Excel (*.xlsx)','*.xlsx'},{'Todos os Arquivos','*.*'}}, 1)
+
+   IF !Empty( cArqDestino )
+      // Garante a extensao correta
+      IF !( Lower(Right(cArqDestino, 5)) == ".xlsx" )
+         cArqDestino += ".xlsx"
+      ENDIF
+
+      // Chama a funcao do motor
+      duckgravarexcel( cArqDestino, AllTrim(cTABELAX) )
+   ELSE
+      MDT( "Exportacao para Excel cancelada." )
+   ENDIF
+
+RETURN .T.
+
+
+// +--------------------------------------------------------------------
+// +    Motor: Gravar Excel (Usando DuckDB excel extension)
+// +--------------------------------------------------------------------
+FUNCTION duckgravarexcel( cArquivo, cTabela )
+   LOCAL oServer, cSql
+   
+   IF Empty( cTabela ) .OR. Empty( cArquivo )
+      RETURN .F.
+   ENDIF
+
+   oServer := duckconnect()
+   IF oServer == NIL
+      RETURN .F.
+   ENDIF
+
+   // Garante que a extensao excel esteja instalada e carregada
+   oServer:Execute("INSTALL excel;")
+   oServer:Execute("LOAD excel;")
+
+   // Gravamos usando COPY nativo com FORMAT xlsx e HEADER true
+   cSql := "COPY " + cTabela + " TO '" + cArquivo + "' WITH (FORMAT xlsx, HEADER true);"
+   
+   IF oServer:Execute( cSql )
+      MDT( "Tabela " + cTabela + " exportada para Excel com sucesso!" )
+   ELSE
+      Alert( "Erro ao exportar arquivo Excel: " + oServer:Error() )
+   ENDIF
+
+   oServer:Close()
+RETURN .T.
+
 
 
 STATIC FUNCTION DataToSql( xField )
