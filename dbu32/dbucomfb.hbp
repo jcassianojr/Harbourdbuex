@@ -82,6 +82,8 @@ hbfbird.hbc
 \develop\harbour\dbu\dbufire.prg 
 \develop\harbour\dbu\dbumypdx.prg
 \develop\harbour\dbu\dbucrypto.prg
+\develop\harbour\csvrdd\FCSVRDD.prg
+\develop\harbour\jsonrdd\jsonrdd.prg
 
 #
 # sqlite
@@ -104,11 +106,11 @@ hbfbird.hbc
 #
 \develop\harbour\dbu\dbuleto.prg 
 #
-c:\develop\harbour\dbu\dumypg.prg
-c:\develop\harbour\dbu\dumytd.prg
-c:\develop\harbour\dbu\dumymy.prg
+#c:\develop\harbour\dbu\dumypg.prg
+#c:\develop\harbour\dbu\dumytd.prg
+#c:\develop\harbour\dbu\dumymy.prg
 c:\develop\harbour\dbu\dbusqlrdd.prg
-c:\develop\harbour\dbu\dumyOCI.prg
+#c:\develop\harbour\dbu\dumyOCI.prg
 
 
 \develop\harbour\diversos\objmgw\netdbf.prg

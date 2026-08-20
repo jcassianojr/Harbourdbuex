@@ -118,6 +118,8 @@ sqlrddpp.hbc
 \develop\harbour\dbu\dbumypdx.prg
 \develop\harbour\dbu\dbumddbml.prg
 \develop\harbour\dbu\dbucrypto.prg
+\develop\harbour\csvrdd\FCSVRDD.prg
+\develop\harbour\jsonrdd\jsonrdd.prg
 
 
 #
@@ -154,7 +156,7 @@ sqlrddpp.hbc
 c:\develop\harbour\dbu\dbutclass.prg
 
 
-c:\develop\harbour\dbu\dumyOCI.prg
+#c:\develop\harbour\dbu\dumyOCI.prg
 c:\develop\harbour\dbu\dbusqlrdd.prg
 
 \develop\harbour\diversos\objmgw\netdbf.prg

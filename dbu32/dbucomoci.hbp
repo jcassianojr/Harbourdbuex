@@ -81,9 +81,11 @@ Tdbclass.hbc
 \develop\harbour\dbu\dbumddbml.prg
 \develop\harbour\dbu\dbumypdx.prg
 \develop\harbour\dbu\dbucrypto.prg
+\develop\harbour\csvrdd\FCSVRDD.prg
+\develop\harbour\jsonrdd\jsonrdd.prg
 
 
-\develop\harbour\dbu\dumyocissd.prg
+#\develop\harbour\dbu\dumyocissd.prg
 
 #
 # sqlite

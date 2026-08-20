@@ -87,6 +87,9 @@ letodb.hbc
 \develop\harbour\dbu\dbuview.prg
 \develop\harbour\dbu\dbusincdbf.prg
 \develop\harbour\dbu\dbudialeto.prg
+\develop\harbour\csvrdd\FCSVRDD.prg
+\develop\harbour\jsonrdd\jsonrdd.prg
+
 
 #
 # exportacao formatos
@@ -142,11 +145,11 @@ letodb.hbc
 \develop\harbour\dbu\dbuleto.prg 
 
 #
-\develop\harbour\dbu\dumyfb.prg
-\develop\harbour\dbu\dumytd.prg
-\develop\harbour\dbu\dumymy.prg
+#\develop\harbour\dbu\dumyfb.prg
+#\develop\harbour\dbu\dumytd.prg
+#\develop\harbour\dbu\dumymy.prg
 \develop\harbour\dbu\dbusqlrdd.prg
-\develop\harbour\dbu\dumyOCI.prg
+#\develop\harbour\dbu\dumyOCI.prg
 
 #
 # funcoes de apoio

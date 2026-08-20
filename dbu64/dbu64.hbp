@@ -170,6 +170,9 @@ letodb.hbc
 #      --- LETO
 #
 \develop\harbour\dbu\dbuleto.prg 
+\develop\harbour\csvrdd\FCSVRDD.prg
+\develop\harbour\jsonrdd\jsonrdd.prg
+
 
 #
 #      --- auxiliares apoio
@@ -205,14 +208,14 @@ c:\develop\harbour\csvrdd\f_freadl.prg
 #\develop\harbour\dbu\dbupg.prg
 #\develop\harbour\dbu\dbupgexp 
 #\develop\harbour\dbu\pgrdd.prg
-\develop\harbour\dbu\dumypg.prg
-c:\develop\harbour\dbu\dumyOCI.prg
+#\develop\harbour\dbu\dumypg.prg
+#\develop\harbour\dbu\dumyOCI.prg
 
 #
 #      ---    firebird
 #
 #\develop\harbour\dbu\dbufire.prg
-\develop\harbour\dbu\dumyfb.prg
+#\develop\harbour\dbu\dumyfb.prg
 
 #
 #      ---    sqlrddpp
@@ -221,9 +224,9 @@ c:\develop\harbour\dbu\dumyOCI.prg
 #odbcfirebird1
 
 
-\develop\harbour\dbu\dumysd.prg
-\develop\harbour\dbu\dumytD.prg
-\develop\harbour\dbu\dumymy.prg
+#\develop\harbour\dbu\dumysd.prg
+#\develop\harbour\dbu\dumytD.prg
+#\develop\harbour\dbu\dumymy.prg
 
 #
 #       ---   tbclass   ---

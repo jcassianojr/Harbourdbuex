@@ -70,13 +70,16 @@ sqlrddpp.hbc
 \develop\harbour\dbu\dbuodbc.prg 
 \develop\harbour\dbu\dbuadox.prg 
 \develop\harbour\dbu\dbuleto.prg 
-c:\develop\harbour\dbu\dumypg.prg
-c:\develop\harbour\dbu\dumyfb.prg
-c:\develop\harbour\dbu\dumytd.prg
-c:\develop\harbour\dbu\dumymy.prg
-c:\develop\harbour\dbu\dumyOCI.prg
-c:\develop\harbour\dbu\dumySD.prg
+#c:\develop\harbour\dbu\dumypg.prg
+#c:\develop\harbour\dbu\dumyfb.prg
+#c:\develop\harbour\dbu\dumytd.prg
+#c:\develop\harbour\dbu\dumymy.prg
+#c:\develop\harbour\dbu\dumyOCI.prg
+#c:\develop\harbour\dbu\dumySD.prg
 c:\develop\harbour\dbu\dbuparadox.prg
+\develop\harbour\csvrdd\FCSVRDD.prg
+\develop\harbour\jsonrdd\jsonrdd.prg
+
 
 
 \develop\harbour\diversos\objmgw\netdbf.prg

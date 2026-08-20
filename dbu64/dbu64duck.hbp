@@ -82,6 +82,9 @@ letodb.hbc
 \develop\harbour\dbu\dbusincdbf.prg
 \develop\harbour\dbu\dbudialeto.prg
 \develop\harbour\dbu\dbuduck.prg
+\develop\harbour\csvrdd\FCSVRDD.prg
+\develop\harbour\jsonrdd\jsonrdd.prg
+\develop\harbour\dbu\dumysd.prg
 
 #
 #      --- exportacao
@@ -156,14 +159,14 @@ c:\develop\harbour\csvrdd\f_freadl.prg
 \develop\harbour\diversos\objmgw\modeseguranca.prg
 \develop\harbour\diversos\objmgw\escolherpasta.prg
 
-\develop\harbour\dbu\dumypg.prg
-\develop\harbour\dbu\dumyOCI.prg
+#\develop\harbour\dbu\dumypg.prg
+#\develop\harbour\dbu\dumyOCI.prg
 
 #
 #      ---    dummy
 #
-\develop\harbour\dbu\dumyfb.prg
-\develop\harbour\dbu\dumysd.prg
-\develop\harbour\dbu\dumytD.prg
-\develop\harbour\dbu\dumymy.prg
+#\develop\harbour\dbu\dumyfb.prg
+#\develop\harbour\dbu\dumysd.prg
+#\develop\harbour\dbu\dumytD.prg
+#\develop\harbour\dbu\dumymy.prg
 

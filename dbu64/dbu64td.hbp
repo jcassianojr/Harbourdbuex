@@ -87,6 +87,8 @@ Tdbclass.hbc
 \develop\harbour\dbu\dbumddbml.prg
 \develop\harbour\dbu\dbumypdx.prg
 \develop\harbour\dbu\dbucrypto.prg
+\develop\harbour\csvrdd\FCSVRDD.prg
+\develop\harbour\jsonrdd\jsonrdd.prg
 
 
 #
@@ -121,11 +123,11 @@ Tdbclass.hbc
 \develop\harbour\dbu\dbuleto.prg 
 #
 c:\develop\harbour\dbu\dbutclass.prg
-c:\develop\harbour\dbu\dumyfb.prg
-c:\develop\harbour\dbu\dumypg.prg
-c:\develop\harbour\dbu\dumymy.prg
-c:\develop\harbour\dbu\dumysd.prg
-c:\develop\harbour\dbu\dumyoci.prg
+#c:\develop\harbour\dbu\dumyfb.prg
+#c:\develop\harbour\dbu\dumypg.prg
+#c:\develop\harbour\dbu\dumymy.prg
+#c:\develop\harbour\dbu\dumysd.prg
+#c:\develop\harbour\dbu\dumyoci.prg
 
 
 \develop\harbour\diversos\objmgw\netdbf.prg

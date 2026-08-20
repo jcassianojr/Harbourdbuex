@@ -57,6 +57,13 @@ FUNCTION Duckdbmenu()
       OPCAO(10, 24, "Exportar &Formatos         ", 70 )   // F 7
       OPCAO(11, 24, "&Versao Info               ", 86 )   // V 8
       OPCAO(12, 24, "Executar arquivo &SQL      ", 83 )   // S 9
+      OPCAO(13, 24, "&Ler arquivo CSV           ", 76 )   // L 10
+      OPCAO(14, 24, "&Gravar arquivo CSV        ", 71 )   // G 11
+      OPCAO(15, 24, "&Ler arquivo JSON          ", 74 )   // J 12
+      OPCAO(16, 24, "&Gravar arquivo JSON       ", 79 )   // O 13  
+      OPCAO(17, 24, "L&er arquivo Parquet       ", 69 )   // 14
+      OPCAO(18, 24, "G&ravar arquivo Parquet    ", 71 )   // 15
+      
       
       KEY := menu(1,0) 
       DO CASE
@@ -82,6 +89,18 @@ FUNCTION Duckdbmenu()
          duckverinfo()
       CASE KEY = 9
          duckExecArqSql()
+      CASE KEY = 10
+         duckChamaLerCSV() // Função de interface intermediária (opcional)
+      CASE KEY = 11
+         duckChamaGravarCSV() // Função de interface intermediária (opcional)   
+      CASE KEY = 12
+         duckChamaLerJSON()
+      CASE KEY = 13
+         duckChamaGravarJSON()        
+     CASE KEY = 14
+         duckChamaLerParquet()
+      CASE KEY = 15
+         duckChamaGravarParquet()    
       OTHERWISE
          EXIT 
       ENDCASE
@@ -95,6 +114,275 @@ FUNCTION Duckdbmenu()
    LAYOUT() 
 
 RETURN .T. 
+
+
+// +--------------------------------------------------------------------
+// +    Interface: Parquet
+// +--------------------------------------------------------------------
+FUNCTION duckChamaLerParquet()
+   LOCAL cArqParquet := win_GetOpenFileName( , "Selecione o arquivo Parquet", HB_CWD(), "Parquet Files", ;
+      {{'Arquivos Parquet','*.parquet'},{'Todos os Arquivos','*.*'}}, 1)
+
+   IF !Empty( cArqParquet )
+      ducklerparquet( cArqParquet, NIL )
+   ENDIF
+RETURN .T.
+
+FUNCTION duckChamaGravarParquet()
+   LOCAL cArqDestino
+   duckTABELAS() 
+   IF Empty( cTABELAX )
+      Alert( "Selecione uma tabela primeiro!" )
+      RETURN .F.
+   ENDIF
+
+   cArqDestino := win_GetSaveFileName( , "Salvar Parquet como", HB_CWD(), "Parquet Files", ;
+      {{'Arquivos Parquet','*.parquet'},{'Todos os Arquivos','*.*'}}, 1)
+
+   IF !Empty( cArqDestino )
+      IF !( Lower(Right(cArqDestino, 8)) == ".parquet" )
+         cArqDestino += ".parquet"
+      ENDIF
+      duckgravarparquet( cArqDestino, AllTrim(cTABELAX) )
+   ENDIF
+RETURN .T.
+
+// +--------------------------------------------------------------------
+// +    Motor: Parquet (com CHECKPOINT)
+// +--------------------------------------------------------------------
+FUNCTION ducklerparquet( cArquivo, cTabela )
+   LOCAL oServer, cSql
+
+   IF Empty( cTabela )
+      hb_FNameSplit( cArquivo, nil, @cTabela, NIL )
+      cTabela := AllTrim( cTabela )
+   ENDIF
+
+   oServer := duckconnect()
+   IF oServer == NIL; RETURN .F.; ENDIF
+
+   IF oServer:TableExists( cTabela )
+      oServer:Execute( "DROP TABLE " + cTabela )
+   ENDIF
+
+   // Importação otimizada do Parquet
+   cSql := "CREATE TABLE " + cTabela + " AS SELECT * FROM read_parquet('" + cArquivo + "');"
+   oServer:Execute( cSql )
+
+   oServer:Commit()
+   
+   // SUGESTÃO 6: Força a gravação do WAL no disco principal para manter o banco compacto
+   oServer:Execute( "CHECKPOINT;" ) 
+   
+   oServer:Close()
+   MDT( "Arquivo Parquet importado com sucesso: " + cTabela )
+RETURN .T.
+
+FUNCTION duckgravarparquet( cArquivo, cTabela )
+   LOCAL oServer, cSql
+   oServer := duckconnect()
+   IF oServer == NIL; RETURN .F.; ENDIF
+
+   // Exportação colunar nativa
+   cSql := "COPY " + cTabela + " TO '" + cArquivo + "' (FORMAT PARQUET);"
+   oServer:Execute( cSql )
+
+   oServer:Close()
+   MDT( "Tabela exportada para Parquet com sucesso!" )
+RETURN .T.
+// +--------------------------------------------------------------------
+// +    Function duckChamaLerJSON()
+// +--------------------------------------------------------------------
+FUNCTION duckChamaLerJSON()
+   LOCAL cArqJSON
+
+   cArqJSON := win_GetOpenFileName( , "Selecione o arquivo JSON", HB_CWD(), "JSON Files", ;
+      {{'Arquivos JSON','*.json'},{'Todos os Arquivos','*.*'}}, 1)
+
+   IF !Empty( cArqJSON )
+      // Passamos o arquivo para a engine. Como não enviamos estrutura, fará auto-detect.
+      ducklerjson( cArqJSON, NIL, NIL )
+   ELSE
+      MDT( "Importacao de JSON cancelada." )
+   ENDIF
+
+RETURN .T.
+
+// +--------------------------------------------------------------------
+// +    Function duckChamaGravarJSON()
+// +--------------------------------------------------------------------
+FUNCTION duckChamaGravarJSON()
+   LOCAL cArqDestino
+
+   // Seleciona tabela atual
+   duckTABELAS() 
+   
+   IF Empty( cTABELAX )
+      Alert( "Selecione uma tabela primeiro!" )
+      RETURN .F.
+   ENDIF
+
+   cArqDestino := win_GetSaveFileName( , "Salvar arquivo JSON como", HB_CWD(), "JSON Files", ;
+      {{'Arquivos JSON','*.json'},{'Todos os Arquivos','*.*'}}, 1)
+
+   IF !Empty( cArqDestino )
+      IF !( Lower(Right(cArqDestino, 5)) == ".json" )
+         cArqDestino += ".json"
+      ENDIF
+
+      duckgravarjson( cArqDestino, AllTrim(cTABELAX) )
+   ELSE
+      MDT( "Exportacao de JSON cancelada." )
+   ENDIF
+
+RETURN .T.
+
+// +--------------------------------------------------------------------
+// +    Function duckChamaGravarCSV()
+// +--------------------------------------------------------------------
+FUNCTION duckChamaGravarCSV()
+   LOCAL cArqDestino
+
+   // Verifica se o usuário selecionou uma tabela previamente no menu (variavel global cTABELAX)
+   duckTABELAS() 
+   
+   IF Empty( cTABELAX )
+      Alert( "Selecione uma tabela primeiro!" )
+      RETURN .F.
+   ENDIF
+
+   // Pede ao usuário o local e nome para salvar o novo CSV
+   cArqDestino := win_GetSaveFileName( , "Salvar arquivo CSV como", HB_CWD(), "CSV Files", ;
+      {{'Arquivos CSV','*.csv'},{'Todos os Arquivos','*.*'}}, 1)
+
+   IF !Empty( cArqDestino )
+      // Garante que a extensão .csv esteja no nome
+      IF !( Lower(Right(cArqDestino, 4)) == ".csv" )
+         cArqDestino += ".csv"
+      ENDIF
+
+      // Chama a função de gravação passando o arquivo, a tabela atual e o delimitador padrão
+      duckgravarcsv( cArqDestino, AllTrim(cTABELAX), "|" )
+   ELSE
+      MDT( "Exportacao de CSV cancelada." )
+   ENDIF
+
+RETURN .T.
+
+
+// +--------------------------------------------------------------------
+// +    Function ducklerjson( cArquivo, cTabela, aStruct )
+// +--------------------------------------------------------------------
+FUNCTION ducklerjson( cArquivo, cTabela, aStruct )
+   LOCAL oServer, cSql, cCampos := "", i
+
+   IF Empty( cArquivo )
+      RETURN .F.
+   ENDIF
+
+   IF Empty( cTabela )
+      hb_FNameSplit( cArquivo, nil, @cTabela, NIL )
+      cTabela := AllTrim( cTabela )
+   ENDIF
+
+   oServer := duckconnect()
+   IF oServer == NIL
+      RETURN .F.
+   ENDIF
+
+   IF oServer:TableExists( cTabela )
+      oServer:Execute( "DROP TABLE " + cTabela )
+   ENDIF
+
+   IF Empty( aStruct ) 
+      // MODO AUTO: O DuckDB infere as chaves, níveis e tipos (funciona tanto para arrays quanto objetos aninhados)[cite: 6]
+      cSql := "CREATE TABLE " + cTabela + " AS SELECT * FROM read_json('" + cArquivo + "', auto_detect=true);"
+      oServer:Execute( cSql )
+   ELSE 
+      // MODO ESTRUTURA MANUAL
+      FOR i := 1 TO Len( aStruct )
+         cCampos += aStruct[i, 1] + " " + duck_map_type_json( aStruct[i, 2], aStruct[i, 3], aStruct[i, 4] )
+         IF i < Len( aStruct )
+            cCampos += ", "
+         ENDIF
+      NEXT
+
+      cSql := "CREATE TABLE " + cTabela + " (" + cCampos + ");"
+      oServer:Execute( cSql )
+
+      // A clausula FORMAT JSON sinaliza ao motor de COPY como importar[cite: 6]
+      cSql := "COPY " + cTabela + " FROM '" + cArquivo + "' (FORMAT JSON);"
+      oServer:Execute( cSql )
+   ENDIF
+
+   oServer:Commit()
+   oServer:Close()
+   
+   MDT( "Arquivo JSON importado com sucesso para a tabela: " + cTabela )
+RETURN .T.
+
+// +--------------------------------------------------------------------
+// +    Function duckgravarjson( cArquivo, cTabela )
+// +--------------------------------------------------------------------
+FUNCTION duckgravarjson( cArquivo, cTabela )
+   LOCAL oServer, cSql
+   
+   // Proteção extra caso a função seja chamada diretamente via código
+   IF Empty( cTabela ) .OR. Empty( cArquivo )
+      RETURN .F.
+   ENDIF
+
+   oServer := duckconnect()
+   IF oServer == NIL
+      RETURN .F.
+   ENDIF
+
+   // Gravamos usando COPY nativo do DuckDB. 
+   // FORMAT JSON e ARRAY true criam um Array de Objetos JSON limpo e formatado!
+   cSql := "COPY " + cTabela + " TO '" + cArquivo + "' (FORMAT JSON, ARRAY true);"
+   
+   IF oServer:Execute( cSql )
+      MDT( "Tabela " + cTabela + " exportada para " + cArquivo + " com sucesso!" )
+   ELSE
+      Alert( "Erro ao exportar arquivo JSON: " + oServer:Error() )
+   ENDIF
+
+   oServer:Close()
+RETURN .T.
+
+// +--------------------------------------------------------------------
+// Função auxiliar (pode ser omitida se você renomear a do CSV para geral)
+// +--------------------------------------------------------------------
+STATIC FUNCTION duck_map_type_json( cTipo, nTam, nDec )
+   SWITCH cTipo
+      CASE "C"; RETURN "VARCHAR"
+      CASE "N"
+         IF nDec > 0; RETURN "DOUBLE"; ELSE; RETURN "INTEGER"; ENDIF
+      CASE "D"; RETURN "DATE"
+      CASE "L"; RETURN "BOOLEAN"
+      CASE "M"; RETURN "VARCHAR"
+   ENDSWITCH
+RETURN "VARCHAR"
+
+// +--------------------------------------------------------------------
+// +    Function duckChamaLerCSV()
+// +--------------------------------------------------------------------
+FUNCTION duckChamaLerCSV()
+   LOCAL cArqCSV
+
+   // Abre a caixa de diálogo do Windows para o usuário procurar o CSV
+   cArqCSV := win_GetOpenFileName( , "Selecione o arquivo CSV", HB_CWD(), "CSV Files", ;
+      {{'Arquivos CSV','*.csv'},{'Todos os Arquivos','*.*'}}, 1)
+
+   // Se o usuário selecionou um arquivo e não cancelou
+   IF !Empty( cArqCSV )
+      // Passa apenas o arquivo. Tabela, delimitador e estrutura ficam NIL para o DuckDB resolver
+      ducklercsv( cArqCSV, NIL, NIL, NIL )
+   ELSE
+      MDT( "Importacao de CSV cancelada." )
+   ENDIF
+
+RETURN .T.
 
 // +--------------------------------------------------------------------
 // +    Function duckcreate()
@@ -119,6 +407,119 @@ FUNCTION duckcreate()
    ENDIF
 
 RETURN .T.
+
+
+// +--------------------------------------------------------------------
+// +    Function duckgravarcsv( cArquivo, cTabela, cDelim )
+// +--------------------------------------------------------------------
+FUNCTION duckgravarcsv( cArquivo, cTabela, cDelim )
+   LOCAL oServer, cSql
+   
+   IF Empty( cTabela ) .OR. Empty( cArquivo )
+      RETURN .F.
+   ENDIF
+
+   IF Empty( cDelim )
+      cDelim := "|" // Delimitador padrão
+   ENDIF
+
+   oServer := duckconnect()
+   IF oServer == NIL
+      RETURN .F.
+   ENDIF
+
+   // Usamos a instrução COPY do DuckDB para gravar o CSV nativamente[cite: 4]
+   cSql := "COPY " + cTabela + " TO '" + cArquivo + "' (HEADER, DELIMITER '" + cDelim + "');"
+   
+   IF oServer:Execute( cSql )
+      MDT( "Tabela " + cTabela + " exportada para " + cArquivo )
+   ELSE
+      Alert( "Erro ao exportar arquivo CSV." )
+   ENDIF
+
+   oServer:Close()
+RETURN .T.
+
+// +--------------------------------------------------------------------
+// +    Function ducklercsv( cArquivo, cTabela, cDelim, aStruct )
+// +--------------------------------------------------------------------
+FUNCTION ducklercsv( cArquivo, cTabela, cDelim, aStruct )
+   LOCAL oServer, cSql, cCampos := "", i
+
+   // 1. Validar Arquivo
+   IF Empty( cArquivo )
+      RETURN .F.
+   ENDIF
+
+   // 2. Definir Nome da Tabela se não passado
+   IF Empty( cTabela )
+      hb_FNameSplit( cArquivo, nil, @cTabela, NIL )
+      cTabela := AllTrim( cTabela )
+   ENDIF
+
+   oServer := duckconnect()
+   IF oServer == NIL
+      RETURN .F.
+   ENDIF
+
+   // Derruba a tabela se ela já existir para recriar
+   IF oServer:TableExists( cTabela )
+      oServer:Execute( "DROP TABLE " + cTabela )
+   ENDIF
+
+   // 3 & 4. Tratar Estrutura e Delimitador
+   IF Empty( aStruct ) 
+      // MODO AUTO: O DuckDB infere as colunas automaticamente
+      cSql := "CREATE TABLE " + cTabela + " AS SELECT * FROM read_csv('" + cArquivo + "', auto_detect=true"
+      
+      IF !Empty( cDelim )
+         // Se o delimitador for passado, força o uso[cite: 4]
+         cSql += ", delim='" + cDelim + "'"
+      ENDIF
+      
+      cSql += ");"
+      oServer:Execute( cSql )
+      
+   ELSE 
+      // MODO ESTRUTURA: Converte array do Clipper/Harbour para SQL
+      FOR i := 1 TO Len( aStruct )
+         cCampos += aStruct[i, 1] + " " + duck_map_type_csv( aStruct[i, 2], aStruct[i, 3], aStruct[i, 4] )
+         IF i < Len( aStruct )
+            cCampos += ", "
+         ENDIF
+      NEXT
+
+      // Cria a tabela
+      cSql := "CREATE TABLE " + cTabela + " (" + cCampos + ");"
+      oServer:Execute( cSql )
+
+      // Importa usando COPY[cite: 4]
+      cSql := "COPY " + cTabela + " FROM '" + cArquivo + "' (HEADER true"
+      IF !Empty( cDelim )
+         cSql += ", DELIMITER '" + cDelim + "'"
+      ENDIF
+      cSql += ");"
+      
+      oServer:Execute( cSql )
+   ENDIF
+
+   oServer:Commit()
+   oServer:Close()
+   
+   MDT( "Arquivo CSV importado com sucesso para a tabela: " + cTabela )
+RETURN .T.
+
+// Função auxiliar para mapear tipos do Harbour para SQL compatível com DuckDB
+STATIC FUNCTION duck_map_type_csv( cTipo, nTam, nDec )
+   SWITCH cTipo
+      CASE "C"; RETURN "VARCHAR"
+      CASE "N"
+         IF nDec > 0; RETURN "DOUBLE"; ELSE; RETURN "INTEGER"; ENDIF
+      CASE "D"; RETURN "DATE"
+      CASE "L"; RETURN "BOOLEAN"
+      CASE "M"; RETURN "VARCHAR"
+   ENDSWITCH
+RETURN "VARCHAR"
 
 // +--------------------------------------------------------------------
 // +    Function duckconnect()
@@ -160,6 +561,42 @@ FUNCTION duckverinfo()
       MDT( "Falha ao obter informacoes do servidor." )
    ENDIF
 
+RETURN .T.
+
+
+// +--------------------------------------------------------------------
+// +    Function duckTABELAS()
+// +--------------------------------------------------------------------
+FUNCTION duckTABELAS( lNATIVE )
+   LOCAL oServer, aTABELAS := {}
+   LOCAL cSchemaBusca
+
+   IF VALTYPE( lNATIVE ) <> "L"
+      lNATIVE := .T.
+   ENDIF
+
+   // TRAVA: Se estiver vazio ou só com espaços, assume 'main'. Senão, limpa os espaços.
+   cSchemaBusca := iif( Empty( cUSERX ), "main", Lower( AllTrim( cUSERX ) ) )
+
+   IF lNATIVE
+      oServer := duckconnect()
+      IF oServer != NIL
+         
+         // Passa o schema já validado e travado
+         aTABELAS := oServer:ListTables( cSchemaBusca )
+         
+         IF !Empty( aTABELAS )
+            mdbtabela( aTABELAS ) 
+         ELSE
+            MDT( "Nenhuma tabela encontrada no schema (" + cSchemaBusca + ")." )
+         ENDIF
+         
+         oServer:Close()
+      ENDIF
+   ELSE
+      mdbtabela( cDATABASEX )
+   ENDIF
+   
 RETURN .T.
 
 // +--------------------------------------------------------------------
@@ -514,14 +951,22 @@ FUNCTION duckexecuteSQL( eCOMANDO, lTRANS )
    oServer:Close()
 RETURN lRet
 
-// Função auxiliar local para tratamento de tipos em SQL
+
 STATIC FUNCTION DataToSql( xField )
    SWITCH ValType( xField )
-   CASE "C"; CASE "M"; RETURN "'" + StrTran( xField, "'", "''" ) + "'"
+   CASE "C"; CASE "M"
+      RETURN "'" + StrTran( xField, "'", "''" ) + "'"
    CASE "D"
       IF Empty( xField ); RETURN "NULL"; ENDIF
       RETURN "'" + StrZero( Year( xField ), 4 ) + "-" + StrZero( Month( xField ), 2 ) + "-" + StrZero( Day( xField ), 2 ) + "'"
-   CASE "N"; RETURN Str( xField )
-   CASE "L"; RETURN iif( xField, "TRUE", "FALSE" )
+   CASE "N"
+      RETURN Str( xField )
+   CASE "L"
+      RETURN iif( xField, "TRUE", "FALSE" )
+   CASE "A"; CASE "H"
+      // Serializa Array e Hash do Harbour para JSON. 
+      // O DuckDB faz o casting automático para LIST, STRUCT ou MAP internamente.
+      RETURN "'" + hb_jsonEncode( xField, .F. ) + "'"
    ENDSWITCH
 RETURN "NULL"
+

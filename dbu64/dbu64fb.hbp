@@ -68,6 +68,10 @@ letodb.hbc
 \develop\harbour\privado\dbu\XLSXClass.prg
 \develop\harbour\dbu\dbuxlsxml.prg
 \develop\harbour\dbu\dbumypdx.prg
+\develop\harbour\csvrdd\FCSVRDD.prg
+\develop\harbour\jsonrdd\jsonrdd.prg
+
+
 #
 # sqlite compilado com fontes C nativo
 #
@@ -115,11 +119,11 @@ c:\develop\harbour\csvrdd\f_freadl.prg
 \develop\harbour\diversos\objmgw\escolherpasta.prg
 
 
-\develop\harbour\dbu\dumyfbsdd.prg
-\develop\harbour\dbu\dumypg.prg
-\develop\harbour\dbu\dumytd.prg
-\develop\harbour\dbu\dumysd.prg
-\develop\harbour\dbu\dumymy.prg
-\develop\harbour\dbu\dumyOCI.prg
+#\develop\harbour\dbu\dumyfbsdd.prg
+#\develop\harbour\dbu\dumypg.prg
+#\develop\harbour\dbu\dumytd.prg
+#\develop\harbour\dbu\dumysd.prg
+#\develop\harbour\dbu\dumymy.prg
+#\develop\harbour\dbu\dumyOCI.prg
 
 
