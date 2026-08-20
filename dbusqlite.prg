@@ -74,6 +74,10 @@ FUNCTION sqlitemenu()
 	  OPCAO( 11, 24, "Mar&kdown documentacao     ", 75 )   //K
       OPCAO( 12, 24, "C&hecar integridade        ", 72 )   //h
       OPCAO( 13, 24, "Executar arquivo &SQL      ", 83 )   //S 83
+      OPCAO( 14, 24, "&Ler arquivo CSV           ", 76 )   // L 11
+      OPCAO( 15, 24, "&Gravar arquivo CSV        ", 71 )   // G 12
+      OPCAO( 16, 24, "Ler arquivo &JSON          ", 74 )   // J 13
+      OPCAO( 17, 24, "Gravar arquivo JS&ON       ", 79 )   // O 14
       KEY := menu( 1, 0 )
       DO CASE
       CASE KEY = 1
@@ -132,6 +136,22 @@ FUNCTION sqlitemenu()
          ENDIF      
         CASE KEY = 10
            SqliteArqSql()  
+       CASE KEY = 11
+         IF selectdb()
+            sqliteChamaLerCSV()
+         ENDIF
+      CASE KEY = 12
+         IF selectdb()
+            sqliteChamaGravarCSV()
+         ENDIF
+      CASE KEY = 13
+         IF selectdb()
+            sqliteChamaLerJSON()
+         ENDIF
+      CASE KEY = 14
+         IF selectdb()
+            sqliteChamaGravarJSON()
+         ENDIF
             	  
       OTHERWISE
          RETURN
@@ -1067,9 +1087,243 @@ FUNCTION MDPCHAVEI( cICHAVE )   // Cria string campo1,campo2,... para create ind
    RETURN cCHAVE
 
 
+// +--------------------------------------------------------------------
+// + Funcoes de Chamada Visual 
+// +--------------------------------------------------------------------
+
+FUNCTION sqliteChamaLerCSV()
+   LOCAL cArq := win_GetOpenFileName(, "CSV Files", hb_cwd(), "CSV", {{'CSV','*.csv'},{'All','*.*'}}, 1 )
+   IF !Empty(cArq); sqliteLerCSV( cArq, "" ); ENDIF
+RETURN .T.
+
+FUNCTION sqliteChamaGravarCSV()
+   LOCAL cArq, cTab := SqliteTables( odb )
+   IF Empty(cTab); RETURN .F.; ENDIF
+   
+   cArq := win_GetSaveFileName(, "CSV Files", hb_cwd(), "CSV", {{'CSV','*.csv'}}, 1 )
+   IF !Empty(cArq)
+      IF !(Lower(Right(cArq,4))==".csv"); cArq += ".csv"; ENDIF
+      sqliteGravarCSV( cArq, cTab, ";" )
+   ENDIF
+RETURN .T.
+
+FUNCTION sqliteChamaLerJSON()
+   LOCAL cArq := win_GetOpenFileName(, "JSON Files", hb_cwd(), "JSON", {{'JSON','*.json'},{'All','*.*'}}, 1 )
+   IF !Empty(cArq); sqliteLerJSON( cArq, "" ); ENDIF
+RETURN .T.
+
+FUNCTION sqliteChamaGravarJSON()
+   LOCAL cArq, cTab := SqliteTables( odb )
+   IF Empty(cTab); RETURN .F.; ENDIF
+   
+   cArq := win_GetSaveFileName(, "JSON Files", hb_cwd(), "JSON", {{'JSON','*.json'}}, 1 )
+   IF !Empty(cArq)
+      IF !(Lower(Right(cArq,5))==".json"); cArq += ".json"; ENDIF
+      sqliteGravarJSON( cArq, cTab )
+   ENDIF
+RETURN .T.
+
+// +--------------------------------------------------------------------
+// + Motor CSV - Ler (Usando Virtual Table nativa)
+// +--------------------------------------------------------------------
+FUNCTION sqliteLerCSV( cArquivo, cTabela )
+   LOCAL cSql, nResult
+   
+   IF Empty( cTabela )
+      hb_FNameSplit( cArquivo, nil, @cTabela, NIL )
+      cTabela := AllTrim( cTabela )
+   ENDIF
+
+   IF oDB == nil; RETURN .F.; ENDIF
+   
+   // Habilita extensoes usando a funcao especifica que existe no seu hbsqlit3.hbx
+   sqlite3_enable_load_extension( oDB, 1 )
+   
+   // Carrega a DLL do CSV (csv.dll no Windows ou csv.so no Linux)
+   nResult := sqlite3_load_extension( oDB, "csv", "sqlite3_csv_init" )
+   
+   IF nResult == 0
+      miscsql( oDB, "DROP TABLE IF EXISTS " + cTabela )
+      
+      cSql := "CREATE VIRTUAL TABLE temp.vcsv_" + cTabela + " USING csv(filename='" + cArquivo + "', header=yes);"
+      miscsql( oDB, cSql )
+      
+      miscsql( oDB, "CREATE TABLE " + cTabela + " AS SELECT * FROM temp.vcsv_" + cTabela + ";" )
+      miscsql( oDB, "DROP TABLE temp.vcsv_" + cTabela )
+      
+      MDT( "Arquivo CSV importado com sucesso para a tabela: " + cTabela )
+   ELSE
+      Alert( "Erro: DLL da extensao CSV (csv.dll) nao encontrada no diretorio. Codigo: " + hb_ValToStr(nResult) )
+   ENDIF
+RETURN .T.
+
+// +--------------------------------------------------------------------
+// + Motor CSV - Gravar (Exporta os dados em array)
+// +--------------------------------------------------------------------
+FUNCTION sqliteGravarCSV( cArquivo, cTabela, cDelim )
+   LOCAL aTable, aRow, nHandle, cLinha, nI, nFld, nJ
+   
+   IF Empty( cDelim ); cDelim := ";"; ENDIF
+   IF oDB == nil; RETURN .F.; ENDIF
+   
+   // Usamos sua funcao existente sqltablestru para buscar os dados direto na memoria
+   aTable := sqltablestru( oDB, "SELECT * FROM " + cTabela )
+   
+   IF Len(aTable) == 0
+      Alert( "Erro ao ler a tabela ou a tabela esta vazia." )
+      RETURN .F.
+   ENDIF
+
+   nHandle := FCreate( cArquivo )
+   IF nHandle == -1
+      Alert( "Erro ao criar arquivo CSV." )
+      RETURN .F.
+   ENDIF
+
+   nFld := Len( aTable[1] )
+   
+   // Busca o cabecalho separadamente 
+   aRow := sqltablestru( oDB, "PRAGMA table_info(" + c2sql(cTabela) + ")" )
+   cLinha := ""
+   FOR nI := 1 TO Len(aRow)
+      cLinha += AllTrim( aRow[nI, 2] )
+      IF nI < Len(aRow); cLinha += cDelim; ENDIF
+   NEXT
+   FWrite( nHandle, cLinha + hb_osNewLine() )
+
+   // Grava Dados varrendo o array
+   FOR nJ := 1 TO Len( aTable )
+      cLinha := ""
+      aRow := aTable[nJ]
+      FOR nI := 1 TO nFld
+         IF ValType( aRow[nI] ) == "C"
+            cLinha += '"' + StrTran( hb_ValToStr( aRow[nI] ), '"', '""' ) + '"'
+         ELSE
+            cLinha += hb_ValToStr( aRow[nI] )
+         ENDIF
+         IF nI < nFld; cLinha += cDelim; ENDIF
+      NEXT
+      FWrite( nHandle, cLinha + hb_osNewLine() )
+   NEXT
+
+   FClose( nHandle )
+   MDT( "Tabela exportada para CSV com sucesso!" )
+RETURN .T.
 
 
+// +--------------------------------------------------------------------
+// + Motor JSON - Ler (Usando JSONRDD nativo)
+// +--------------------------------------------------------------------
+FUNCTION sqliteLerJSON( cArquivo, cTabela )
+   LOCAL cSql, nI, nFld
+   LOCAL cAliasTemp := "JSN_" + AllTrim( Str( HB_RandomInt( 1000, 9999 ) ) )
+   LOCAL cCampos := "", cValores := "", aRow
+   LOCAL nLASTREC
+   
+   IF Empty( cTabela )
+      hb_FNameSplit( cArquivo, nil, @cTabela, NIL )
+      cTabela := AllTrim( cTabela )
+   ENDIF
 
+   IF oDB == nil; RETURN .F.; ENDIF
 
-// + EOF: sql2dbf.prg
-// +
+   FJSON_RETORNATIPADO( .T. )
+   IF !DbUseArea( .T., "JSONRDD", cArquivo, cAliasTemp, .T., .F. )
+      Alert( "Erro ao abrir o JSON via JSONRDD." )
+      RETURN .F.
+   ENDIF
+
+   nFld := ( cAliasTemp )->( FCount() )
+   FOR nI := 1 TO nFld
+      cCampos += ( cAliasTemp )->( FieldName( nI ) ) + " TEXT"
+      IF nI < nFld; cCampos += ", "; ENDIF
+   NEXT
+
+   miscsql( oDB, "DROP TABLE IF EXISTS " + cTabela )
+   miscsql( oDB, "CREATE TABLE " + cTabela + " (" + cCampos + ");" )
+   
+   nLASTREC := ( cAliasTemp )->( LastRec() )
+   zei_fort( nLASTREC,,, 0 )
+   
+   miscsql( oDB, "BEGIN TRANSACTION;" )
+
+   ( cAliasTemp )->( DBGoTop() )
+   WHILE ( cAliasTemp )->( !EOF() )
+      zei_fort( nLASTREC,,, 1 )
+      
+      aRow := FJSON_GETROW() 
+      cCampos := ""
+      cValores := ""
+      
+      FOR nI := 1 TO nFld
+         cCampos += ( cAliasTemp )->( FieldName( nI ) )
+         
+         IF ValType( aRow[nI] ) == "C" .OR. ValType( aRow[nI] ) == "D"
+            cValores += "'" + StrTran( hb_ValToStr( aRow[nI] ), "'", "''" ) + "'"
+         ELSEIF ValType( aRow[nI] ) == "L"
+            cValores += iif( aRow[nI], "1", "0" )
+         ELSE
+            cValores += hb_ValToStr( aRow[nI] )
+         ENDIF
+         
+         IF nI < nFld
+            cCampos += ", "
+            cValores += ", "
+         ENDIF
+      NEXT
+      
+      cSql := "INSERT INTO " + cTabela + " (" + cCampos + ") VALUES (" + cValores + ");"
+      miscsql( oDB, cSql )
+      
+      ( cAliasTemp )->( DBSkip() )
+   ENDDO
+
+   miscsql( oDB, "COMMIT;" )
+   ( cAliasTemp )->( DBCloseArea() )
+   MDT( "Arquivo JSON importado com sucesso usando JSONRDD!" )
+RETURN .T.
+
+// +--------------------------------------------------------------------
+// + Motor JSON - Gravar (Com funções nativas SQLite >= 3.38.0)
+// +--------------------------------------------------------------------
+FUNCTION sqliteGravarJSON( cArquivo, cTabela )
+   LOCAL cSql, cJsonStr, cCamposJSON, aTable
+   
+   IF oDB == nil; RETURN .F.; ENDIF
+   
+   cCamposJSON := sqliteGetJsonColumns( cTabela ) 
+   
+   IF Empty( cCamposJSON )
+      Alert( "Erro ao processar as colunas." )
+      RETURN .F.
+   ENDIF
+
+   // Funcao nativa ultra-rapida do SQLite embutida a partir da v3.38
+   cSql := "SELECT json_group_array( json_object(" + cCamposJSON + ") ) FROM " + cTabela
+   
+   // Pega apenas a primeira linha / primeira coluna que e o JSON gigante
+   aTable := sqltablestru( oDB, cSql )
+   
+   IF Len(aTable) > 0
+      cJsonStr := aTable[ 1, 1 ]
+      hb_MemoWrit( cArquivo, cJsonStr )
+      MDT( "Tabela exportada para JSON com sucesso!" )
+   ELSE
+      Alert( "Falha na exportacao JSON. O SQLite atual e antigo (< 3.38)." )
+   ENDIF
+RETURN .T.
+
+// Auxiliar JSON
+STATIC FUNCTION sqliteGetJsonColumns( cTabela )
+   LOCAL cResult := "", nJ, aTable
+   
+   aTable := sqltablestru( oDB, "PRAGMA table_info(" + c2sql(cTabela) + ")" )
+   IF Len( aTable ) > 0
+      FOR nJ := 1 TO Len( aTable )
+         cResult += "'" + AllTrim(aTable[nJ, 2]) + "', " + AllTrim(aTable[nJ, 2]) + ", "
+      NEXT
+      IF Len( cResult ) > 0
+         cResult := Left( cResult, Len( cResult ) - 2 )
+      ENDIF
+   ENDIF
+RETURN cResult
