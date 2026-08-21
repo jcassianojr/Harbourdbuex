@@ -1136,11 +1136,15 @@ FUNCTION sqliteLerCSV( cArquivo, cTabela )
 
    IF oDB == nil; RETURN .F.; ENDIF
    
-   // Habilita extensoes usando a funcao especifica que existe no seu hbsqlit3.hbx
+   // 1. Define o caminho onde a DLL está guardada (ex: subpasta 'ext')
+   // hb_dirBase() pega o diretório de onde o seu .exe está rodando
+   cPathDll := hb_dirBase() + "ext" + hb_ps() + "csv" 
+   
+   // 2. Habilita o carregamento
    sqlite3_enable_load_extension( oDB, 1 )
    
-   // Carrega a DLL do CSV (csv.dll no Windows ou csv.so no Linux)
-   nResult := sqlite3_load_extension( oDB, "csv", "sqlite3_csv_init" )
+   // 3. Carrega passando o caminho mapeado
+   nResult := sqlite3_load_extension( oDB, cPathDll, "sqlite3_csv_init" )
    
    IF nResult == 0
       miscsql( oDB, "DROP TABLE IF EXISTS " + cTabela )
