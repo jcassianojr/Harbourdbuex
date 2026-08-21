@@ -33,7 +33,7 @@
 
 #require "hbsqlit3"
 #require "hbmemio"
-
+#require "hbmzip"
 
 // +--------------------------------------------------------------------
 // +
@@ -63,21 +63,22 @@ FUNCTION sqlitemenu()
    aAMBIENTE := SALVAA()
 
    WHILE .T.
-      hb_DispBox( 3, 18, 18, 55, B_DOUBLE + " " )
-      OPCAO(  4, 24, "&Criar base sqllite        ", 67 )   // c
+      hb_DispBox( 3, 18, 19, 55, B_DOUBLE + " " )
+      OPCAO(  4, 24, "&Criar base sqllite        ", 67 )   // C
       OPCAO(  5, 24, "&VACUUM (PACK)             ", 86 )   // V
       OPCAO(  6, 24, "&Importar  DBF             ", 73 )   // I
       OPCAO(  7, 24, "&Exportar  DBF             ", 69 )   // E
       OPCAO(  8, 24, "&Tabelas                   ", 84 )   // T
       OPCAO(  9, 24, "&Apagar Tabela             ", 65 )   // A
-      OPCAO( 10, 24, "Exportar &Formatos         ", 70 )  // f
-	  OPCAO( 11, 24, "Mar&kdown documentacao     ", 75 )   //K
-      OPCAO( 12, 24, "C&hecar integridade        ", 72 )   //h
-      OPCAO( 13, 24, "Executar arquivo &SQL      ", 83 )   //S 83
-      OPCAO( 14, 24, "&Ler arquivo CSV           ", 76 )   // L 11
-      OPCAO( 15, 24, "&Gravar arquivo CSV        ", 71 )   // G 12
-      OPCAO( 16, 24, "Ler arquivo &JSON          ", 74 )   // J 13
-      OPCAO( 17, 24, "Gravar arquivo JS&ON       ", 79 )   // O 14
+      OPCAO( 10, 24, "Exportar &Formatos         ", 70 )   // F
+      OPCAO( 11, 24, "Mar&kdown documentacao     ", 75 )   // K
+      OPCAO( 12, 24, "C&hecar integridade        ", 72 )   // H
+      OPCAO( 13, 24, "Executar arquivo &SQL      ", 83 )   // S
+      OPCAO( 14, 24, "&Ler arquivo CSV           ", 76 )   // L
+      OPCAO( 15, 24, "&Gravar arquivo CSV        ", 71 )   // G
+      OPCAO( 16, 24, "Ler arquivo &JSON          ", 74 )   // J
+      OPCAO( 17, 24, "Gravar arquivo JS&ON       ", 79 )   // O
+      OPCAO( 18, 24, "Gravar arquivo XL&SX       ", 88 )   // X (Nova opcao para XLSX)
       KEY := menu( 1, 0 )
       DO CASE
       CASE KEY = 1
@@ -152,7 +153,10 @@ FUNCTION sqlitemenu()
          IF selectdb()
             sqliteChamaGravarJSON()
          ENDIF
-            	  
+     CASE KEY = 15 // Chama a exportacao XLSX
+         IF selectdb()
+            sqliteChamaGravarXLSX()
+         ENDIF    
       OTHERWISE
          RETURN
       ENDCASE
@@ -163,6 +167,22 @@ FUNCTION sqlitemenu()
 
    RETURN NIL
 
+
+// +--------------------------------------------------------------------
+// + Funcao de Chamada Visual - XLSX
+// +--------------------------------------------------------------------
+FUNCTION sqliteChamaGravarXLSX()
+   LOCAL cArq, cTab := SqliteTables( odb )
+   
+   IF Empty(cTab); RETURN .F.; ENDIF
+   
+   cArq := win_GetSaveFileName(, "XLSX Files", hb_cwd(), "XLSX", {{'XLSX','*.xlsx'}}, 1 )
+   
+   IF !Empty(cArq)
+      IF !(Lower(Right(cArq,5))==".xlsx"); cArq += ".xlsx"; ENDIF
+      sqliteGravarXLSX( cArq, cTab )
+   ENDIF
+RETURN .T.
 
 // +--------------------------------------------------------------------
 // +
@@ -1331,3 +1351,90 @@ STATIC FUNCTION sqliteGetJsonColumns( cTabela )
       ENDIF
    ENDIF
 RETURN cResult
+
+// +--------------------------------------------------------------------
+// + Motor XLSX - Gravar (Usando xlsxclass pura em Harbour)
+// + Baseado no repositorio digikv/xlsx
+// +--------------------------------------------------------------------
+#require "hbmzip"
+
+FUNCTION sqliteGravarXLSX( cArquivo, cTabela )
+   LOCAL oExcel, oSheet1, nFont, nStyleCabecalho, nStyleDados, nNumFmt1
+   LOCAL aTable, aRow, nI, nJ, nMaxCol, cColStr, eValor
+   
+   IF oDB == nil; RETURN .F.; ENDIF
+   
+   // 1. Busca os dados via sua funcao (retorna array matriz)
+   aTable := sqltablestru( oDB, "SELECT * FROM " + cTabela )
+   IF Len( aTable ) == 0
+      Alert( "Erro ao ler a tabela ou a tabela esta vazia." )
+      RETURN .F.
+   ENDIF
+
+   hb_cdpSelect( 'UTF8EX' ) // Conforme seu padrao
+
+   // 2. Inicializa o Excel
+   oExcel := WorkBook():New( cArquivo ) 
+   oSheet1 := oExcel:WorkSheet( cTabela )
+   
+   // Formatacoes (Opcional, mas deixa bonito igual ao seu)
+   nNumFmt1 := oExcel:NewFormat( "#,##0.00" )
+   nFont := oExcel:NewFont( "Tahoma", 12, .T., .F., .F., .F., "FF000000" ) // Negrito p/ Cabecalho
+   nStyleCabecalho := oExcel:NewStyle( nFont, , , 2, 2 )
+   nStyleDados := oExcel:NewStyle( , , , , , nNumFmt1 )
+
+   // 3. Busca o Cabecalho dinamicamente
+   aRow := sqltablestru( oDB, "PRAGMA table_info(" + c2sql(cTabela) + ")" )
+   nMaxCol := Len( aRow )
+   
+   // Grava a Linha 1 (Cabecalho)
+   FOR nI := 1 TO nMaxCol
+      cColStr := GetExcelColumnName( nI ) + "1"
+      eValor := AllTrim( aRow[nI, 2] )
+      oSheet1:Cell( cColStr, eValor, nStyleCabecalho )
+   NEXT
+
+   // 4. Grava os Dados varrendo o Array do SQLite
+   FOR nJ := 1 TO Len( aTable )
+      aRow := aTable[nJ]
+      FOR nI := 1 TO nMaxCol
+         cColStr := GetExcelColumnName( nI ) + hb_ValToStr( nJ + 1 )
+         eValor := aRow[nI]
+         
+         // Limpeza de string padrao do seu sistema[cite: 27]
+         IF ValType( eValor ) == "C"
+            eValor := FixSRTExtendido( eValor, .T., .T., .T., .T., .T. )
+         ENDIF
+         
+         IF !Empty( eValor )
+            // Se for numero, aplica o estilo numerico
+            IF ValType( eValor ) == "N"
+               oSheet1:Cell( cColStr, eValor, nStyleDados )
+            ELSE
+               oSheet1:Cell( cColStr, eValor )
+            ENDIF
+         ENDIF
+      NEXT
+   NEXT
+
+   // Salva e zipa o arquivo final XLSX
+   oExcel:Save()
+   hb_cdpSelect( 'PTISO' )
+   
+   MDT( "Tabela exportada para XLSX com sucesso!" )
+RETURN .T.
+
+// +--------------------------------------------------------------------
+// + Funcao auxiliar para converter Numero em Letra de Coluna Excel (A, B... Z, AA, AB...)
+// + Evita o bug de limite no CHR(64+I) do seu codigo original
+// +--------------------------------------------------------------------
+STATIC FUNCTION GetExcelColumnName( nColIndex )
+   LOCAL cColName := ""
+   LOCAL nMod
+   
+   WHILE nColIndex > 0
+      nMod := ( nColIndex - 1 ) % 26
+      cColName := Chr( 65 + nMod ) + cColName
+      nColIndex := Int( ( nColIndex - nMod ) / 26 )
+   ENDDO
+RETURN cColName

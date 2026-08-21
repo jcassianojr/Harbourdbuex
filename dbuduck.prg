@@ -10,7 +10,7 @@
 #include "TRY.CH"
 #include "dbstruct.ch"
 #include "directry.ch"
-
+#require "hbmzip"
 
 // +--------------------------------------------------------------------
 // +    Function duckdbmenu()

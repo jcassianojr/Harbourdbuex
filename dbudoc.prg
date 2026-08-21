@@ -14,6 +14,7 @@
 #include "BOX.CH"
 #include "dbinfo.ch"
 #include "dbstruct.ch"
+#require "hbmzip"
 
 // +||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 // +
