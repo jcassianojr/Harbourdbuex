@@ -510,9 +510,10 @@ OPCAO(15,14,"&UNL PSV       (|) Pipe             ",85)  //U 11
 OPCAO(16,14,"TSV            TA&B                 ",66)  //B 12
 OPCAO(17,14,"S&QL   insert into                  ",81)  //Q 13
 OPCAO(18,14,"Mar&kdown                           ",75)  //K 14
+OPCAO(19,14,"ODS (Open Document Sheet)           ",75)  //K 15
 
 IF lincdbf
-   OPCAO(21,14,"DB&F                                ",70)   //F 15-->90
+   OPCAO(20,14,"DB&F                                ",70)   //F 15-->90
 ENDIF
 tdoc := menu(2,0)
 
@@ -546,6 +547,8 @@ CASE tDOC = 13
 CASE tDOC = 14
     zEXPOREXT :="MD"  //-->14 Mar&kdown MD   
 CASE tDOC = 15
+    zEXPOREXT :="ODS"  //-->15 ODS     
+CASE tDOC = 16
    zEXPOREXT := "DBF"  //como vao incluindos novos tipos o dbf fica travando no 90 evitando a cada novo tipo verre fontes para correcao da posicao
    tdoc=90 
 ENDCASE
