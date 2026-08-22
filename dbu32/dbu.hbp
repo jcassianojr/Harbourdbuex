@@ -86,7 +86,7 @@ sqlrddpp.hbc
 \develop\harbour\dbu\dbucrypto.prg
 \develop\harbour\csvrdd\FCSVRDD.prg
 \develop\harbour\jsonrdd\jsonrdd.prg
-
+\develop\harbour\dbu\dbuodsclass.prg
 
 #
 # sqlite
