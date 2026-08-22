@@ -80,13 +80,13 @@ sqlrddpp.hbc
 \develop\harbour\dbu\dbusincdbf.prg
 \develop\harbour\dbu\dbudialeto.prg 
 \develop\harbour\dbu\dbuxlsxml.prg
-#\develop\harbour\dbu\dbu2md.prg
 \develop\harbour\dbu\dbumddbml.prg
 \develop\harbour\dbu\dbumypdx.prg
 \develop\harbour\dbu\dbucrypto.prg
 \develop\harbour\csvrdd\FCSVRDD.prg
 \develop\harbour\jsonrdd\jsonrdd.prg
 \develop\harbour\dbu\dbuodsclass.prg
+\develop\harbour\OdsOdt\odsclass.prg
 
 #
 # sqlite
