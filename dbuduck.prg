@@ -65,6 +65,7 @@ FUNCTION Duckdbmenu()
       OPCAO(17, 24, "L&er arquivo Parquet       ", 69 )   // 14
       OPCAO(18, 24, "G&ravar arquivo Parquet    ", 71 )   // 15
       OPCAO(19, 24, "G&ravar arquivo excel      ", 71 )   // 15
+      OPCAO(20, 24, "&Otimizar Lakehouse (CHECKPOINT)", 79 ) // 17 <- NOVA OPÇÃO
       
       KEY := menu(1,0) 
       DO CASE
@@ -115,6 +116,8 @@ FUNCTION Duckdbmenu()
          duckChamaGravarParquet()    
       CASE KEY = 16
          duckChamaGravarExcel()   
+     CASE KEY = 17          // <- NOVO CASE DE CHAMADA
+         duckChamaOptimize()    
       OTHERWISE
          EXIT 
       ENDCASE
@@ -128,6 +131,26 @@ FUNCTION Duckdbmenu()
    LAYOUT() 
 
 RETURN .T. 
+
+// +--------------------------------------------------------------------
+// +    Function duckChamaOptimize()
+// +--------------------------------------------------------------------
+FUNCTION duckChamaOptimize()
+   LOCAL oServer
+   
+   // Tenta conectar. A própria função duckconnect() identifica o dialeto
+   oServer := duckconnect()
+   IF oServer != NIL
+      // Assume DIALETO_DUCKLAKE (2) se o arquivo tiver a extensão, ou passa a propriedade da sua classe se houver
+      IF ".ducklake" $ Lower( AllTrim(cDATABASEX) )
+         DuckOptimize( oServer, 2 )
+      ELSE
+         DuckOptimize( oServer, 1 )
+      ENDIF
+      
+      oServer:Close()
+   ENDIF
+RETURN .T.
 
 
 // +--------------------------------------------------------------------
@@ -539,23 +562,63 @@ STATIC FUNCTION duck_map_type_csv( cTipo, nTam, nDec )
    ENDSWITCH
 RETURN "VARCHAR"
 
+
 // +--------------------------------------------------------------------
 // +    Function duckconnect()
 // +--------------------------------------------------------------------
 STATIC FUNCTION duckconnect( nDialect, cAlias )
-   LOCAL oServer
+   LOCAL oServer := NIL
+   LOCAL oErr
+   LOCAL cDirBase, cDataPath
+   LOCAL lDeuErro := .F.
 
-   // Instancia a classe repassando o dialeto e o alias (que podem ser NIL se omitidos).
-   // A DuckDBClass fará a autodetecção se nDialect estiver vazio.
-   oServer := DuckDBClass():New( AllTrim(cDATABASEX), "", "", nDialect, "UTF8", cAlias )
-
-   IF oServer:NetErr()
-      Alert( "Falha na conexao: " + oServer:Error() )
-      RETURN NIL
+   // Garante a identificação do dialeto DuckLake pela extensão caso não tenha sido passado
+   IF Empty( nDialect ) .AND. ".ducklake" $ Lower( AllTrim(cDATABASEX) )
+      nDialect := 2 // DIALETO_DUCKLAKE
    ENDIF
 
-   // Inicia transação padrão para segurança das operações
-   oServer:StartTransaction()
+   // ITEM 4: Extração do diretório e criação da subpasta 'metadados'
+   IF nDialect == 2
+      cDirBase := hb_FNameDir( AllTrim(cDATABASEX) )
+      
+      IF Empty( cDirBase )
+         cDirBase := hb_cwd()
+      ENDIF
+      
+      cDataPath := cDirBase + "metadados"
+      
+      IF !hb_DirExists( cDataPath )
+         IF hb_DirBuild( cDataPath ) != 0 
+            Alert( "Nao foi possivel criar a pasta de dados em:;" + cDataPath )
+            RETURN NIL
+         ENDIF
+      ENDIF
+   ENDIF
+
+   // ITEM 1: Tratamento de Erro Seguro (Try/Catch)
+   TRY
+      oServer := DuckDBClass():New( AllTrim(cDATABASEX), "", "", nDialect, "UTF8", cAlias )
+
+      IF oServer:NetErr()
+         lDeuErro := .T.
+      ELSE
+         // Inicia transação padrão para segurança das operações
+         oServer:StartTransaction()
+      ENDIF
+
+   CATCH oErr
+      lDeuErro := .T.
+   END
+
+   // Tratamento fora do bloco SEQUENCE para satisfazer o compilador do Harbour
+   IF lDeuErro
+      IF oServer != NIL .AND. oServer:NetErr()
+         Alert( "Falha na conexao: " + oServer:Error() )
+      ELSE
+         Alert( "Erro fatal ao conectar ou criar o banco de dados! Verifique o diretorio e permissoes." )
+      ENDIF
+      RETURN NIL
+   ENDIF
 
 RETURN oServer
 
@@ -1026,3 +1089,25 @@ STATIC FUNCTION DataToSql( xField )
    ENDSWITCH
 RETURN "NULL"
 
+
+FUNCTION DuckOptimize( oDb, nDialect )
+    LOCAL cSql := "CHECKPOINT;"
+    
+    // Supondo que a constante para DuckLake seja 2 (ajuste conforme seu duckdb.ch)
+    IF nDialect == 2
+        IF Alert( "Deseja realizar a manutencao profunda do DuckLake?;Isso ira compactar dados e limpar arquivos orfaos.", { "Sim", "Nao" } ) == 1
+            
+            TRY
+                oDb:Execute( cSql )
+                Alert( "Manutencao (CHECKPOINT) concluida com sucesso!" )
+            CATCH
+                Alert( "Ocorreu um erro durante a otimizacao." )
+            END
+            
+        ENDIF
+    ELSE
+        // Para SQLite ou DuckDB nativo, os comandos de otimização são diferentes (ex: VACUUM)
+        // Você pode expandir aqui no futuro.
+        Alert( "Otimizacao automatica configurada apenas para o dialeto DuckLake no momento." )
+    ENDIF
+RETURN .T.
