@@ -10,6 +10,7 @@
 #include "TRY.CH"
 #include "dbstruct.ch"
 #include "directry.ch"
+#include "duckdb.ch"
 #require "hbmzip"
 
 // +--------------------------------------------------------------------
@@ -70,10 +71,21 @@ FUNCTION Duckdbmenu()
       CASE KEY = 1
          duckcreate()
       CASE KEY = 2
-         // Seleção de arquivo físico .duckdb
-         cDATABASEX := win_GetOpenFileName(, "DuckDB Files", HB_CWD(), "DuckDB", {{'DuckDB Database','*.duckdb'},{'All Files','*.*'}}, 1)
+         // Seleção multi-formato (DuckDB, DuckLake, SQLite, CSV, JSON, Parquet)
+         cDATABASEX := win_GetOpenFileName(, "Selecionar Origem de Dados", HB_CWD(), "DuckDB", ;
+            { {'DuckDB Database', '*.duckdb'},;
+              {'DuckLake Database', '*.ducklake'},;
+              {'SQLite Database', '*.sqlite;*.db'},;
+              {'CSV File', '*.csv'},;
+              {'JSON File', '*.json'},;
+              {'Parquet File', '*.parquet'},;
+              {'Todos os Arquivos', '*.*'} }, 1)
+              
          IF Empty(cDATABASEX)
-            cDATABASEX := PADR("dados.duckdb",30)
+            cDATABASEX := PADR("dados.duckdb", 30)
+         ELSE
+            // Atualiza a variável global mantendo o tamanho
+            cDATABASEX := PADR(cDATABASEX, 30)
          ENDIF
       CASE KEY = 3
          duckTABELAS() 
@@ -386,30 +398,34 @@ FUNCTION duckChamaLerCSV()
 
 RETURN .T.
 
+
 // +--------------------------------------------------------------------
 // +    Function duckcreate()
 // +--------------------------------------------------------------------
 FUNCTION duckcreate()
-   LOCAL cARQORI
+   LOCAL cARQORI, oServer
 
-   cARQORI := win_GetsaveFileName(, "DuckDB Files", HB_CWD(), "DuckDB", ;
-      {{'DuckDB Database','*.duckdb'},{'All Files','*.*'}}, 1)  
+   // Filtro para os formatos que podem ser "criados" como bancos nativos
+   cARQORI := win_GetsaveFileName(, "Criar Banco de Dados", HB_CWD(), "DuckDB", ;
+      { {'DuckDB Database','*.duckdb'},;
+        {'DuckLake Database','*.ducklake'},;
+        {'All Files','*.*'} }, 1)  
 
    IF !Empty(cARQORI)
-      cDATABASEX := cARQORI
-      // No DuckDB, criar o banco significa apenas abri-lo pela primeira vez; 
-      // a engine cria o arquivo físico no disco automaticamente no primeiro Execute/Connect.
-      oServer := DuckDBClass():New( AllTrim(cARQORI) )
+      cDATABASEX := PADR(cARQORI, 30)
+      
+      // Abre (ou cria) a conexão usando a rotina padronizada
+      oServer := duckconnect()
+      
       IF oServer != NIL .AND. !oServer:NetErr()
-         MDT("Base de dados DuckDB criada/aberta com sucesso!")
+         MDT("Base de dados criada/aberta com sucesso!")
          oServer:Close()
       ELSE
-         Alert("Erro ao criar base DuckDB.")
+         Alert("Erro ao criar base de dados.")
       ENDIF
    ENDIF
 
 RETURN .T.
-
 
 // +--------------------------------------------------------------------
 // +    Function duckgravarcsv( cArquivo, cTabela, cDelim )
@@ -526,14 +542,15 @@ RETURN "VARCHAR"
 // +--------------------------------------------------------------------
 // +    Function duckconnect()
 // +--------------------------------------------------------------------
-STATIC FUNCTION duckconnect()
+STATIC FUNCTION duckconnect( nDialect, cAlias )
    LOCAL oServer
 
-   // Instancia a classe DuckDBClass usando o caminho do arquivo físico (ou vazio para memória)
-   oServer := DuckDBClass():New( AllTrim(cDATABASEX) )
+   // Instancia a classe repassando o dialeto e o alias (que podem ser NIL se omitidos).
+   // A DuckDBClass fará a autodetecção se nDialect estiver vazio.
+   oServer := DuckDBClass():New( AllTrim(cDATABASEX), "", "", nDialect, "UTF8", cAlias )
 
    IF oServer:NetErr()
-      Alert( "Falha na conexao com DuckDB: " + oServer:Error() )
+      Alert( "Falha na conexao: " + oServer:Error() )
       RETURN NIL
    ENDIF
 
