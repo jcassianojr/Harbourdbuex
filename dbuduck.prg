@@ -69,6 +69,7 @@ FUNCTION Duckdbmenu()
       OPCAO(  9, 44, "Gravar arquivo Par&quet    ", 81 )   // Q (81)
       OPCAO( 10, 44, "Gravar arquivo E&xcel      ", 88 )   // X (88)
       OPCAO( 11, 44, "&Otimizar Lakehouse        ", 79 )   // O (79)
+      OPCAO( 12, 44, "Abrir via O&DBC (Access/FB)", 68 )   // D (68)
       
       KEY := menu(1,0) 
       DO CASE
@@ -121,6 +122,9 @@ FUNCTION Duckdbmenu()
          duckChamaGravarExcel()   
      CASE KEY = 17          // <- NOVO CASE DE CHAMADA
          duckChamaOptimize()    
+     CASE KEY = 18 
+         duckChamaODBC()     
+         
       OTHERWISE
          EXIT 
       ENDCASE
@@ -134,6 +138,72 @@ FUNCTION Duckdbmenu()
    LAYOUT() 
 
 RETURN .T. 
+
+
+// +--------------------------------------------------------------------
+// +    Function duckChamaODBC()
+// +    Captura o arquivo, aciona configuracoes e instancia a classe DuckDB
+// +--------------------------------------------------------------------
+FUNCTION duckChamaODBC()
+   LOCAL cArqOrigem, cExt, cConnString
+   LOCAL oServer
+
+   // 1. Pede ao usuario o arquivo fisico
+   cArqOrigem := win_GetOpenFileName(, "Selecione o Banco de Dados", HB_CWD(), "Bancos de Dados", ;
+      { {'Access (*.mdb, *.accdb)', '*.mdb;*.accdb'},;
+        {'Firebird (*.fdb, *.gdb)', '*.fdb;*.gdb'},;
+        {'Todos os Arquivos', '*.*'} }, 1)
+
+   IF Empty( cArqOrigem )
+      RETURN .F.
+   ENDIF
+   
+   // Extrai a extensao do arquivo
+   cExt := Lower( hb_FNameExt( cArqOrigem ) )
+
+   // 2. Define o Tipo SQL baseado na extensao
+   DO CASE
+      CASE cExt == ".mdb"
+         cTIPOSQL := "MDB"
+      CASE cExt == ".accdb"
+         cTIPOSQL := "ACCDB"
+      CASE cExt == ".fdb" .OR. cExt == ".gdb"
+         cTIPOSQL := "FIREBIRD"
+      OTHERWISE
+         Alert("Formato nao mapeado para conexao ODBC direta nesta rotina.")
+         RETURN .F.
+   ENDCASE
+
+   // 3. Define a variavel global do banco com o caminho completo
+   cDATABASEX := cArqOrigem
+
+   // 4. Se for Firebird, preenche as credenciais via rotina do sistema
+   IF cTIPOSQL == "FIREBIRD"
+      pegcfgbanco()
+   ENDIF
+
+   // 5. Gera a string usando sua funcao central com lPROVIDER = .F. (Forca gerar via 'Driver=')
+   cConnString := geraconn( AllTrim(cDATABASEX), .F. )
+
+   IF Empty( cConnString )
+      Alert("Nao foi possivel gerar a string de conexao ODBC via geraconn().")
+      RETURN .F.
+   ENDIF
+
+   // 6. Instancia a classe passando a string de conexao pronta no novo parametro
+   // O construtor ira instalar a extensao ODBC e setar a variavel global de sessao automaticamente.
+   oServer := DuckDBClass():New( cDATABASEX, "", "", , "UTF8", , cConnString )
+
+   IF oServer != NIL .AND. !oServer:NetErr()
+      Alert( "Conexao ODBC estabelecida com sucesso no DuckDB utilizando a nova classe!" )
+      oServer:Close()
+   ELSE
+      Alert( "Erro ao conectar via ODBC na classe DuckDB." )
+   ENDIF
+
+RETURN .T.
+
+
 
 // +--------------------------------------------------------------------
 // +    Function duckChamaOptimize()
