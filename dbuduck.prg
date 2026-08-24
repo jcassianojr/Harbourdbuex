@@ -46,26 +46,29 @@ FUNCTION Duckdbmenu()
    ENDIF
 
    WHILE .T.
-      hb_DispBox(3,18,20,55,B_DOUBLE+" ") 
-      @ 03,24 SAY "DUCKDB " + ALLTRIM(cDATABASEX) 
+      hb_DispBox(3, 12, 22, 75, B_DOUBLE+" ")  // Ajustado a largura da caixa para caber 2 colunas
+      @ 03, 24 SAY "DUCKDB " + ALLTRIM(cDATABASEX) 
       
-      OPCAO( 4, 24, "&Criar Database            ", 67 )   // C 1
-      OPCAO( 5, 24, "&Database Selecionar       ", 68 )   // D 2
-      OPCAO( 6, 24, "&Tabelas                   ", 84 )   // T 3
-      OPCAO( 7, 24, "&Importar  DBF             ", 73 )   // I 4
-      OPCAO( 8, 24, "&Exportar  DBF             ", 69 )   // E 5
-      OPCAO( 9, 24, "&Apagar Tabela             ", 65 )   // A 6
-      OPCAO(10, 24, "Exportar &Formatos         ", 70 )   // F 7
-      OPCAO(11, 24, "&Versao Info               ", 86 )   // V 8
-      OPCAO(12, 24, "Executar arquivo &SQL      ", 83 )   // S 9
-      OPCAO(13, 24, "&Ler arquivo CSV           ", 76 )   // L 10
-      OPCAO(14, 24, "&Gravar arquivo CSV        ", 71 )   // G 11
-      OPCAO(15, 24, "&Ler arquivo JSON          ", 74 )   // J 12
-      OPCAO(16, 24, "&Gravar arquivo JSON       ", 79 )   // O 13  
-      OPCAO(17, 24, "L&er arquivo Parquet       ", 69 )   // 14
-      OPCAO(18, 24, "G&ravar arquivo Parquet    ", 71 )   // 15
-      OPCAO(19, 24, "G&ravar arquivo excel      ", 71 )   // 15
-      OPCAO(20, 24, "&Otimizar Lakehouse (CHECKPOINT)", 79 ) // 17 <- NOVA OPÇÃO
+      // --- COLUNA ESQUERDA (Linhas 4 a 12, Coluna 14) ---
+      OPCAO(  4, 14, "&Criar Database            ", 67 )   // C (67)
+      OPCAO(  5, 14, "&Database Selecionar       ", 68 )   // D (68)
+      OPCAO(  6, 14, "&Tabelas                   ", 84 )   // T (84)
+      OPCAO(  7, 14, "&Importar  DBF             ", 73 )   // I (73)
+      OPCAO(  8, 14, "&Exportar  DBF             ", 69 )   // E (69)
+      OPCAO(  9, 14, "&Apagar Tabela             ", 65 )   // A (65)
+      OPCAO( 10, 14, "Exportar &Formatos         ", 70 )   // F (70)
+      OPCAO( 11, 14, "&Versao Info               ", 86 )   // V (86)
+      OPCAO( 12, 14, "Executar arquivo &SQL      ", 83 )   // S (83)
+
+      // --- COLUNA DIREITA (Linhas 4 a 12, Coluna 44) ---
+      OPCAO(  4, 44, "&Ler arquivo CSV           ", 76 )   // L (76)
+      OPCAO(  5, 44, "&Gravar arquivo CSV        ", 71 )   // G (71)
+      OPCAO(  6, 44, "&Ler arquivo JSON          ", 74 )   // J (74)
+      OPCAO(  7, 44, "Gravar arquivo J&SON       ", 78 )   // N (78)
+      OPCAO(  8, 44, "Le&r arquivo Parquet       ", 82 )   // R (82)
+      OPCAO(  9, 44, "Gravar arquivo Par&quet    ", 81 )   // Q (81)
+      OPCAO( 10, 44, "Gravar arquivo E&xcel      ", 88 )   // X (88)
+      OPCAO( 11, 44, "&Otimizar Lakehouse        ", 79 )   // O (79)
       
       KEY := menu(1,0) 
       DO CASE
