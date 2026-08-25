@@ -59,17 +59,20 @@ FUNCTION Duckdbmenu()
       OPCAO( 10, 14, "Exportar &Formatos         ", 70 )   // F (70)
       OPCAO( 11, 14, "&Versao Info               ", 86 )   // V (86)
       OPCAO( 12, 14, "Executar arquivo &SQL      ", 83 )   // S (83)
+      OPCAO( 13, 14, "&Ler arquivo CSV           ", 76 )   // L (76)
+      
 
       // --- COLUNA DIREITA (Linhas 4 a 12, Coluna 44) ---
-      OPCAO(  4, 44, "&Ler arquivo CSV           ", 76 )   // L (76)
-      OPCAO(  5, 44, "&Gravar arquivo CSV        ", 71 )   // G (71)
-      OPCAO(  6, 44, "&Ler arquivo JSON          ", 74 )   // J (74)
-      OPCAO(  7, 44, "Gravar arquivo J&SON       ", 78 )   // N (78)
-      OPCAO(  8, 44, "Le&r arquivo Parquet       ", 82 )   // R (82)
-      OPCAO(  9, 44, "Gravar arquivo Par&quet    ", 81 )   // Q (81)
-      OPCAO( 10, 44, "Gravar arquivo E&xcel      ", 88 )   // X (88)
-      OPCAO( 11, 44, "&Otimizar Lakehouse        ", 79 )   // O (79)
-      OPCAO( 12, 44, "Abrir via O&DBC (Access/FB)", 68 )   // D (68)
+      OPCAO(  4, 44, "&Gravar arquivo CSV        ", 71 )   // G (71)
+      OPCAO(  5, 44, "&Ler arquivo JSON          ", 74 )   // J (74)
+      OPCAO(  6, 44, "Gravar arquivo J&SON       ", 78 )   // N (78)
+      OPCAO(  7, 44, "Le&r arquivo Parquet       ", 82 )   // R (82)
+      OPCAO(  8, 44, "Gravar arquivo Par&quet    ", 81 )   // Q (81)
+      OPCAO( 09, 44, "Gravar arquivo E&xcel      ", 88 )   // X (88)
+      OPCAO( 10, 44, "&Otimizar Lakehouse        ", 79 )   // O (79)
+      OPCAO( 11, 44, "Abrir via O&DBC (Access/FB)", 68 )   // D (68)
+      OPCAO( 12, 44, "Conexoes &SGBD (Nativas/ODBC)", 83 )   // S (83)
+      
       
       KEY := menu(1,0) 
       DO CASE
@@ -124,6 +127,8 @@ FUNCTION Duckdbmenu()
          duckChamaOptimize()    
      CASE KEY = 18 
          duckChamaODBC()     
+     CASE KEY = 18 
+         duckMenuConexoesSGBD()    
          
       OTHERWISE
          EXIT 
@@ -139,6 +144,112 @@ FUNCTION Duckdbmenu()
 
 RETURN .T. 
 
+// +--------------------------------------------------------------------
+// +    Function duckMenuConexoesSGBD()
+// +    Submenu de Conexoes com SGBDs Nativos e ODBC
+// +--------------------------------------------------------------------
+FUNCTION duckMenuConexoesSGBD()
+   LOCAL nOpcao
+   LOCAL cConnString, oServer, nDialect
+
+   WHILE .T.
+      hb_DispBox( 5, 25, 14, 55, B_DOUBLE + " " )
+      @ 05, 30 SAY " Conectar SGBD " 
+      
+      OPCAO( 06, 28, "1. POSTGRESQL (Nativo)   ", 49 )
+      OPCAO( 07, 28, "2. MARIADB (Nativo)      ", 50 )
+      OPCAO( 08, 28, "3. MYSQL (Nativo)        ", 51 )
+      OPCAO( 09, 28, "4. MSSQL (via ODBC)      ", 52 )
+      OPCAO( 10, 28, "5. ORACLE (via ODBC)     ", 53 )
+      OPCAO( 11, 28, "6. DSN (via ODBC)        ", 54 )
+      OPCAO( 12, 28, "0. Retornar              ", 48 )
+
+      nOpcao := menu( 1, 0 )
+      
+      IF nOpcao == 7 .OR. nOpcao == 0
+         EXIT
+      ENDIF
+
+      // 1. Define cTIPOCON, cTIPOSQL e nDialect 
+      cConnString := ""
+      nDialect    := 0
+      
+      DO CASE
+         CASE nOpcao == 1
+            cTIPOCON := "POSTGRESQL"
+            cTIPOSQL := "POSTGRESQL"
+            nDialect := 101 // DIALETO_POSTGRES
+         CASE nOpcao == 2
+            cTIPOCON := "MARIADB"
+            cTIPOSQL := "MARIADB"
+            nDialect := 100 // DIALETO_MYSQL (MariaDB usa a extensao mysql)
+         CASE nOpcao == 3
+            cTIPOCON := "MYSQL"
+            cTIPOSQL := "MYSQL"
+            nDialect := 100 // DIALETO_MYSQL
+         CASE nOpcao == 4
+            cTIPOCON := "MSSQL"
+            cTIPOSQL := "MSSQL"
+            nDialect := 106 // DIALETO_ODBC_MSSQL
+         CASE nOpcao == 5
+            cTIPOCON := "ORACLE"
+            cTIPOSQL := "ORACLE"
+            nDialect := 107 // DIALETO_ODBC_ORACLE
+         CASE nOpcao == 6
+            cTIPOCON := "DSN"
+            cTIPOSQL := "ODBC"
+            nDialect := 108 // DIALETO_ODBC_DSN
+      ENDCASE
+
+      // 2. Coleta de credenciais e Geracao da String
+      IF nOpcao == 6
+         IF IsFunction("sqlrdd_ODBC_info")
+            sqlrdd_ODBC_info() // A funcao setara o nome em cBANCOX
+         ENDIF
+         // Nota: O DuckDB odbc_scanner usa ODBC puro. Logo, em vez de 
+         // "Provider=MSDASQL", o formato nativo correto e DSN=[cite: 36]
+         cConnString := "DSN=" + AllTrim(cBANCOX) + ";" 
+      ELSE
+         // Demais SGBDs precisam usar a tela de credenciais do sistema
+         IF IsFunction("pegcfgbanco")
+            pegcfgbanco()
+         ENDIF
+         
+         DO CASE
+            CASE nOpcao == 1 // POSTGRESQL nativo 
+               // Formato: dbname=... user=... host=...[cite: 37]
+               cConnString := "dbname=" + AllTrim(cDATABASEX) + " user=" + AllTrim(cUSERX) + ;
+                              " host=" + AllTrim(cSERVERX) + " port=" + AllTrim(cPORTAX) + ;
+                              " password=" + AllTrim(cPASSX)
+                              
+            CASE nOpcao == 2 .OR. nOpcao == 3 // MYSQL/MARIADB nativo
+               // Formato: host=... user=... database=...[cite: 38]
+               cConnString := "host=" + AllTrim(cSERVERX) + " port=" + AllTrim(cPORTAX) + ;
+                              " database=" + AllTrim(cDATABASEX) + " user=" + AllTrim(cUSERX) + ;
+                              " password=" + AllTrim(cPASSX)
+                              
+            CASE nOpcao == 4 .OR. nOpcao == 5 // MSSQL / ORACLE via odbc_scanner
+               IF IsFunction("geraconn")
+                  // Usa sua rotina para gerar Driver=... (lPROVIDER=.F.)
+                  cConnString := geraconn( AllTrim(cDATABASEX), .F. )
+               ENDIF
+         ENDCASE
+      ENDIF
+
+      // 3. Conecta repassando a string recem montada 
+      IF !Empty( cConnString )
+         oServer := DuckDBClass():New( cDATABASEX, "", "", nDialect, "UTF8", cTIPOCON, cConnString )
+         
+         IF oServer != NIL .AND. !oServer:NetErr()
+            Alert( "Conexao SGBD estabelecida com sucesso no DuckDB!" )
+            oServer:Close()
+         ELSE
+            Alert( "Erro ao conectar no DuckDB." )
+         ENDIF
+      ENDIF
+
+   ENDDO
+RETURN .T.
 
 // +--------------------------------------------------------------------
 // +    Function duckChamaODBC()
