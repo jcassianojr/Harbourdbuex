@@ -35,6 +35,7 @@ FUNCTION Duckdbmenu()
    lMDB       := .F. 
    lACCDB     := .F. 
    lFDB       := .F.
+   nDialect   := 0
 
    cOLDRDD     := RDDSETDEFAULT("DUCKDB") 
    nOLDTIPORDD := TIPODBF 
@@ -127,7 +128,7 @@ FUNCTION Duckdbmenu()
          duckChamaOptimize()    
      CASE KEY = 18 
          duckChamaODBC()     
-     CASE KEY = 18 
+     CASE KEY = 19
          duckMenuConexoesSGBD()    
          
       OTHERWISE
@@ -747,64 +748,6 @@ STATIC FUNCTION duck_map_type_csv( cTipo, nTam, nDec )
 RETURN "VARCHAR"
 
 
-// +--------------------------------------------------------------------
-// +    Function duckconnect()
-// +--------------------------------------------------------------------
-STATIC FUNCTION duckconnect( nDialect, cAlias )
-   LOCAL oServer := NIL
-   LOCAL oErr
-   LOCAL cDirBase, cDataPath
-   LOCAL lDeuErro := .F.
-
-   // Garante a identificação do dialeto DuckLake pela extensão caso não tenha sido passado
-   IF Empty( nDialect ) .AND. ".ducklake" $ Lower( AllTrim(cDATABASEX) )
-      nDialect := 2 // DIALETO_DUCKLAKE
-   ENDIF
-
-   // ITEM 4: Extração do diretório e criação da subpasta 'metadados'
-   IF nDialect == 2
-      cDirBase := hb_FNameDir( AllTrim(cDATABASEX) )
-      
-      IF Empty( cDirBase )
-         cDirBase := hb_cwd()
-      ENDIF
-      
-      cDataPath := cDirBase + "metadados"
-      
-      IF !hb_DirExists( cDataPath )
-         IF hb_DirBuild( cDataPath ) != 0 
-            Alert( "Nao foi possivel criar a pasta de dados em:;" + cDataPath )
-            RETURN NIL
-         ENDIF
-      ENDIF
-   ENDIF
-
-   // ITEM 1: Tratamento de Erro Seguro (Try/Catch)
-   TRY
-      oServer := DuckDBClass():New( AllTrim(cDATABASEX), "", "", nDialect, "UTF8", cAlias )
-
-      IF oServer:NetErr()
-         lDeuErro := .T.
-      ELSE
-         // Inicia transação padrão para segurança das operações
-         oServer:StartTransaction()
-      ENDIF
-
-   CATCH oErr
-      lDeuErro := .T.
-   END
-
-   // Tratamento fora do bloco SEQUENCE para satisfazer o compilador do Harbour
-   IF lDeuErro
-      IF oServer != NIL .AND. oServer:NetErr()
-         Alert( "Falha na conexao: " + oServer:Error() )
-      ELSE
-         Alert( "Erro fatal ao conectar ou criar o banco de dados! Verifique o diretorio e permissoes." )
-      ENDIF
-      RETURN NIL
-   ENDIF
-
-RETURN oServer
 
 // +--------------------------------------------------------------------
 // +    Function duckverinfo()
@@ -1005,23 +948,154 @@ FUNCTION duck_impdbf( cARQORI, lincdados )
 RETURN .T.
 
 // +--------------------------------------------------------------------
+// +    Function duckconnect()
+// +    Gerencia a conexao unificada com o DuckDB baseada em dialetos
+// +--------------------------------------------------------------------
+STATIC FUNCTION duckconnect( nDialect, cAlias )
+   LOCAL oServer := NIL
+   LOCAL oErr
+   LOCAL cDirBase, cDataPath, cExt, cDir, cName
+   LOCAL lDeuErro := .F.
+
+   // 1. Auto-deteccao do dialeto e do alias pela extensao do arquivo se nDialect nao for informado
+   IF Empty( nDialect )
+      hb_FNameSplit( AllTrim(cDATABASEX), @cDir, @cName, @cExt )
+      cExt := Lower( cExt )
+      
+      DO CASE
+         CASE cExt == ".duckdb" .OR. cExt == ".db"
+            nDialect := DIALETO_DUCKDB     // 1
+         CASE cExt == ".ducklake"
+            nDialect := DIALETO_DUCKLAKE   // 2
+         CASE cExt == ".sqlite" .OR. cExt == ".sqlite3"
+            nDialect := DIALETO_SQLITE     // 3
+         CASE cExt == ".csv"
+            nDialect := DIALETO_CSV        // 4
+         CASE cExt == ".json"
+            nDialect := DIALETO_JSON       // 5
+         CASE cExt == ".parquet"
+            nDialect := DIALETO_PARQUET    // 6
+         CASE cExt == ".mdb"
+            nDialect := DIALETO_ODBC_MDB   // 103
+         CASE cExt == ".accdb"
+            nDialect := DIALETO_ODBC_ACCDB // 104
+         CASE cExt == ".fdb" .OR. cExt == ".gdb"
+            nDialect := DIALETO_ODBC_FIREBIRD // 105
+         OTHERWISE
+            nDialect := DIALETO_DUCKDB     // Padrao Nativo
+      ENDCASE
+   ENDIF
+
+   // 2. Se o alias nao foi passado, define com base no nome limpo do arquivo
+   IF Empty( cAlias )
+      hb_FNameSplit( AllTrim(cDATABASEX), @cDir, @cName, @cExt )
+      cAlias := Lower( StrTran( cName, " ", "_" ) )
+   ENDIF
+
+   // 3. Extração do diretório e criação da subpasta 'metadados' para o DuckLake
+   IF nDialect == DIALETO_DUCKLAKE
+      cDirBase := hb_FNameDir( AllTrim(cDATABASEX) )
+      
+      IF Empty( cDirBase )
+         cDirBase := hb_cwd()
+      ENDIF
+      
+      cDataPath := cDirBase + "metadados"
+      
+      IF !hb_DirExists( cDataPath )
+         IF hb_DirBuild( cDataPath ) != 0 
+            Alert( "Nao foi possivel criar a pasta de dados em:;" + cDataPath )
+            RETURN NIL
+         ENDIF
+      ENDIF
+   ENDIF
+
+   // 4. Tratamento de Conexao Segura (Try/Catch)
+   TRY
+      // Instancia a classe passando o dialeto e o alias resolvido
+      oServer := DuckDBClass():New( AllTrim(cDATABASEX), "", "", nDialect, "UTF8", cAlias )
+
+      IF oServer:NetErr()
+         lDeuErro := .T.
+      ELSE
+         // Inicia transação padrão para segurança das operações
+         oServer:StartTransaction()
+      ENDIF
+
+   CATCH oErr
+      lDeuErro := .T.
+   END
+
+   // 5. Tratamento de falhas de abertura
+   IF lDeuErro
+      IF oServer != NIL .AND. oServer:NetErr()
+         Alert( "Falha na conexao: " + oServer:Error() )
+      ELSE
+         Alert( "Erro fatal ao conectar ou criar o banco de dados! Verifique o diretorio e permissoes." )
+      ENDIF
+      RETURN NIL
+   ENDIF
+
+RETURN oServer
+
+// +--------------------------------------------------------------------
 // +    Function duckexpdbf()
+// +    Exporta dados de uma tabela do DuckDB para DBF (Nativo ou em Memória)
 // +--------------------------------------------------------------------
 FUNCTION duckexpdbf( nTipo )
    LOCAL oServer, oQuery, oRow
    LOCAL aSTRU := {}
    LOCAL aVALOR
    LOCAL i, nFIM, cDESTINO, eVALOR, nLASTREC
-   LOCAL aStructInfo
+   LOCAL aStructInfo, cQuerySql, cAliasDb, cDir, cName, cExt
 
+   // 1. Conecta utilizando o mecanismo unificado de dialetos
    oServer := duckconnect()
    IF oServer == NIL
       RETURN .F.
    ENDIF
 
+   // 2. Seleciona a tabela ativa
    duckTABELAS() 
 
-   oQuery := oServer:Query( "SELECT * FROM " + AllTrim(cTABELAX) )
+   IF Empty( cTABELAX )
+      Alert( "Nenhuma tabela selecionada!" )
+      oServer:Close()
+      RETURN .f.
+   ENDIF
+
+   // 3. Extrai informações do arquivo para compor o prefixo de alias quando necessário
+   hb_FNameSplit( AllTrim(cDATABASEX), @cDir, @cName, @cExt )
+   cAliasDb := Lower( StrTran( cName, " ", "_" ) )
+
+   // 4. Montagem da query com base estrita no Dialeto configurado na classe/conexão
+   DO CASE
+      // Grupo 1: Bancos anexados (ATTACH) que exigem o prefixo alias.tabela
+      CASE oServer:dialect == DIALETO_DUCKLAKE .OR. ;
+           oServer:dialect == DIALETO_SQLITE  .OR. ;
+           oServer:dialect == DIALETO_MYSQL   .OR. ;
+           oServer:dialect == DIALETO_POSTGRES
+           
+         cQuerySql := "SELECT * FROM " + cAliasDb + "." + AllTrim(cTABELAX)
+
+      // Grupo 2: Arquivos Tabulares / Planos (Tratados via VIEWs criadas pela classe)
+      CASE oServer:dialect == DIALETO_CSV     .OR. ;
+           oServer:dialect == DIALETO_JSON    .OR. ;
+           oServer:dialect == DIALETO_PARQUET
+           
+         cQuerySql := "SELECT * FROM " + AllTrim(cTABELAX)
+
+      // Grupo 3: SGBDs via ODBC Scanner (MDB, ACCDB, Firebird, MSSQL, Oracle, DSN)
+      CASE oServer:dialect >= DIALETO_ODBC .AND. oServer:dialect <= DIALETO_ODBC_DSN
+         cQuerySql := "SELECT * FROM " + AllTrim(cTABELAX)
+
+      // Grupo 4: DuckDB Nativo (DIALETO_DUCKDB = 1) ou Padrão
+      OTHERWISE
+         cQuerySql := "SELECT * FROM " + AllTrim(cTABELAX)
+   ENDCASE
+
+   // 5. Executa a query no servidor DuckDB
+   oQuery := oServer:Query( cQuerySql )
    IF oServer:NetErr()
       Alert( "Erro ao ler tabela: " + oServer:Error() )
       oServer:Close()
@@ -1031,7 +1105,7 @@ FUNCTION duckexpdbf( nTipo )
    nLASTREC := oQuery:LastRec()
    zei_fort( nLASTREC,,, 0 )
 
-   // Obtém estrutura para exportação
+   // 6. Obtém a estrutura física para exportação do DBF
    aStructInfo := oServer:TableStruct( AllTrim(cTABELAX) )
    
    FOR i := 1 TO Len(aStructInfo)
@@ -1049,6 +1123,7 @@ FUNCTION duckexpdbf( nTipo )
       dbCreate( "mem:destino", aSTRU,, .T., "DESTINO" )
    ENDIF
 
+   // 7. Varre os dados e alimenta o DBF de destino
    oQuery:GoTop()
    DO WHILE !oQuery:Eof()
       aVALOR := {}
@@ -1087,6 +1162,7 @@ FUNCTION duckexpdbf( nTipo )
       oQuery:Skip()
    ENDDO
 
+   // 8. Limpeza de recursos e fechamento de conexões
    oQuery:Destroy()
    oServer:Close()
 
