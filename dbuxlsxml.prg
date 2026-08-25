@@ -8,7 +8,7 @@
 
 
 #require "hbxlsxml"
-PROCEDURE Fazerxlsxlm()
+PROCEDURE FazerxlsXML()
     LOCAL oXml, oSheet
     LOCAL aStru    := DBStruct()
     LOCAL nFields  := Len( aStru )

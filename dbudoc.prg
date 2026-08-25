@@ -114,7 +114,7 @@ FUNCTION GERADOC( tdoc )
 FUNCTION PegcsUB( tDOC )
 
    IF tDOC = 7    //xml
-         nCHOICE := ALERT( "Tipo XML", { "MS", "PACKET", "ISO","XLSXLM"  } )
+         nCHOICE := ALERT( "Tipo XML", { "MS", "PACKET", "ISO" , "XLSXML" } )
          DO CASE
          CASE nCHOICE = 1
             cSUBTIPO := "XML"
@@ -123,24 +123,19 @@ FUNCTION PegcsUB( tDOC )
          CASE nCHOICE = 3
             cSUBTIPO := "ISO"
          CASE nCHOICE = 4
-            cSUBTIPO := "XLSXLM"      
+             cSUBTIPO := "XLSXML"      
          ENDCASE
       lDOCDAD := MDG( "Gravar Dados" )
    ENDIF
    IF  tDOC = 1   //xls
        lDOCCAB := MDG( "Gravar Informacao Estrutura" )
        lDOCDAD := MDG( "Gravar Dados" )
-       nCHOICE := ALERT( "Tipo XLS", { "TAB", "TRH-HTML", "TDB","XLSXLM" } )
+       nCHOICE := ALERT( "Tipo XLS", {  "TRH-HTML", "OPEN XLS" } )
          DO CASE
-         CASE nCHOICE = 1   //xls
-            tDOC := 5           //delimitado
-            cSUBTIPO := "TAB"  //salva delimitado por tab 
          CASE nCHOICE = 2
             cSUBTIPO := "TRH"
          CASE nCHOICE = 3
             cSUBTIPO := "TDB"
-         CASE nCHOICE = 4
-            cSUBTIPO := "XLSXLM"   
          ENDCASE
    ENDIF
    IF  tDOC = 5 .OR.  tDOC = 6    //delimitado   //sdf
@@ -201,11 +196,11 @@ FUNCTION multidocs
    PegcsUB( tDOC )  // pegar o subtipo conforme tipo
    altd()
    DO CASE 
-      CASE cSUBTIPO = "XLSXLM"                 //xlsxlm 
-           FAZERDBF( {|| Fazerxlsxlm() }, .F.,,, cMASK )
+      CASE cSUBTIPO = "XLSXML"                 //xlsxmL 
+           FAZERDBF( {|| FazerxlsxmL() }, .F.,,, cMASK )
       CASE tDOC = 1 .AND. cSUBTIPO = "TDB"    //xls
            FAZERDBF( {|| Fazerxlsclass() }, .F.,,, cMASK )
-      CASE tdoc = 7 .AND. cSUBTIPO="XML"      //xlm 
+      CASE tdoc = 7 .AND. cSUBTIPO="XML"      //xmL 
           FAZERDBF( {|| dbf2xml() }, .F.,,, cMASK )
 	  CASE tdoc = 14
           GeraMDdbml(cMASK)	
@@ -347,7 +342,7 @@ FUNCTION GRAVADOC( tdoc, cARQ, aESTRU, aVAL, lDOCCAB, lDOCDAD, cSUBTIPO, lDOCREC
       PegcsUB( tDOC )  // pegar o subtipo conforme tipo
    ENDIF
 
-   IF tdoc = 7 .AND. cSUBTIPO="XML"    //xlm
+   IF tdoc = 7 .AND. cSUBTIPO="XML"    //xm
       Dbf2Xml()
       RETURN .T.
    ENDIF
@@ -357,10 +352,10 @@ FUNCTION GRAVADOC( tdoc, cARQ, aESTRU, aVAL, lDOCCAB, lDOCDAD, cSUBTIPO, lDOCREC
        RETURN .T.
    ENDIF    
    
-    IF cSUBTIPO = "XLSXLM"         //xlsxlm 
-       Fazerxlsxlm() 
+   IF cSUBTIPO = "XLSXML"         //xlsxmL 
+       FazerxlsxmL() 
        RETURN .T.
-    ENDIF   
+   ENDIF   
 
    IF zEXPOREXT = "XML" .AND. tDOC = 5   //xml //delimitado tab
       tDOC := 7
@@ -484,7 +479,7 @@ FUNCTION GRAVADOC( tdoc, cARQ, aESTRU, aVAL, lDOCCAB, lDOCDAD, cSUBTIPO, lDOCREC
                   Str( aESTRU[ X, 3 ], 3 ) + ' ' + ;
                   Str( aESTRU[ X, 4 ], 2 ) + cLIN
             ENDIF
-         CASE tDOC = 7 .AND. cSUBTIPO = "PCK"  //xlm
+         CASE tDOC = 7 .AND. cSUBTIPO = "PCK"  //xmL
             cTEXTO += "   <FIELD attrname=" + Chr( 34 ) + AllTrim( cCAMPO ) + Chr( 34 )
             cTEXTO += " fieldtype="
             cTEXTO += Chr( 34 ) + TIPOXML( aESTRU[ X, 2 ], aESTRU[ X, 3 ], aESTRU[ X, 4 ] ) + Chr( 34 )
@@ -495,7 +490,7 @@ FUNCTION GRAVADOC( tdoc, cARQ, aESTRU, aVAL, lDOCCAB, lDOCDAD, cSUBTIPO, lDOCREC
                cTEXTO += " WIDTH=" + Chr( 34 ) + AllTrim( Str( 255 ) ) + Chr( 34 )
             ENDIF
             cTEXTO += "/>" + cLIN
-         CASE tDOC = 7 .AND. cSUBTIPO = "ISO"  //xlm
+         CASE tDOC = 7 .AND. cSUBTIPO = "ISO"  //xmL
             cTEXTO += "<Campo>" + CLIN
             cTEXTO += "<Nome>"    + AllTrim( cCAMPO ) +          "</Nome>" + CLIN
             cTEXTO += "<Tipo>"    + aESTRU[ X ][ 2 ] +             "</Tipo>" + CLIN
@@ -506,7 +501,7 @@ FUNCTION GRAVADOC( tdoc, cARQ, aESTRU, aVAL, lDOCCAB, lDOCDAD, cSUBTIPO, lDOCREC
       NEXT x
       
       // Grava os indices
-      IF tDOC = 7 .AND. cSUBTIPO = "ISO"     //xlm
+      IF tDOC = 7 .AND. cSUBTIPO = "ISO"     //xmL
          
          aINDICES:=GeraINDICES()
         nIndexes := LEN(aINDICES)
