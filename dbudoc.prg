@@ -114,17 +114,7 @@ FUNCTION GERADOC( tdoc )
 FUNCTION PegcsUB( tDOC )
 
    IF tDOC = 7    //xml
-         nCHOICE := ALERT( "Tipo XML", { "MS", "PACKET", "ISO" , "XLSXML" } )
-         DO CASE
-         CASE nCHOICE = 1
-            cSUBTIPO := "XML"
-         CASE nCHOICE = 2
-            cSUBTIPO := "PCK"
-         CASE nCHOICE = 3
-            cSUBTIPO := "ISO"
-         CASE nCHOICE = 4
-             cSUBTIPO := "XLSXML"      
-         ENDCASE
+      cSUBTIPO := "XLSXML"      
       lDOCDAD := MDG( "Gravar Dados" )
    ENDIF
    IF  tDOC = 1   //xls
@@ -196,12 +186,10 @@ FUNCTION multidocs
    PegcsUB( tDOC )  // pegar o subtipo conforme tipo
    altd()
    DO CASE 
-      CASE cSUBTIPO = "XLSXML"                 //xlsxmL 
+      CASE cSUBTIPO = "XLSXML"  .OR. tDOC=7                //xlsxmL  XML
            FAZERDBF( {|| FazerxlsxmL() }, .F.,,, cMASK )
       CASE tDOC = 1 .AND. cSUBTIPO = "TDB"    //xls
            FAZERDBF( {|| Fazerxlsclass() }, .F.,,, cMASK )
-      CASE tdoc = 7 .AND. cSUBTIPO="XML"      //xmL 
-          FAZERDBF( {|| dbf2xml() }, .F.,,, cMASK )
 	  CASE tdoc = 14
           GeraMDdbml(cMASK)	
       CASE tdoc = 15
@@ -342,24 +330,17 @@ FUNCTION GRAVADOC( tdoc, cARQ, aESTRU, aVAL, lDOCCAB, lDOCDAD, cSUBTIPO, lDOCREC
       PegcsUB( tDOC )  // pegar o subtipo conforme tipo
    ENDIF
 
-   IF tdoc = 7 .AND. cSUBTIPO="XML"    //xm
-      Dbf2Xml()
-      RETURN .T.
-   ENDIF
    
     IF tDOC = 1 .AND. cSUBTIPO = "TDB"  //xls
        Fazerxlsclass()
        RETURN .T.
    ENDIF    
    
-   IF cSUBTIPO = "XLSXML"         //xlsxmL 
+   IF cSUBTIPO = "XLSXML" .OR. tDOC=7          //xlsxmL XNK
        FazerxlsxmL() 
        RETURN .T.
    ENDIF   
 
-   IF zEXPOREXT = "XML" .AND. tDOC = 5   //xml //delimitado tab
-      tDOC := 7
-   ENDIF
 
    IF zEXPOREXT = "JSON"
       tDOC := 8    //json
@@ -386,7 +367,7 @@ FUNCTION GRAVADOC( tdoc, cARQ, aESTRU, aVAL, lDOCCAB, lDOCDAD, cSUBTIPO, lDOCREC
    CASE tDOC = 6   //sdf
       cARQGRV += ".SDF"
    CASE tDOC = 7  //xml
-      cARQGRV += "_"+cSUBTIPO+"_.XLS"
+      cARQGRV += ".XML"
    CASE tDOC = 8     //json
       cARQGRV += ".JSON"
    ENDCASE

@@ -85,3 +85,39 @@ PROCEDURE FazerxlsXML()
     oXml:writeData() // hbxlsxml geralmente já sabe o nome do arquivo pelo New()
 
     RETURN
+    
+    
+// +--------------------------------------------------------------------
+// +
+// +
+// +
+// +    Function TIPOXML()
+// +
+// +
+// +
+// +--------------------------------------------------------------------
+// +
+// +
+// +
+FUNCTION TIPOXML( cTIPO, nTAM, nDEC )
+
+   LOCAL cRETU := ""
+
+   DO CASE
+   CASE cTIPO = 'C'
+      cRETU := 'string'
+   CASE cTIPO = 'N'
+      IF nDEC = 0
+         cRETU := 'i4'   // +alltrim(str(ntam))
+      ELSE
+         cRETU := 'r8'   // 'float'
+      ENDIF
+   CASE cTIPO = 'L'
+      cRETU := 'boolean'
+   CASE cTIPO = 'D'
+      cRETU := 'date'  // datetime
+   CASE cTIPO = 'M'
+      cRETU := 'string'
+   ENDCASE
+
+   RETURN cRETU

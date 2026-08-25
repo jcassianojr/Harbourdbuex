@@ -64,7 +64,6 @@ sqlrddpp.hbc
 
 \develop\harbour\dbu\DBU.PRG  
 \develop\harbour\dbu\dbucnvmemo.prg 
-\develop\harbour\dbu\dbuxml.prg
 \develop\harbour\dbu\dbucopy.prg
 \develop\harbour\dbu\dbudoc.prg  
 \develop\harbour\dbu\dbuedi.prg
