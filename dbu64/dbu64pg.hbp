@@ -15,6 +15,8 @@
 -llibpq
 -lbcrypt
 
+{cflag}-DHB_SQLT3_MAP_DECLARED_EMULATED
+
 -dUSE_MENU_PGSQL
 
 -dUSE_SDD_POSTGRES

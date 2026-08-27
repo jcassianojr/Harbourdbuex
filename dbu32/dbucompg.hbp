@@ -7,6 +7,8 @@
 # Pastas de bibliotecas (essencial para evitar o erro de 'cannot find')
 -Lc:\harbour\hb3rd\pgsql\lib
 
+{cflag}-DHB_SQLT3_MAP_DECLARED_EMULATED
+
 # Dependências (libs)
 -llibpq
 -lbcrypt

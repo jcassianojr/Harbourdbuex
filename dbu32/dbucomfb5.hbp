@@ -10,6 +10,8 @@
 -lfbclient
 -lbcrypt
 
+{cflag}-DHB_SQLT3_MAP_DECLARED_EMULATED
+
 
 -gtwvg
 -gui

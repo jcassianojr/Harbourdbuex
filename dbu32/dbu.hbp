@@ -1,10 +1,12 @@
-
+{cflag}-DHB_SQLT3_MAP_DECLARED_EMULATED
 -lfbclient
 -lbcrypt
 
 # Setado para testes sqlrdd em firebird
 #-dUSE_SR_FIREBIRD
 #-cflag=-USE_SR_FIREBIRD
+
+{cflag}-DHB_SQLT3_MAP_DECLARED_EMULATED
 
 -gtwvg
 -gui

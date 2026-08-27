@@ -1394,14 +1394,13 @@ FUNCTION SqliteCreateTable( cTablename, aStruct, cTIPOSQL, lINDEX ,lPK,lINCSR)
                mSql += "LONG DEFAULT 0"
             ENDIF
             
-         CASE mFldType = "N" .AND. cTIPOSQL = "SQLITE"
+        CASE mFldType = "N" .AND. cTIPOSQL = "SQLITE"
             IF mFldDec > 0
-               mSql += "FLOAT  default 0" 
+               mSql += "NUMERIC(" + hb_ntos( mFldLen ) + "," + hb_ntos( mFldDec ) + ") default 0" 
             ELSE
-               mSql += "INTEGER default 0"
-            ENDIF
-            
-            
+               mSql += "NUMERIC(" + hb_ntos( mFldLen ) + ",0) default 0" //integer default 0
+            ENDIF 
+                        
        CASE mFldType = "N" .AND. ( cTIPOSQL = "IBMDB2" )
             IF mFldDec > 0
                mSql += "DECIMAL(" + hb_ntos( mFldLen ) + "," + hb_ntos( mFldDec ) + ")"

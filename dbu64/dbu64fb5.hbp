@@ -6,6 +6,8 @@
 -dUSE_SDD_FB5
 -dUSE_SR_FIREBIRD
 
+{cflag}-DHB_SQLT3_MAP_DECLARED_EMULATED
+
 -gtwvg
 -gui
 -lng=pt_BR

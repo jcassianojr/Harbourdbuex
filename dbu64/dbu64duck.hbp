@@ -11,6 +11,8 @@
 -workdir=.hbmk/dbu64duck
 -dUSE_MENU_DUCKDB
 
+{cflag}-DHB_SQLT3_MAP_DECLARED_EMULATED
+
 #
 #      --- apoio,auxiliares
 #

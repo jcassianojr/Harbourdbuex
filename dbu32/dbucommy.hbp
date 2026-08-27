@@ -13,6 +13,8 @@
 #-llibpq
 #-lfbclient
 
+{cflag}-DHB_SQLT3_MAP_DECLARED_EMULATED
+
 #-dUSE_SDD_MYSQL
 #-cflag=-dUSE_SDD_MYSQL
 

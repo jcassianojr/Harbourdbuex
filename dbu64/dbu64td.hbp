@@ -11,6 +11,7 @@
 #-Lc:\harbour\hb3rd\pgsql-x64\lib
 
 -dUSE_MENU_TD
+{cflag}-DHB_SQLT3_MAP_DECLARED_EMULATED
 
 # Dependências (libs) requerida pela tclass
 -llibmysql

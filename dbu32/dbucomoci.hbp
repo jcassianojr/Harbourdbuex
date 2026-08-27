@@ -12,6 +12,8 @@
 -dUSE_SR_ORACLE
 -cflag=-USE_SR_ORACLE
 
+{cflag}-DHB_SQLT3_MAP_DECLARED_EMULATED
+
 
 -gtwvg
 -gui

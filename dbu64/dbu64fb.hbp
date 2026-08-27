@@ -11,6 +11,8 @@
 #-cflag=-USE_SR_FIREBIRD
 -dUSE_MENU_FIREBIRD
 
+{cflag}-DHB_SQLT3_MAP_DECLARED_EMULATED
+
 -gtwvg
 -gui
 -lng=pt_BR

@@ -8,6 +8,8 @@
 #-cflag=-USE_PXRDD
 -dUSE_MENU_PARADOX
 
+{cflag}-DHB_SQLT3_MAP_DECLARED_EMULATED
+
 -gtwvg
 -gui
 -lng=pt_BR

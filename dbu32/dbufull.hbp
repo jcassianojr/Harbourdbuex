@@ -2,6 +2,8 @@
 -Lc:\harbour\hb3rd\mysql\lib
 -Lc:\harbour\hb3rd\pgsql\lib
 
+{cflag}-DHB_SQLT3_MAP_DECLARED_EMULATED
+
 # Dependências (libs) requerida pela tclass
 -llibmysql
 -llibpq
