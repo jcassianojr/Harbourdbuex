@@ -18,6 +18,7 @@
 #include "dbinfo.ch"
 #include "TRY.ch"
 #INCLUDE "hbVER.CH"
+#include "dbinfo.ch"
 
 REQUEST DBFCDXEX
 

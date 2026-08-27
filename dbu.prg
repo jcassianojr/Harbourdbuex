@@ -22,6 +22,7 @@
 
 #INCLUDE "HBGTINFO.CH"
 #INCLUDE "hbVER.CH"
+#include "dbinfo.ch"
 
 
 
@@ -52,7 +53,7 @@ REQUEST DBFCDXEX  //-19 CRYPTO   DBFCDXEX
 REQUEST FCSVRDD   //-20 FCSVRDD CSV RDD
 REQUEST JSONRDD   //-21 JSONRDD json RDD
 //REQUEST RMDBFCDX   //-22 RMDBFCDX  RushMore nos .prg de teste esta comentado se descomenta gera erro 
-//ele trabalha com as funcoes hs_
+//ele trabalha com as funcoes hs_ em harbour.hbx
 
 #ifdef USE_PXRDD
     REQUEST PXRDD   //-30 Carrega a RDD do Paradox criada acima
