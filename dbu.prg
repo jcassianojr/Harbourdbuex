@@ -51,9 +51,11 @@ REQUEST BMDBFNTX  //-18 BMDBFNTX DBFNTX
 REQUEST DBFCDXEX  //-19 CRYPTO   DBFCDXEX
 REQUEST FCSVRDD   //-20 FCSVRDD CSV RDD
 REQUEST JSONRDD   //-21 JSONRDD json RDD
+//REQUEST RMDBFCDX   //-22 RMDBFCDX  RushMore nos .prg de teste esta comentado se descomenta gera erro 
+//ele trabalha com as funcoes hs_
 
 #ifdef USE_PXRDD
-    REQUEST PXRDD   //-22 Carrega a RDD do Paradox criada acima
+    REQUEST PXRDD   //-30 Carrega a RDD do Paradox criada acima
 #endif
 
 

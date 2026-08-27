@@ -345,6 +345,7 @@ DO WHILE .T.
          OPCAO( 09, 22, "DBFCDXEX  (Crypto AES)  ", 88 ) // 19
          OPCAO( 10, 22, "&DBFNSX   (DBF/NSX/MST) ", 68 ) // 11
          OPCAO( 11, 22, "DBFB&LOB  (DBV Blob)    ", 76 ) // 12
+         OPCAO( 12, 22, "RMDBFCDX  RushMore      ", 77 ) // 13
          nOpSub := menu(2, 0)
          DO CASE
             CASE nOpSub == 1; TIPODBF := 1;  EXIT
@@ -352,6 +353,7 @@ DO WHILE .T.
             CASE nOpSub == 3; TIPODBF := 19; EXIT
             CASE nOpSub == 4; TIPODBF := 11; EXIT
             CASE nOpSub == 5; TIPODBF := 12; EXIT
+            CASE nOpSub == 6; TIPODBF := 22; EXIT
          ENDCASE
 
       CASE KEY == 4 // Submenu ADS Drivers
@@ -413,7 +415,7 @@ DO WHILE .T.
 
 #ifdef USE_PXRDD
       CASE KEY == 9 // PXRDD
-         TIPODBF := 22
+         TIPODBF := 30
          EXIT
 #endif
 
@@ -523,9 +525,11 @@ do case
        TABLEEXT :="JSON"
        USOVIA := "JSONRDD"
        rddSetDefault("JSONRDD")      
-           
-#ifdef USE_PXRDD
     case nTIPODBF = 22
+       USOVIA := "RMDBFCDX"
+       rddSetDefault("RMDBFCDX")        
+#ifdef USE_PXRDD
+    case nTIPODBF = 30
         TABLEEXT :="DB"
         USOVIA := "PXRDD"
         rddSetDefault("PXRDD")
