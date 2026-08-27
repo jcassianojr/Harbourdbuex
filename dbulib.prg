@@ -254,12 +254,8 @@ return.t.
 *+
 *+
 *+
-FUNCtion tipodbfesc
 
 //TipoDBF,USOVIA e varivel public
-local aAMBIENTE
-LOCAL KEY
-
 /* indices
 .NTX   Single NATIVE  DBFNTX Nantucket Clipper / CA-Clipper / Harbour Native Harbour RDD. One key per file. Full DESCEND, FOR, UNIQUE support.
 .CDX Compound NATIVE  DBFCDX FoxPro / Visual FoxPro / Harbour Multi-tag compound index. Fully supported. VFP CDX compatible.
@@ -292,51 +288,145 @@ PXRDD  baseada na pxlib        implementacao
 */
 
 
+*+--------------------------------------------------------------------
+*+
+*+    Function tipodbfesc()
+*+
+*+--------------------------------------------------------------------
+*+
+*+--------------------------------------------------------------------
+*+
+*+    Function tipodbfesc()
+*+
+*+--------------------------------------------------------------------
+*+
+FUNCTION tipodbfesc()
 
+LOCAL aAMBIENTE
+LOCAL KEY
+LOCAL nOpSub := 0
 
-//KEY= TIPODBF //posiciona pela escolha anterior
 aAMBIENTE := SALVAA()
-HB_dispbox(03,08,21,60,B_DOUBLE+" ")
-@ 03,10 SAY "DRIVER    ARQ IND MEMO"          //     Driver   heranca
-@ 03,35 SAY "DRIVER    ARQ IND MEMO"
-OPCAO( 4,10,"DBF&NTX   DBF NTX DBT ",78)  //N  1 DBFNTX   DBF/DBFFPT/DBFNTX
-OPCAO( 5,10,"DBF&CDX   DBF CDX FPT ",67)  //C  2 DBFCDX   DBF/DBFFPT/CDXRDD
-OPCAO( 6,10,"&ADSCDX   DBF CDX FPT ",65)  //A  3 ADSCDX
-OPCAO( 7,10,"ADSNT&X   DBF NTX DBT ",88)  //X  4 ADSNTX
-OPCAO( 8,10,"ADSVF&P   DBF CDX FPT ",80)  //P  5 ADSVFP
-OPCAO( 9,10,"ADSAD&T   ADT ADI ADM ",84)  //T  6 ADSADT
-OPCAO(10,10,"D&BTCDX   DBF CDX DBT ",66)  //B  7 DBTCDX   DBFCDX/DBFFPT/DBTCDX
-OPCAO(11,10,"&SMTCDX   DBF CDX SMT ",83)  //S  8 DBFCDX   DBFFPT/SMTCDX
-OPCAO(12,10,"&FPTCDX   DBF CDX FPT ",70)  //F  9 FPTCDX   DBFCDX/DBFFPT/FPTCDX
-OPCAO(13,10,"S&IXCDX   DBF CDX FPT ",73)  //I 10 SIXCDX
 
-OPCAO(04,35,"&DBFNSX   DBF NSX MST ",68)  //D 11 DBFNSX   DBF/DBFFPT/DBFNSX
-OPCAO(05,35,"DBFB&LOB  DBF     DBV ",76)  //L 12 DBFBLOB  DBF/DBFFPT/DBFBLOB
-OPCAO(06,35,"&HSCDX    DBF CDX FPT ",72)  //H 13 HSCDX    DBFCDX/HSCDX
-OPCAO(07,35,"&RLCDX    DBF CDX FPT ",82)  //R 14 RLCDX    DBFCDX/RLCDX
-OPCAO(08,35,"&VFPCDX   DBF CDX FPT ",86)  //V 15 VFPCDX   DBFCDX/DBFFPT/VFPCDX
-OPCAO(09,35,"B&MDBFCDX DBF CXD FPT ",77)  //M 16 BMDBFCDX DBFCDX DBFFPT
-OPCAO(10,35,"BMDBFNSX  DBF NSX FPT ",49)  //1 17 BMDBFNSX DBFNSX DBFFPT
-OPCAO(11,35,"BMDBFNTX  DBF NTX FPT ",50)  //2 18 BMDBFNTX DBFNTX DBFFPT 
-OPCAO(12,35,"DBFCDXEX  DBF CDX FPT ",51)  //2 19 Crypto   DBFCDXEX   -lbcrypt
-OPCAO(13,35,"FCSVRDD   CSV         ",51)   //2 20 FCSVRDD csv
-OPCAO(13,35,"JSONRDD   JSON        ",51)   //2 21 JSONRDD json RDD
-
-
+DO WHILE .T.
+   HB_dispbox(03,08,20,54,B_DOUBLE+" ")
+   @ 03,12 SAY " SELECIONE A RDD / DRIVER "
+   OPCAO( 05, 11, "1. DBFCDX                 ", 68 ) // 1 -> Direto DBFCDX (2)
+   OPCAO( 06, 11, "2. ADSADT                 ", 65 ) // 2 -> Direto ADSADT (6)
+   OPCAO( 07, 11, "3. DBF Drivers            ", 66 ) // 3 -> Submenu DBF
+   OPCAO( 08, 11, "4. ADS Drivers            ", 83 ) // 4 -> Submenu ADS
+   OPCAO( 09, 11, "5. BMDBF Drivers          ", 77 ) // 5 -> Submenu BMDBF
+   OPCAO( 10, 11, "6. Outros Drivers         ", 79 ) // 6 -> Submenu Outros
+   OPCAO( 11, 11, "7. FCSVRDD (CSV)          ", 67 ) // 7 -> FCSVRDD (20)
+   OPCAO( 12, 11, "8. JSONRDD (JSON)         ", 74 ) // 8 -> JSONRDD (21)
 #ifdef USE_PXRDD
-   OPCAO(14,35,"PARADOX   DB  PX  MB  ",51)   //-22 Carrega a RDD do Paradox pxrdd
+   OPCAO( 13, 11, "9. PARADOX (PXRDD)        ", 80 ) // 9 -> PXRDD (22)
+   OPCAO( 14, 11, "0. Sair / Cancelar        ", 83 )
+#else
+   OPCAO( 13, 11, "0. Sair / Cancelar        ", 83 )
 #endif
 
-KEY := menu(2,0)
-if KEY > 0
-   TIPODBF := KEY
-else
-   TIPODBF := 2   //padrao dbfcdx
-endif
+   KEY := menu(1, 0)
+
+   DO CASE
+      CASE KEY == 1 // DBFCDX direto
+         TIPODBF := 2
+         EXIT
+
+      CASE KEY == 2 // ADSADT direto
+         TIPODBF := 6
+         EXIT
+
+      CASE KEY == 3 // Submenu DBF Drivers
+         HB_dispbox(06,20,13,50,B_DOUBLE+" ")
+         @ 06,22 SAY " DRIVERS DBF "
+         OPCAO( 07, 22, "DBF&NTX   (DBF/NTX/DBT) ", 78 ) // 1
+         OPCAO( 08, 22, "DBF&CDX   (DBF/CDX/FPT) ", 67 ) // 2
+         OPCAO( 09, 22, "DBFCDXEX  (Crypto AES)  ", 88 ) // 19
+         OPCAO( 10, 22, "&DBFNSX   (DBF/NSX/MST) ", 68 ) // 11
+         OPCAO( 11, 22, "DBFB&LOB  (DBV Blob)    ", 76 ) // 12
+         nOpSub := menu(2, 0)
+         DO CASE
+            CASE nOpSub == 1; TIPODBF := 1;  EXIT
+            CASE nOpSub == 2; TIPODBF := 2;  EXIT
+            CASE nOpSub == 3; TIPODBF := 19; EXIT
+            CASE nOpSub == 4; TIPODBF := 11; EXIT
+            CASE nOpSub == 5; TIPODBF := 12; EXIT
+         ENDCASE
+
+      CASE KEY == 4 // Submenu ADS Drivers
+         HB_dispbox(07,20,13,50,B_DOUBLE+" ")
+         @ 07,22 SAY " DRIVERS ADS "
+         OPCAO( 08, 22, "&ADSCDX   (DBF/CDX)     ", 65 ) // 3
+         OPCAO( 09, 22, "ADSNT&X   (DBF/NTX)     ", 88 ) // 4
+         OPCAO( 10, 22, "ADSVF&P   (VFP Table)   ", 80 ) // 5
+         OPCAO( 11, 22, "ADSAD&T   (ADT Table)   ", 84 ) // 6
+         nOpSub := menu(2, 0)
+         DO CASE
+            CASE nOpSub == 1; TIPODBF := 3; EXIT
+            CASE nOpSub == 2; TIPODBF := 4; EXIT
+            CASE nOpSub == 3; TIPODBF := 5; EXIT
+            CASE nOpSub == 4; TIPODBF := 6; EXIT
+         ENDCASE
+
+      CASE KEY == 5 // Submenu BMDBF Drivers
+         HB_dispbox(08,20,12,50,B_DOUBLE+" ")
+         @ 08,22 SAY " DRIVERS BMDBF "
+         OPCAO( 09, 22, "B&MDBFCDX (DBF/CDX)     ", 77 ) // 16
+         OPCAO( 10, 22, "BMDBFNSX  (DBF/NSX)     ", 49 ) // 17
+         OPCAO( 11, 22, "BMDBFNTX  (DBF/NTX)     ", 50 ) // 18
+         nOpSub := menu(2, 0)
+         DO CASE
+            CASE nOpSub == 1; TIPODBF := 16; EXIT
+            CASE nOpSub == 2; TIPODBF := 17; EXIT
+            CASE nOpSub == 3; TIPODBF := 18; EXIT
+         ENDCASE
+
+      CASE KEY == 6 // Submenu Outros Drivers
+         HB_dispbox(09,20,17,50,B_DOUBLE+" ")
+         @ 09,22 SAY " OUTROS DRIVERS "
+         OPCAO( 10, 22, "D&BTCDX   (DBF/CDX/DBT) ", 66 ) // 7
+         OPCAO( 11, 22, "&SMTCDX   (DBF/CDX/SMT) ", 83 ) // 8
+         OPCAO( 12, 22, "&FPTCDX   (DBF/CDX/FPT) ", 70 ) // 9
+         OPCAO( 13, 22, "S&IXCDX   (SIx Driver)  ", 73 ) // 10
+         OPCAO( 14, 22, "&HSCDX    (HSCDX)       ", 72 ) // 13
+         OPCAO( 15, 22, "&RLCDX    (RLCDX)       ", 82 ) // 14
+         OPCAO( 16, 22, "&VFPCDX   (VFPCDX)      ", 86 ) // 15
+         nOpSub := menu(2, 0)
+         DO CASE
+            CASE nOpSub == 1; TIPODBF := 7;  EXIT
+            CASE nOpSub == 2; TIPODBF := 8;  EXIT
+            CASE nOpSub == 3; TIPODBF := 9;  EXIT
+            CASE nOpSub == 4; TIPODBF := 10; EXIT
+            CASE nOpSub == 5; TIPODBF := 13; EXIT
+            CASE nOpSub == 6; TIPODBF := 14; EXIT
+            CASE nOpSub == 7; TIPODBF := 15; EXIT
+         ENDCASE
+
+      CASE KEY == 7 // FCSVRDD
+         TIPODBF := 20
+         EXIT
+
+      CASE KEY == 8 // JSONRDD
+         TIPODBF := 21
+         EXIT
+
+#ifdef USE_PXRDD
+      CASE KEY == 9 // PXRDD
+         TIPODBF := 22
+         EXIT
+#endif
+
+      OTHERWISE
+         TIPODBF := 2 // Padrão DBFCDX caso cancele
+         EXIT
+   ENDCASE
+ENDDO
+
 USOVIA := RDDNOME(TIPODBF)
 RESTAA(aAMBIENTE)
-layout()
-return TIPODBF
+LAYOUT()
+RETURN TIPODBF
 
 
 *+--------------------------------------------------------------------
