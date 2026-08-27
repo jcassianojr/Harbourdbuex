@@ -1962,7 +1962,8 @@ FUNCTION GERACAMPOADT(cFieldName, cSqlType, nFieldLength, nFieldDec)
       cType    := SUBSTR(cType, 1, 1)
    ENDIF
 
-   // 1. EXTRAÇÃO DE TAMANHO: Tipos com Tamanho entre Parênteses Ex: VARCHAR(50) ou NUMERIC(10,2)
+
+// 1. EXTRAÇÃO DE TAMANHO: Tipos com Tamanho entre Parênteses Ex: VARCHAR(50) ou NUMERIC(10,2)
    IF AT("(", cType) > 0 .AND. AT(")", cType) > 0
       cTmpSize := SUBSTR(cType, AT("(", cType) + 1)
       cTmpSize := SUBSTR(cTmpSize, 1, AT(")", cTmpSize) - 1)
@@ -1971,7 +1972,7 @@ FUNCTION GERACAMPOADT(cFieldName, cSqlType, nFieldLength, nFieldDec)
          nFieldLength := VAL(SUBSTR(cTmpSize, 1, AT(",", cTmpSize) - 1))
          nFieldDec    := VAL(SUBSTR(cTmpSize, AT(",", cTmpSize) + 1))
          
-         // Se for um tipo numérico explicitado com tamanho
+         // Se for um tipo numérico explicitado com tamanho e decimais
          IF "NUMERIC" $ cType .OR. "DECIMAL" $ cType .OR. "NUMBER" $ cType
             RETURN {cFieldName, "N", nFieldLength, nFieldDec}
          ENDIF
