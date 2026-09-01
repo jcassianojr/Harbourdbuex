@@ -133,7 +133,7 @@ FUNCTION GerarFragmentoSQL(cCampo, lNot)
             
          CASE cTIPOSQL == "ORACLE"
             cRet := " ( " + cCampo + " IS NOT NULL ) "
-         CASE cTIPOSQL == "DUCKDB"
+         CASE cTIPOSQL == "DUCKDB" .OR. cTIPOSQL == "DUCKLAKE"
               cRet := " ( " + cCampo + " IS NOT NULL AND " + cCampo + " <> '' ) "
             
          OTHERWISE // Padrão ANSI (Compatível com a maioria)
@@ -248,7 +248,7 @@ FUNCTION Dialeto_begin(cTipo)
       cCOMANDO := "BEGIN;"
     CASE cTIPOSQL="ORACLE" .OR. cTIPOSQL="OCI"
            cCOMANDO ="SET TRANSACTION READ WRITE;"        
-    CASE cTIPOSQL == "DUCKDB"
+    CASE cTIPOSQL == "DUCKDB" .OR. cTIPOSQL == "DUCKLAKE"
         cCOMANDO := "BEGIN TRANSACTION;"  
       
    ENDCASE
@@ -284,7 +284,7 @@ FUNCTION Dialeto_commit()
       cCOMANDO := "end transaction"
    CASE cTIPOSQL = "PGSQL" .OR. cTIPOSQL = "PGSQL64" .OR. cTIPOSQL = "POSTGRESQL"
       cCOMANDO := "COMMIT;"
-   CASE cTIPOSQL == "DUCKDB"
+   CASE cTIPOSQL == "DUCKDB" .OR. cTIPOSQL == "DUCKLAKE"
    cCOMANDO := "COMMIT;"   
    ENDCASE
 
@@ -319,7 +319,7 @@ FUNCTION Dialeto_rollback()
       cCOMANDO := "ROLLBACK;"
    CASE cTIPOSQL = "PGSQL" .OR. cTIPOSQL = "PGSQL64" .OR. cTIPOSQL = "POSTGRESQL"
       cCOMANDO := "ROLLBACK;"
-   CASE cTIPOSQL == "DUCKDB"
+   CASE cTIPOSQL == "DUCKDB" .OR. cTIPOSQL == "DUCKLAKE"
    cCOMANDO := "ROLLBACK;"   
    ENDCASE
 
@@ -353,7 +353,7 @@ cCOMANDO:=""
            cCOMANDO ="CURRENT_DATE"
         CASE cTIPOSQL="ORACLE" .OR. cTIPOSQL="OCI"
            cCOMANDO ="SYSDATE"  
-      CASE cTIPOSQL == "DUCKDB"
+      CASE cTIPOSQL == "DUCKDB".OR. cTIPOSQL == "DUCKLAKE"
    cCOMANDO := "CURRENT_DATE"                  
    ENDCASE
 return cCOMANDO  
@@ -387,7 +387,7 @@ cCOMANDO:=""
            cCOMANDO ="NOW()"
         CASE cTIPOSQL="ORACLE" .OR. cTIPOSQL="OCI"
            cCOMANDO ="SYSTIMESTAMP"
-     CASE cTIPOSQL == "DUCKDB"
+     CASE cTIPOSQL == "DUCKDB".OR. cTIPOSQL == "DUCKLAKE"
    cCOMANDO := "CURRENT_TIMESTAMP"                     
    ENDCASE
 return cCOMANDO  
@@ -424,7 +424,7 @@ cCOMANDO:=""
            cCOMANDO ="NULL"
       CASE cSQLDIALETO="ORACLE" .OR. cSQLDIALETO="OCI"
            cCOMANDO ="NULL"  
-      CASE cSQLDIALETO == "DUCKDB"
+      CASE cSQLDIALETO == "DUCKDB" .OR. cSQLDIALETO == "DUCKLAKE"
           cCOMANDO := "NULL"                  
    ENDCASE
 return cCOMANDO  
@@ -505,6 +505,9 @@ FUNCTION Dialeto_ShowDatabases(cTipo)
    
    CASE cTipo == "DUCKDB"
        cCOMANDO := "SELECT schema_name AS DB_NAME FROM information_schema.schemata;"
+       
+  CASE cTipo == "DUCKLAKE"
+   cCOMANDO := "SELECT schema_name AS DB_NAME FROM ducklake_schema;"     
 
 ENDCASE
 RETURN cCOMANDO
@@ -534,7 +537,7 @@ FUNCTION Dialeto_Version(cTipo)
 
    CASE cTipo == "ORACLE" .OR. cTipo == "OCI"
       cCOMANDO := "SELECT BANNER AS VER FROM V$VERSION WHERE ROWNUM = 1;"
-   CASE cTipo == "DUCKDB"
+   CASE cTipo == "DUCKDB" .OR. cTipo == "DUCKLAKE"
         cCOMANDO := "SELECT duckdb_version() AS VER;"   
       
    ENDCASE
@@ -598,7 +601,7 @@ FUNCTION Dialeto_SetLimit( nQtd )
           
    CASE cTIPOSQL = "MSSQL" .OR. cTIPOSQL = "SQLSERVER" .OR. cTIPOSQL = "SYBASE"
       cCOMANDO := " TOP " + cQtd + " "       
-   CASE cTIPOSQL == "DUCKDB"
+   CASE cTIPOSQL == "DUCKDB" .OR. cTIPOSQL == "DUCKLAKE"
       cCOMANDO := " LIMIT " + cQtd       
       
    ENDCASE
@@ -785,7 +788,7 @@ FUNCTION Dialeto_SQL( cSQLCNV )
       cSQLCNV := StrTran( cSQLCNV, "IFNULL(", "COALESCE(" ) // O SQLite usa IFNULL, o Pos
      
      
- CASE cTIPOSQL == "DUCKDB"
+ CASE cTIPOSQL == "DUCKDB" .OR. cTIPOSQL == "DUCKLAKE"
       // Datas
       cSQLCNV := StrTran( cSQLCNV, "TODAY()", "CURRENT_DATE" )
       
@@ -1222,7 +1225,7 @@ FUNCTION SqliteCreateTable( cTablename, aStruct, cTIPOSQL, lINDEX ,lPK,lINCSR)
 	        //CONSTRAINT INTEG_5 UNIQUE (SR_RECNO)
             //CREATE UNIQUE INDEX RDB$3 ON TEST (SR_RECNO);
         // Campo Auto-incremento / SR_RECNO para DuckDB
-        CASE mFldType = "+"  .and. cTIPOSQL == "DUCKDB"      
+        CASE mFldType = "+"  .and. (cTIPOSQL == "DUCKDB"   .OR. cTIPOSQL == "DUCKLAKE")   
              MSql += " BIGINT "    
             
          // Caracter (C)
@@ -1257,7 +1260,7 @@ FUNCTION SqliteCreateTable( cTablename, aStruct, cTIPOSQL, lINDEX ,lPK,lINCSR)
          CASE mFldType = "C" .AND. cTIPOSQL = "FIREBIRD"
             mSql += "VARCHAR(" + LTrim( Str( mFldLen ) ) + ")"  
          // Exemplo de como fica a sua função adaptada
-        CASE mFldType = "C" .AND. cTIPOSQL == "DUCKDB"
+        CASE mFldType = "C" .AND. (cTIPOSQL == "DUCKDB" .OR. cTIPOSQL == "DUCKLAKE")
             IF mFldLen > 0
                 mSql += "VARCHAR(" + LTrim(Str(mFldLen)) + ")" // O DuckDB aceita e otimiza
             ELSE
@@ -1295,7 +1298,7 @@ FUNCTION SqliteCreateTable( cTablename, aStruct, cTIPOSQL, lINDEX ,lPK,lINCSR)
                                     .OR. cTIPOSQL == "CUBRID" ;
                                     )   
             mSql += "DATETIME"
-         CASE mFldType = "D" .AND. cTIPOSQL == "DUCKDB"
+         CASE mFldType = "D" .AND. (cTIPOSQL == "DUCKDB" .OR. cTIPOSQL == "DUCKLAKE")
             mSql += "DATE" // DuckDB nativo para datas   
 
         CASE mFldType = "D" .AND. ( cTIPOSQL = "IBMDB2" )
@@ -1322,7 +1325,7 @@ FUNCTION SqliteCreateTable( cTablename, aStruct, cTIPOSQL, lINDEX ,lPK,lINCSR)
                                     .OR. cTIPOSQL == "CUBRID" ;
                                     )   
             mSql += "DATETIME"
-         CASE mFldType = "@" .AND. cTIPOSQL == "DUCKDB"
+         CASE mFldType = "@" .AND. (cTIPOSQL == "DUCKDB" .OR. cTIPOSQL == "DUCKLAKE")
             mSql += "TIMESTAMP"    
          CASE mFldType = "@"
              mSql += "TIMESTAMP"
@@ -1350,7 +1353,7 @@ FUNCTION SqliteCreateTable( cTablename, aStruct, cTIPOSQL, lINDEX ,lPK,lINCSR)
             ELSE
                mSql += "NUMBER(" + hb_ntos( mFldLen ) + ")  DEFAULT 0"
             ENDIF
-         CASE mFldType = "N" .AND. cTIPOSQL == "DUCKDB"
+         CASE mFldType = "N" .AND. (cTIPOSQL == "DUCKDB" .OR. cTIPOSQL == "DUCKLAKE")
              IF mFldDec > 0
                 mSql += "DECIMAL(" + hb_ntos(mFldLen) + "," + hb_ntos(mFldDec) + ")" // Ideal para monetários
              ELSE
@@ -1483,7 +1486,7 @@ FUNCTION SqliteCreateTable( cTablename, aStruct, cTIPOSQL, lINDEX ,lPK,lINCSR)
             mSql += "INT  default 0 "
          CASE mFldType = "I" .AND. ( cTIPOSQL = "ORACLE" .OR. cTIPOSQL = "OCI")   
             mSql += "NUMBER(" + hb_ntos( mFldLen ) + ",0)  DEFAULT 0"
-        CASE mFldType = "I" .AND. cTIPOSQL == "DUCKDB"
+        CASE mFldType = "I" .AND. (cTIPOSQL == "DUCKDB" .OR. cTIPOSQL == "DUCKLAKE")
             mSql += "BIGINT"    
          CASE mFldType = "I"
             mSql += "INTEGER"
@@ -1511,7 +1514,7 @@ FUNCTION SqliteCreateTable( cTablename, aStruct, cTIPOSQL, lINDEX ,lPK,lINCSR)
             mSql += "BOOLEAN"
          CASE mFldType = "L" .AND. ( llMDB .OR. llACCDB .OR. cTIPOSQL = "MSSQL" .OR. cTIPOSQL = "SQLSERVER" )
             mSql += "BIT DEFAULT 0"
-         CASE mFldType = "L" .AND. cTIPOSQL == "DUCKDB"
+         CASE mFldType = "L" .AND. (cTIPOSQL == "DUCKDB" .OR. cTIPOSQL == "DUCKLAKE")
             mSql += "BOOLEAN" 
         CASE mFldType = "L" .AND. ( cTIPOSQL = "IBMDB2" )
             mSql += "SMALLINT"
@@ -1540,7 +1543,7 @@ FUNCTION SqliteCreateTable( cTablename, aStruct, cTIPOSQL, lINDEX ,lPK,lINCSR)
             mSql += "LONGTEXT"
          CASE mFldType = "M" .AND. ( cTIPOSQL = "FIREBIRD" )
             mSql += "BLOB SUB_TYPE TEXT" 
-         CASE mFldType = "M" .AND. cTIPOSQL == "DUCKDB"
+         CASE mFldType = "M" .AND. (cTIPOSQL == "DUCKDB" .OR. cTIPOSQL == "DUCKLAKE")
             mSql += "VARCHAR" // DuckDB lida com textos grandes eficientemente como VARCHAR   
         CASE mFldType = "M" .AND. ( cTIPOSQL = "IBMDB2" )
             mSql += "CLOB (256000)"
@@ -1633,7 +1636,8 @@ FUNCTION SqliteCreateTable( cTablename, aStruct, cTIPOSQL, lINDEX ,lPK,lINCSR)
    
    
    // Criação dos Índices Originais do DBF
-   IF lINDEX
+   // prevent index creation for DuckLake since the format does not support them
+   IF lINDEX .AND. cTIPOSQL <> "DUCKLAKE"
       msql +=  hb_osNewLine() 
       aINDICES := GeraINDICES()
       nIndexes := LEN(aINDICES)
@@ -1648,7 +1652,7 @@ FUNCTION SqliteCreateTable( cTablename, aStruct, cTIPOSQL, lINDEX ,lPK,lINCSR)
           ENDIF
       NEXT j
    ENDIF
-   IF lINCSR
+   IF lINCSR .AND. cTIPOSQL <> "DUCKLAKE"
       mSql += " CREATE INDEX IDX_" + cTablename + "_DELETED ON" + cTablename + " (SR_DELETED);" + HB_OSNEWLINE()
       mSql += " CREATE INDEX IDX_" + cTablename + "_RECNO   ON" + cTablename + " (SR_RECNO);"   + HB_OSNEWLINE()
    ENDIF
@@ -2260,7 +2264,7 @@ FUNCTION DIALETO_DetectTargetDb(cTargetDB)
    
    cTargetDB:=UPPER(cTargetDB)
 
-   DO CASE
+DO CASE
    CASE "ORACLE" $ cTargetDB
       cSystemID := "ORACLE"                 //SQLRDD_RDBMS_ORACLE
 //   CASE ("MICROSOFT" $ cTargetDB .AND. "SQL" $ cTargetDB .AND. "SERVER" $ cTargetDB .AND.("10.25" $ ::cSystemVers))
@@ -2337,9 +2341,11 @@ FUNCTION DIALETO_DetectTargetDb(cTargetDB)
    CASE "CUBRID" $ cTargetDB
       cSystemID := "CUBRID" //SQLRDD_RDBMS_CUBRID
    CASE "DUCKDB" $ cTargetDB
-       cSystemID := "DUCKDB"   
+       cSystemID := "DUCKDB" 
+   CASE "DUCKLAKE" $ cTargetDB
+     cSystemID := "DUCKLAKE"      
    OTHERWISE
-   ENDCASE
+ENDCASE
 
 
 RETURN cSystemID
@@ -2430,7 +2436,7 @@ DO CASE
                   "JOIN RDB$FIELDS T ON F.RDB$FIELD_SOURCE = T.RDB$FIELD_NAME " + ;
                   "WHERE F.RDB$RELATION_NAME = '" + Upper(cTabela) + "' " + ;
                   "ORDER BY F.RDB$FIELD_POSITION;"
-    CASE cTargerdb == "DUCKDB"
+    CASE cTargerdb == "DUCKDB" .OR. cTargerdb == "DUCKLAKE"
         cSchemaSQL := iif( Empty(cUsuario), "main", Lower(cUsuario) )
         cCOMANDO := "SELECT column_name AS FIELD_NAME, data_type AS DATA_TYPE, " + ;
                "COALESCE(character_maximum_length, numeric_precision) AS FIELD_LEN, " + ;
