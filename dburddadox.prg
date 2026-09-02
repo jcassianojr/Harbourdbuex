@@ -126,28 +126,46 @@ FUNCTION opencmdbarq()
    CASE cTIPOSQL == "MYSQL" .OR. cTIPOSQL == "MYSQL64"
       hb_adoSetTable(cTABELA) 
       hb_adoSetEngine( iif(loledb, "MYSQL", "MYSQL64") ) 
-      hb_adoSetServer(cSERVERx); hb_adoSetUser(CUSERX); hb_adoSetPassword(CPASSX) 
+      hb_adoSetServer(cSERVERx)
+      hb_adoSetUser(CUSERX)
+      hb_adoSetPassword(CPASSX) 
       dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
    CASE cTIPOSQL == "MARIADB"
       hb_adoSetTable(cTABELA) 
       hb_adoSetEngine("MARIADB") 
-      hb_adoSetServer(cSERVERx); hb_adoSetUser(CUSERX); hb_adoSetPassword(CPASSX) 
+      hb_adoSetServer(cSERVERx)
+      hb_adoSetUser(CUSERX)
+      hb_adoSetPassword(CPASSX) 
       dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
    CASE cTIPOSQL == "MSSQL" .OR. cTIPOSQL == "SQLSERVER"
       hb_adoSetTable(cTABELA) 
       hb_adoSetEngine("SQL") 
-      hb_adoSetServer(cSERVERx); hb_adoSetUser(CUSERX); hb_adoSetPassword(CPASSX) 
+      hb_adoSetServer(cSERVERx)
+      hb_adoSetUser(CUSERX)
+      hb_adoSetPassword(CPASSX) 
       dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
    CASE cTIPOSQL == "PGSQL" .OR. cTIPOSQL == "PGSQL64" .OR. cTIPOSQL == "POSTGRESQL"
-      TRY
          hb_adoSetTable(cTABELA) 
          hb_adoSetEngine( iif(loledb, "PGSQL", "PGSQL64") ) 
-         hb_adoSetServer(cSERVERx); hb_adoSetUser(CUSERX); hb_adoSetPassword(CPASSX) 
+         hb_adoSetServer(cSERVERx)
+         hb_adoSetUser(CUSERX)
+         hb_adoSetPassword(CPASSX) 
          dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
-      CATCH; MDT("Erro Abrindo"); lRETU := .F.; END
    CASE cTIPOSQL == "PARADOX"
       hb_adoSetTable(cTABELA)
       hb_adoSetEngine("PARADOX")
       dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
+  CASE cTIPOSQL == "DUCKDB"
+      hb_adoSetTable(cTABELA)
+      hb_adoSetEngine("DUCKDB")
+      dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
+   CASE cTIPOSQL == "ORACLE" .OR. cTIPOSQL == "OCI"
+      hb_adoSetTable(cTABELA)
+      hb_adoSetEngine("ORACLE")
+      hb_adoSetServer(cSERVERx)
+      hb_adoSetUser(CUSERX)
+      hb_adoSetPassword(CPASSX)
+      dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)    
+      
    ENDCASE
    RETURN lRETU
