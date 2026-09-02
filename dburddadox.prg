@@ -3,10 +3,9 @@
 #INCLUDE "TRY.CH"
 #INCLUDE "DBINFO.CH"
 #INCLUDE "hbVER.CH"
-#require "rddado"
-#include "adordd.ch"
-
-REQUEST ADORDD
+#require "rddadox"
+#include "rddadox.ch"
+REQUEST RDDADOX
 
 Function mdbmenu(cUSOSQL)
 cTIPOSQL := cUSOSQL   
@@ -48,7 +47,7 @@ WHILE .T.
          @ 03,40 SAY "odbc 9(64b)"         
       endif
    OTHERWISE
-      @ 03,24 SAY "ADORDD"+" "+cTIPOSQL         
+      @ 03,24 SAY "RDDADOX"+" "+cTIPOSQL         
    ENDCASE
    if cTIPOSQL = "MYSQL" .OR. cTIPOSQL = "MYSQL64" .OR. cTIPOSQL = "MARIADB" .OR. cTIPOSQL = "PGSQL" .OR. cTIPOSQL = "PGSQL64" .OR. cTIPOSQL = "POSTGRESQL" ;
               .OR. cTIPOSQL = "MSSQL" .OR. cTIPOSQL = "SQLSERVER"
@@ -103,77 +102,52 @@ laccdb := .f.
 lFDB   := .f.
 return nil
 
-function opencmdbarq()
-local lRETU := .T.
-DO CASE
-CASE lMDB
-   if loledb
+FUNCTION opencmdbarq()
+   LOCAL lRETU := .T.
+   DO CASE
+   CASE lMDB
       hb_adoSetTable(cTABELA) 
-      dbUseArea(.F.,"ADORDD",(cMDBARQ),,.T.,.F.)
-   else
+      hb_adoSetEngine( iif(loledb, "ACCESS", "ACEOLEDB") )
+      dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
+   CASE lACCDB
       hb_adoSetTable(cTABELA) 
       hb_adoSetEngine("ACEOLEDB") 
-      dbUseArea(.F.,"ADORDD",(cMDBARQ),,.T.,.F.)
-   endif
-CASE lACCDB
-   hb_adoSetTable(cTABELA) 
-   hb_adoSetEngine("ACEOLEDB") 
-   dbUseArea(.F.,"ADORDD",(cMDBARQ),,.T.,.F.)
-CASE lFDB 
-   hb_adoSetTable(cTABELA) 
-   hb_adoSetEngine("FIREBIRD") 
-   hb_adoSetUser(CUSERX) 
-   hb_adoSetPassword(CPASSX) 
-   dbUseArea(.F.,"ADORDD",(cMDBARQ),,.T.,.F.)
-CASE cTIPOSQL = "SQLITE"
-   hb_adoSetTable(cTABELA) 
-   hb_adoSetEngine("SQLITE") 
-   dbUseArea(.F.,"ADORDD",(cMDBARQ),,.T.,.F.)
-CASE cTIPOSQL = "MYSQL" .OR. cTIPOSQL = "MYSQL64"
-   if loledb
+      dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
+   CASE lFDB 
       hb_adoSetTable(cTABELA) 
-      hb_adoSetEngine("MYSQL") 
-      hb_adoSetServer(cSERVERx) 
+      hb_adoSetEngine("FIREBIRD") 
       hb_adoSetUser(CUSERX) 
       hb_adoSetPassword(CPASSX) 
-      dbUseArea(.F.,"ADORDD",(cMDBARQ),,.T.,.F.)
-   else
+      dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
+   CASE cTIPOSQL == "SQLITE"
       hb_adoSetTable(cTABELA) 
-      hb_adoSetEngine("MYSQL64") 
-      hb_adoSetServer(cSERVERx) 
-      hb_adoSetUser(CUSERX) 
-      hb_adoSetPassword(CPASSX) 
-      dbUseArea(.F.,"ADORDD",(cMDBARQ),,.T.,.F.)
-   endif
-CASE cTIPOSQL = "MARIADB"
-   hb_adoSetTable(cTABELA) 
-   hb_adoSetEngine("MARIADB") 
-   hb_adoSetServer(cSERVERx) 
-   hb_adoSetUser(CUSERX) 
-   hb_adoSetPassword(CPASSX) 
-   dbUseArea(.F.,"ADORDD",(cMDBARQ),,.T.,.F.)
-CASE cTIPOSQL = "MSSQL" .OR. cTIPOSQL = "SQLSERVER"
-   hb_adoSetTable(cTABELA) 
-   hb_adoSetEngine("SQL") 
-   hb_adoSetServer(cSERVERx) 
-   hb_adoSetUser(CUSERX) 
-   hb_adoSetPassword(CPASSX) 
-   dbUseArea(.F.,"ADORDD",(cMDBARQ),,.T.,.F.)
-CASE cTIPOSQL = "PGSQL" .OR. cTIPOSQL = "PGSQL64" .OR. cTIPOSQL = "POSTGRESQL"
-   if loledb
+      hb_adoSetEngine("SQLITE") 
+      dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
+   CASE cTIPOSQL == "MYSQL" .OR. cTIPOSQL == "MYSQL64"
+      hb_adoSetTable(cTABELA) 
+      hb_adoSetEngine( iif(loledb, "MYSQL", "MYSQL64") ) 
+      hb_adoSetServer(cSERVERx); hb_adoSetUser(CUSERX); hb_adoSetPassword(CPASSX) 
+      dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
+   CASE cTIPOSQL == "MARIADB"
+      hb_adoSetTable(cTABELA) 
+      hb_adoSetEngine("MARIADB") 
+      hb_adoSetServer(cSERVERx); hb_adoSetUser(CUSERX); hb_adoSetPassword(CPASSX) 
+      dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
+   CASE cTIPOSQL == "MSSQL" .OR. cTIPOSQL == "SQLSERVER"
+      hb_adoSetTable(cTABELA) 
+      hb_adoSetEngine("SQL") 
+      hb_adoSetServer(cSERVERx); hb_adoSetUser(CUSERX); hb_adoSetPassword(CPASSX) 
+      dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
+   CASE cTIPOSQL == "PGSQL" .OR. cTIPOSQL == "PGSQL64" .OR. cTIPOSQL == "POSTGRESQL"
       TRY
-        hb_adoSetTable(cTABELA); hb_adoSetEngine("PGSQL"); hb_adoSetServer(cSERVERx); hb_adoSetUser(CUSERX); hb_adoSetPassword(CPASSX) 
-        dbUseArea(.F.,"ADORDD",(cMDBARQ),,.T.,.F.)
-      catch; MDT("Erro Abrindo"); lRETU := .F.; END
-   else
-      TRY
-        hb_adoSetTable(cTABELA); hb_adoSetEngine("PGSQL64"); hb_adoSetServer(cSERVERx); hb_adoSetUser(CUSERX); hb_adoSetPassword(CPASSX) 
-        dbUseArea(.F.,"ADORDD",(cMDBARQ),,.T.,.F.)
-      catch; MDT("Erro Abrindo"); lRETU := .F.; END
-   endif
-CASE cTIPOSQL == "PARADOX"
-   hb_adoSetTable(cTABELA)
-   hb_adoSetEngine("PARADOX")
-   dbUseArea(.F.,"ADORDD",(cMDBARQ),,.T.,.F.)
-ENDCASE
-return lRETU
+         hb_adoSetTable(cTABELA) 
+         hb_adoSetEngine( iif(loledb, "PGSQL", "PGSQL64") ) 
+         hb_adoSetServer(cSERVERx); hb_adoSetUser(CUSERX); hb_adoSetPassword(CPASSX) 
+         dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
+      CATCH; MDT("Erro Abrindo"); lRETU := .F.; END
+   CASE cTIPOSQL == "PARADOX"
+      hb_adoSetTable(cTABELA)
+      hb_adoSetEngine("PARADOX")
+      dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
+   ENDCASE
+   RETURN lRETU
