@@ -27,7 +27,6 @@ gtwvg.hbc
 rddads.hbc
 rddbm.hbc
 sqlrddpp-firebird.hbc
-adoxb.hbc
 rddado.hbc
 dbfcdxex.hbc
 
@@ -87,7 +86,6 @@ letodb.hbc
 #
 \develop\harbour\dbu\dbuodbc.prg
 #
-\develop\harbour\dbu\dbuadox.prg 
 \develop\harbour\dbu\dbumddbml.prg
 \develop\harbour\dbu\dbucrypto.prg
 #

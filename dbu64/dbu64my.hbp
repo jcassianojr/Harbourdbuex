@@ -46,7 +46,6 @@ rddado.hbc
 sqlrddpp-mysql.hbc
 dbfcdxex.hbc
 rddado.hbc
-adoxb.hbc
 
 
 #
@@ -180,8 +179,6 @@ letodb.hbc
 #
 #      --- ADOX ODBC MDB,ACCESS,ACCDB,SQLITE,MYSQL,POSTGRESQL
 #
-#\develop\harbour\dbu\adoxb.prg
-\develop\harbour\dbu\dbuadox.prg 
 #
 #      --- LETO
 #

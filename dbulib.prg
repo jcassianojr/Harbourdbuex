@@ -225,7 +225,9 @@ WHILE .T.
        CASE KEY = 4
           ODBCmenu(cTIPOSQL) //odbc e dsn
        CASE KEY = 5
-          adoxmenu(cTIPOSQL)  //adox engine e odbc e dsn
+          #ifdef USE_MENU_ADOX
+            adoxmenu(cTIPOSQL)  //adox engine e odbc e dsn
+          #endif  
       CASE KEY = 6
           #ifdef USE_MENU_TD
             tclassmenu(cTIPOSQL)   //ao entrar trato os tipo que funcionam

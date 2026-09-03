@@ -22,7 +22,6 @@ hbtip.hbc
 xhb.hbc
 gtwvg.hbc
 hbmemio.hbc
-adoxb.hbc
 rddado.hbc
 dbfcdxex.hbc
 hbziparc.hbc
@@ -126,7 +125,6 @@ letodb.hbc
 #
 #      --- ADOX ODBC MDB,ACCESS,ACCDB,SQLITE,MYSQL,POSTGRESQL
 #
-\develop\harbour\dbu\dbuadox.prg 
 #
 #      --- LETO
 #

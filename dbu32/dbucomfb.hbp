@@ -32,7 +32,6 @@ hbziparc.hbc
 hbmxml.hbc
 hbxlsxml.hbc
 sqlrddpp-firebird.hbc
-adoxb.hbc
 dbfcdxex.hbc
 
 #
@@ -102,8 +101,6 @@ hbfbird.hbc
 #
 \develop\harbour\dbu\dbuodbc.prg 
 #
-#\develop\harbour\dbu\adoxb.prg   
-\develop\harbour\dbu\dbuadox.prg 
 #
 \develop\harbour\dbu\dbuleto.prg 
 #

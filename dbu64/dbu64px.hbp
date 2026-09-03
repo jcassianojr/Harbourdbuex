@@ -40,7 +40,6 @@ rddsql.hbc
 sddodbc.hbc
 sddsqlt3.hbc
 letodb.hbc
-adoxb.hbc
 rddado.hbc
 
 sqlrddpp.hbc
@@ -70,7 +69,6 @@ sqlrddpp.hbc
 \develop\harbour\dbu\dburddado.prg
 \develop\harbour\dbu\dbumix.prg
 \develop\harbour\dbu\dbuodbc.prg 
-\develop\harbour\dbu\dbuadox.prg 
 \develop\harbour\dbu\dbuleto.prg 
 #c:\develop\harbour\dbu\dumypg.prg
 #c:\develop\harbour\dbu\dumyfb.prg

@@ -57,7 +57,6 @@ hbsqlit3.hbc
 hbpgsql.hbc
 hbodbc.hbc
 rddado.hbc
-adoxb.hbc
 
 #
 # sqlmix
@@ -139,8 +138,6 @@ letodb.hbc
 #
 #       ---    adox
 #
-#\develop\harbour\dbu\adoxb.prg   
-\develop\harbour\dbu\dbuadox.prg 
 #
 #       ---   leto
 #

@@ -44,7 +44,6 @@ hbxlsxml.hbc
 rddado.hbc
 #sqlrddpp-mysql.hbc
 dbfcdxex.hbc
-adoxb.hbc
 hbmysql.hbc
 
 #
@@ -123,17 +122,11 @@ sqlrddpp.hbc
 #
 \develop\harbour\dbu\dbuodbc.prg 
 #
-#\develop\harbour\dbu\adoxb.prg   
-\develop\harbour\dbu\dbuadox.prg 
 #
 \develop\harbour\dbu\dbuleto.prg 
 #
 #c:\develop\harbour\dbu\dbutclass.prg
-#c:\develop\harbour\dbu\dumypg.prg
-#c:\develop\harbour\dbu\dumyfb.prg
-#c:\develop\harbour\dbu\dumytd.prg
 c:\develop\harbour\dbu\dbusqlrdd.prg
-#c:\develop\harbour\dbu\dumyOCI.prg
 
 
 \develop\harbour\diversos\objmgw\netdbf.prg

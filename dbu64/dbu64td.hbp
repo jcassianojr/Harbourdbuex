@@ -64,7 +64,6 @@ sddmy.hbc
 sddsqlt3.hbc
 letodb.hbc
 
-adoxb.hbc
 Tdbclass.hbc
 
 \develop\harbour\dbu\DBU.PRG  
@@ -117,9 +116,6 @@ Tdbclass.hbc
 #
 #
 \develop\harbour\dbu\dbuodbc.prg 
-#
-#\develop\harbour\dbu\adoxb.prg   
-\develop\harbour\dbu\dbuadox.prg 
 #
 \develop\harbour\dbu\dbuleto.prg 
 #
