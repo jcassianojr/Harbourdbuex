@@ -2448,5 +2448,100 @@ DO CASE
 ENDCASE
 RETURN cCOMANDO
 
+
+
+// +--------------------------------------------------------------------
+// +    Function Dialeto_PK()
+// +
+// +    Retorna o comando SQL para extrair a Chave Primária (Primary Key)
+// +    Padroniza o retorno da coluna com o alias "FIELD_NAME"
+// +--------------------------------------------------------------------
+FUNCTION Dialeto_PK( cTargetDB, cTabela, cUsuario )
+   LOCAL cCOMANDO := ""
+   LOCAL cSchema, cSchemaSQL, cUserOracle, cColOracle
+   
+   hb_Default( @cTargetDB, cTIPOSQL ) // Usa a global como fallback
+   hb_Default( @cTabela, cTabelax )
+   hb_Default( @cUsuario, cuserx )
+
+   DO CASE
+      CASE cTargetDB == "SQLITE"
+         // No SQLite, o pragma table_info retorna a coluna 'pk' com valor > 0 para chaves primárias
+         cCOMANDO := "SELECT name AS FIELD_NAME FROM pragma_table_info('" + cTabela + "') WHERE pk > 0 ORDER BY pk;"
+
+      CASE cTargetDB == "MYSQL" .OR. cTargetDB == "MYSQL64" .OR. cTargetDB == "MARIADB"
+         // Usa a sintaxe de função DATABASE() caso não forneça o schema
+         cSchema := iif( Empty( cUsuario ), "DATABASE()", "'" + cUsuario + "'" )
+         cCOMANDO := "SELECT kcu.COLUMN_NAME AS FIELD_NAME " + ;
+                     "FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc " + ;
+                     "JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu " + ;
+                     "  ON tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME " + ;
+                     "  AND tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA " + ;
+                     "WHERE tc.CONSTRAINT_TYPE = 'PRIMARY KEY' " + ;
+                     "  AND tc.TABLE_NAME = '" + cTabela + "' " + ;
+                     "  AND tc.TABLE_SCHEMA = " + cSchema + " " + ;
+                     "ORDER BY kcu.ORDINAL_POSITION;"
+
+      CASE cTargetDB == "PGSQL" .OR. cTargetDB == "PGSQL64" .OR. cTargetDB == "POSTGRESQL"
+         cSchema := iif( Empty( cUsuario ), "public", Lower( cUsuario ) )
+         // Utiliza o catálogo do PostgreSQL, emulando a consulta rápida implementada na PGRDD
+         cCOMANDO := "SELECT c.attname AS FIELD_NAME " + ;
+                     "FROM pg_class a, pg_class b, pg_attribute c, pg_index d, pg_namespace e " + ;
+                     "WHERE a.oid = d.indrelid " + ;
+                     "  AND a.relname = '" + Lower( cTabela ) + "' " + ;
+                     "  AND b.oid = d.indexrelid " + ;
+                     "  AND c.attrelid = b.oid " + ;
+                     "  AND d.indisprimary " + ;
+                     "  AND e.oid = a.relnamespace " + ;
+                     "  AND e.nspname = '" + cSchema + "';"
+
+      CASE cTargetDB == "MSSQL" .OR. cTargetDB == "SQLSERVER"
+         cSchemaSQL := iif( Empty( cUsuario ), "dbo", cUsuario )
+         cCOMANDO := "SELECT kcu.COLUMN_NAME AS FIELD_NAME " + ;
+                     "FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc " + ;
+                     "JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu " + ;
+                     "  ON tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME " + ;
+                     "WHERE tc.CONSTRAINT_TYPE = 'PRIMARY KEY' " + ;
+                     "  AND tc.TABLE_NAME = '" + cTabela + "' " + ;
+                     "  AND tc.TABLE_SCHEMA = '" + cSchemaSQL + "' " + ;
+                     "ORDER BY kcu.ORDINAL_POSITION;"
+
+      CASE cTargetDB == "ORACLE" .OR. cTargetDB == "OCI"
+         // Seleção condicional das visões para otimização com ou sem owner explícito
+         cUserOracle := iif( Empty( cUsuario ), "USER_CONSTRAINTS", "ALL_CONSTRAINTS" )
+         cColOracle  := iif( Empty( cUsuario ), "USER_CONS_COLUMNS", "ALL_CONS_COLUMNS" )
+         
+         cCOMANDO := "SELECT cols.column_name AS FIELD_NAME " + ;
+                     "FROM " + cUserOracle + " cons " + ;
+                     "JOIN " + cColOracle + " cols " + ;
+                     "  ON cons.constraint_name = cols.constraint_name " + ;
+                     iif( !Empty( cUsuario ), "  AND cons.owner = cols.owner ", "" ) + ;
+                     "WHERE cons.constraint_type = 'P' " + ;
+                     "  AND cons.table_name = '" + Upper( cTabela ) + "' " + ;
+                     iif( !Empty( cUsuario ), "  AND cons.owner = '" + Upper( cUsuario ) + "' ", "" ) + ;
+                     "ORDER BY cols.position;"
+
+      CASE cTargetDB == "FIREBIRD"
+         cCOMANDO := "SELECT TRIM(S.RDB$FIELD_NAME) AS FIELD_NAME " + ;
+                     "FROM RDB$INDEX_SEGMENTS S " + ;
+                     "JOIN RDB$RELATION_CONSTRAINTS RC ON S.RDB$INDEX_NAME = RC.RDB$INDEX_NAME " + ;
+                     "WHERE RC.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY' " + ;
+                     "  AND RC.RDB$RELATION_NAME = '" + Upper( cTabela ) + "' " + ;
+                     "ORDER BY S.RDB$FIELD_POSITION;"
+
+      CASE cTargetDB == "DUCKDB" .OR. cTargetDB == "DUCKLAKE"
+         cSchemaSQL := iif( Empty( cUsuario ), "main", Lower( cUsuario ) )
+         cCOMANDO := "SELECT kcu.column_name AS FIELD_NAME " + ;
+                     "FROM information_schema.table_constraints tc " + ;
+                     "JOIN information_schema.key_column_usage kcu " + ;
+                     "  ON tc.constraint_name = kcu.constraint_name " + ;
+                     "WHERE tc.constraint_type = 'PRIMARY KEY' " + ;
+                     "  AND tc.table_name = '" + cTabela + "' " + ;
+                     "  AND tc.table_schema = '" + cSchemaSQL + "' " + ;
+                     "ORDER BY kcu.ordinal_position;"
+   ENDCASE
+   
+   RETURN cCOMANDO
+
 // + EOF: dbudialeto.prg
 // +
