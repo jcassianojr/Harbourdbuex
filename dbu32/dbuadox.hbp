@@ -52,7 +52,7 @@ sddodbc.hbc
 #sddfb.hbc
 #sddpg.hbc
 sddsqlt3.hbc
-letodb.hbc
+rddleto.hbc
 rddadox.hbc
 
 sqlrddpp.hbc

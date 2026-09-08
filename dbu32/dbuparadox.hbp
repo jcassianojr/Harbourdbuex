@@ -39,7 +39,7 @@ hbodbc.hbc
 rddsql.hbc
 sddodbc.hbc
 sddsqlt3.hbc
-letodb.hbc
+rddleto.hbc
 rddado.hbc
 
 sqlrddpp.hbc

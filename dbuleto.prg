@@ -29,7 +29,7 @@
 // +
 // +
 
-#include "leto_rev.ch"
+//#include "leto_rev.ch"
 #include "rddleto.ch"
 #include "BOX.CH"
 #include "TRY.CH"
@@ -399,14 +399,14 @@ ENDIF
 IF nConnect >= 0 .AND. !EMPTY(cOptions)
    IF VAL(cOptions) >= 0 .AND. LEFT(cOptions,1) $ "0123456789"
       nTmp := VAL(cOptions)
-      IF leto_mgID() != nTmp /* ele we have just overwritten the log */
-         cTmp := leto_MgLog(nConnect,nTmp)
-      ELSE
-         cTmp := ""
-      ENDIF
+      //IF leto_mgID() != nTmp /* ele we have just overwritten the log */
+      //   cTmp := leto_MgLog(nConnect,nTmp)
+      //ELSE
+      //   cTmp := ""
+      //ENDIF
    ELSE
       nTmp := - 1
-      cTmp := leto_MgLog(nConnect,- 1)
+      //cTmp := leto_MgLog(nConnect,- 1)
    ENDIF
    IF !EMPTY(cTmp)
       cInfo += "- -[ "+STR(nTmp,4,0)+" ]"+REPL("- ",15)

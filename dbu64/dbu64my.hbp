@@ -91,7 +91,7 @@ sddsqlt3.hbc
 #
 #      --- LETO
 #
-letodb.hbc
+rddleto.hbc
 
 #
 #      --- Firebird

@@ -56,7 +56,7 @@ rddsql.hbc
 sddodbc.hbc
 sddfb.hbc
 sddsqlt3.hbc
-letodb.hbc
+rddleto.hbc
 hbfbird.hbc
 
 

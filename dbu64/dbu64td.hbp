@@ -62,7 +62,7 @@ rddsql.hbc
 sddodbc.hbc
 sddmy.hbc
 sddsqlt3.hbc
-letodb.hbc
+rddleto.hbc
 
 Tdbclass.hbc
 

@@ -47,7 +47,7 @@ hbfbird.hbc
 #hbfbird.hbc usando as dll compiladas com msv incluidas no robin nao aborta nem da erro 142
 #sddfb.hbc incluido o sddfb o programa nao abre mesmo com as dll do robin
 
-letodb.hbc
+rddleto.hbc
 
 
 \develop\harbour\dbu\DBU.PRG  
