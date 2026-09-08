@@ -4,9 +4,12 @@ del *.dbe
 del *.fpt
 del *.sql
 del *.dbml
+del *.puml
 del *.xlsx
 del *.xml
 del *.md
 del *.sqlite
 del *.log
 del *.csv
+del *.txt
+del *.zip
