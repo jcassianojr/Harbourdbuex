@@ -329,19 +329,26 @@ ENDIF
 IF EMPTY(cEXTINDEX)
    cEXTINDEX := ".CDX"
 ENDIF
+if at(".",cEXTENSAO)=0
+   cEXTENSAO:="."+cEXTENSAO
+endif
 //*.dbf, *.fpt, *.dbt, *.smt
 //.CDX, .IDX, .MDX, .NTX, .NDX
 nConnect := LETO_CONNECT(cSrvAddr)
 IF nConnect >= 0
-   IF File(cARQORI)
-      Leto_FCopyToSrv(cARQORI,cARQUIVO+cEXTENSAO)
-   ENDIF
-   IF FILE(cCAMINHO+cARQUIVO+cEXTMEMO)
-      Leto_FCopyToSrv(cCAMINHO+cARQUIVO+cEXTMEMO,cARQUIVO+cEXTMEMO)
-   ENDIF
-   IF FILE(cCAMINHO+cARQUIVO+cEXTINDEX)
-      Leto_FCopyToSrv(cCAMINHO+cARQUIVO+cEXTINDEX,cARQUIVO+cEXTINDEX)
-   ENDIF
+   iF leto_File(cARQUIVO+cEXTENSAO)
+      alert("Arquivo ja existe no servidor"+cARQUIVO)
+   else
+     IF File(cARQORI)
+        Leto_FCopyToSrv(cARQORI,cARQUIVO+cEXTENSAO)
+     ENDIF
+     IF FILE(cCAMINHO+cARQUIVO+cEXTMEMO)
+        Leto_FCopyToSrv(cCAMINHO+cARQUIVO+cEXTMEMO,cARQUIVO+cEXTMEMO)
+     ENDIF
+     IF FILE(cCAMINHO+cARQUIVO+cEXTINDEX)
+        Leto_FCopyToSrv(cCAMINHO+cARQUIVO+cEXTINDEX,cARQUIVO+cEXTINDEX)
+     ENDIF
+   endif  
    leto_disconnect()
 else
    leto_errocon(nConnect)
