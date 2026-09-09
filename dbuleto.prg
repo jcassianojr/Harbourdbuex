@@ -50,10 +50,12 @@ REQUEST LETO
 *+
 *+
 *+
+*+--------------------------------------------------------------------
+*+    Function letomenu()
+*+--------------------------------------------------------------------
 FUNCTION letomenu()
 
-
-LOCAL aAMBIENTE
+LOCAL aAMBIENTE, KEY := 0
 
 cTIPOSQL := "LETO"  // Passa para privada usadas nas funcoes aBaixo
 
@@ -63,41 +65,9 @@ cDATABASEX := Space(30)
 cUSERX     := Space(30)
 cPASSX     := Space(30)
 cTABELAX   := Space(30)
-cBANCOX   := Space(30)
-cOWNERX   := Space(30)
-cPORTAX    :=SPACE(30)
-
-cPATH      :=""
-loledb     := .T.
-lMDB       := .F.
-lACCDB     := .F.
-lFDB       := .F.
-
-cRDDSQL     := "LETO"
-cOLDRDD     := RDDSETDEFAULT("LETO")
-nOLDTIPORDD := TIPODBF
-TIPODBF     := 90
-
-pegcfgbanco()
-
-
-
-WHILE .T.
-FUNCTION letomenu()
-
-LOCAL aAMBIENTE
-
-cTIPOSQL := "LETO"  // Passa para privada usadas nas funcoes aBaixo
-
-aAMBIENTE  := SALVAA()
-cSERVERX   := PADR("//127.0.0.1:2812/",30," ")
-cDATABASEX := Space(30)
-cUSERX     := Space(30)
-cPASSX     := Space(30)
-cTABELAX   := Space(30)
-cBANCOX   := Space(30)
-cOWNERX   := Space(30)
-cPORTAX    :=SPACE(30)
+cBANCOX    := Space(30)
+cOWNERX    := Space(30)
+cPORTAX    := SPACE(30)
 
 cPATH      :=""
 loledb     := .T.
@@ -116,17 +86,16 @@ WHILE .T.
    hb_DispBox(3,18,18,55,B_DOUBLE+" ")
    @ 03,24 SAY "LETODB"+" "+cSERVERX         
    OPCAO(4,24,"&Informacoes Servidor      ",73)   // I
-   OPCAO(5,24,"&DBF                       ",68)   // D <- NOVO SUBMENU
+   OPCAO(5,24,"&DBF                       ",68)   // D
    OPCAO(6,24,"&Usuarios                 ",85)   // U 
    OPCAO(7,24,"S&QLite                   ",81)   // Q 
-   //opcao backup zip
    
    KEY := menu(1,0)
    DO CASE
    CASE KEY = 1
       LETO_INFOMENU(cSERVERX)
    CASE KEY = 2
-      LETO_DBFMENU(cSERVERX)                      // <- CHAMADA DBF
+      LETO_DBFMENU(cSERVERX)
    CASE KEY = 3
       LETO_USERS(cSERVERX) 
    CASE KEY = 4
@@ -138,17 +107,6 @@ ENDDO
 
 TIPODBF := nOLDTIPORDD
 rddSetDefault(cOLDRDD)
-
-RESTAA(aAMBIENTE)
-LAYOUT()
-
-RETURN .T.
-
-ENDDO
-
-TIPODBF := nOLDTIPORDD
-rddSetDefault(cOLDRDD)
-
 
 RESTAA(aAMBIENTE)
 LAYOUT()
