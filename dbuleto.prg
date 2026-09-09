@@ -856,12 +856,15 @@ FUNCTION LETO_SQLITEMENU(cSrvAddr)
 
    IF nConnect >= 0
       DO WHILE nKey != 48
-         hb_DispBox(12,18,17,55,B_DOUBLE+" ")
+         // Aumentando a caixa para caber as novas opcoes
+         hb_DispBox(12,18,19,55,B_DOUBLE+" ")
          @ 12,24 SAY " MENU SQLITE "
          @ 13,20 SAY "1 Criar base"
          @ 14,20 SAY "2 Copiar base (Local p/ Srv)"
          @ 15,20 SAY "3 Copiar do servidor (Srv p/ Local)"
-         @ 16,20 SAY "0 Exit"
+         @ 16,20 SAY "4 Listar bases SQLite"
+         @ 17,20 SAY "5 Excluir base SQLite"
+         @ 18,20 SAY "0 Exit"
          
          nKey := Inkey( 0 )
          
@@ -871,6 +874,10 @@ FUNCTION LETO_SQLITEMENU(cSrvAddr)
             Leto_SQLTCopiar(cSrvAddr)
          ELSEIF nKey == 51
             Leto_SQLTCopiarSrv(cSrvAddr)
+         ELSEIF nKey == 52
+            Leto_SQLTListar(cSrvAddr)
+         ELSEIF nKey == 53
+            Leto_SQLTExcluir(cSrvAddr)
          ENDIF
       ENDDO
       leto_disconnect()
@@ -878,6 +885,54 @@ FUNCTION LETO_SQLITEMENU(cSrvAddr)
       leto_errocon(nConnect)
    ENDIF
 RETURN .T.
+
+
+*+--------------------------------------------------------------------
+*+    Sub-rotina 4: Listar Bases SQLite no Servidor
+*+--------------------------------------------------------------------
+STATIC FUNCTION Leto_SQLTListar(cSrvAddr)
+   LOCAL cArqSrv
+
+   // Chama a funcao leto_tables ativando apenas o filtro SQLite (lSOSQLITE = .T.)
+   // Ela se encarrega de desenhar o AChoice e aguardar a selecao
+   cArqSrv := leto_tables(cSrvAddr, "*.*", .F., .T.)
+
+   // Se o usuario selecionou alguma base em vez de pressionar Esc
+   IF !Empty(cArqSrv)
+      MDT("Base selecionada: " + cArqSrv)
+   ENDIF
+
+RETURN NIL
+
+*+--------------------------------------------------------------------
+*+    Sub-rotina 5: Excluir Base SQLite no Servidor
+*+--------------------------------------------------------------------
+STATIC FUNCTION Leto_SQLTExcluir(cSrvAddr)
+   LOCAL cArqSrv, nConnect
+
+   // Usa leto_tables para listar apenas SQLite para escolha
+   cArqSrv := leto_tables(cSrvAddr, "*.*", .F., .T.)
+
+   // Se o usuario confirmou uma selecao
+   IF !Empty(cArqSrv)
+      // Pede a confirmacao usando a funcao MDG padrao do sistema
+      IF MDG('Excluir ' + cArqSrv + ' ?')
+         
+         nConnect := LETO_CONNECT(cSrvAddr)
+         IF nConnect >= 0
+            // Deleta o arquivo selecionado
+            Leto_FERASE(cArqSrv, cArqSrv)
+            
+            MDT("Base " + cArqSrv + " excluida com sucesso.")
+            leto_disconnect()
+         ELSE
+            leto_errocon(nConnect)
+         ENDIF
+
+      ENDIF
+   ENDIF
+   
+RETURN NIL
 
 *+--------------------------------------------------------------------
 *+    Sub-rotina 1: Criar Base SQLite no Servidor
