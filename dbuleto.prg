@@ -83,38 +83,67 @@ pegcfgbanco()
 
 
 WHILE .T.
+FUNCTION letomenu()
+
+LOCAL aAMBIENTE
+
+cTIPOSQL := "LETO"  // Passa para privada usadas nas funcoes aBaixo
+
+aAMBIENTE  := SALVAA()
+cSERVERX   := PADR("//127.0.0.1:2812/",30," ")
+cDATABASEX := Space(30)
+cUSERX     := Space(30)
+cPASSX     := Space(30)
+cTABELAX   := Space(30)
+cBANCOX   := Space(30)
+cOWNERX   := Space(30)
+cPORTAX    :=SPACE(30)
+
+cPATH      :=""
+loledb     := .T.
+lMDB       := .F.
+lACCDB     := .F.
+lFDB       := .F.
+
+cRDDSQL     := "LETO"
+cOLDRDD     := RDDSETDEFAULT("LETO")
+nOLDTIPORDD := TIPODBF
+TIPODBF     := 90
+
+pegcfgbanco()
+
+WHILE .T.
    hb_DispBox(3,18,18,55,B_DOUBLE+" ")
    @ 03,24 SAY "LETODB"+" "+cSERVERX         
    OPCAO(4,24,"&Informacoes Servidor      ",73)   // I
-   OPCAO(5,24,"&Tabelas                   ",84)   // T
-   OPCAO(6,24,"&Importar  DBF             ",73)   // I
-   OPCAO(7,24,"&Exportar  DBF             ",69)   // E
-   OPCAO(8,24,"&Apagar Tabela             ",65)   // A
-   OPCAO(9,24,"Exportar &Formatos         ",70)   // F
-   OPCAO(10,24,"&Usuarios                 ",85)   // U 
-   OPCAO(11,24,"S&QLite                   ",81)   // Q 
+   OPCAO(5,24,"&DBF                       ",68)   // D <- NOVO SUBMENU
+   OPCAO(6,24,"&Usuarios                 ",85)   // U 
+   OPCAO(7,24,"S&QLite                   ",81)   // Q 
    //opcao backup zip
+   
    KEY := menu(1,0)
    DO CASE
    CASE KEY = 1
       LETO_INFOMENU(cSERVERX)
    CASE KEY = 2
-      LETO_tables(cSERVERX)
+      LETO_DBFMENU(cSERVERX)                      // <- CHAMADA DBF
    CASE KEY = 3
-      LETO_DBFTOSRV(cSERVERX)
-   CASE KEY = 4
-      LETO_SRVTODBF(cSERVERX)
-   CASE KEY = 5
-      LETO_DELDBF(cSERVERX)
-   CASE KEY = 6
-      leto_expformat(cSERVERX)
-   CASE KEY = 7
       LETO_USERS(cSERVERX) 
-   CASE KEY = 8
+   CASE KEY = 4
       LETO_SQLITEMENU(cSERVERX)     
    OTHERWISE
       EXIT
    ENDCASE
+ENDDO
+
+TIPODBF := nOLDTIPORDD
+rddSetDefault(cOLDRDD)
+
+RESTAA(aAMBIENTE)
+LAYOUT()
+
+RETURN .T.
+
 ENDDO
 
 TIPODBF := nOLDTIPORDD
@@ -142,7 +171,7 @@ RETURN .T.
 *+
 FUNCTION LETO_SRVTODBF(cSrvAddr)
 
-cARQORI   := LETO_tables(cSERVERX)
+cARQORI   := LETO_tables(cSrvAddr, "*."+TABLEEXT, .T., .F.)
 cARQUIVO  := TIRAEXT(cARQORI)
 cEXTMEMO  := ".FPT"
 cEXTINDEX := ".CDX"
@@ -178,7 +207,7 @@ RETURN .T.
 *+
 FUNCTION LETO_DELDBF(cSrvAddr)
 
-cARQORI   := LETO_tables(cSERVERX)
+cARQORI   := LETO_tables(cSrvAddr, "*."+TABLEEXT, .T., .F.)
 cARQUIVO  := TIRAEXT(cARQORI)
 cEXTMEMO  := ".FPT"
 cEXTINDEX := ".CDX"
@@ -242,7 +271,7 @@ RETURN
 *+
 FUNCTION leto_expformat(cSrvAddr)
 
-cARQORI  := LETO_tables(cSERVERX)
+cARQORI   := LETO_tables(cSrvAddr, "*."+TABLEEXT, .T., .F.)
 cTABELAX := TIRAEXT(cARQORI)
 
 
@@ -1051,6 +1080,40 @@ STATIC FUNCTION Leto_SQLTCopiarSrv(cSrvAddr)
       ENDIF
    ENDIF
 RETURN NIL
+
+
+*+--------------------------------------------------------------------
+*+    Function LETO_DBFMENU()
+*+--------------------------------------------------------------------
+FUNCTION LETO_DBFMENU(cSrvAddr)
+   LOCAL nKey := 0
+
+   DO WHILE nKey != 48
+      hb_DispBox(12,18,19,55,B_DOUBLE+" ")
+      @ 12,24 SAY " MENU DBF "
+      @ 13,20 SAY "1 Tabelas (Listar)"
+      @ 14,20 SAY "2 Importar DBF"
+      @ 15,20 SAY "3 Exportar DBF"
+      @ 16,20 SAY "4 Apagar Tabela"
+      @ 17,20 SAY "5 Exportar Formatos"
+      @ 18,20 SAY "0 Exit"
+      
+      nKey := Inkey( 0 )
+      
+      IF nKey == 49
+         // Passando mascara, lSODBF = .T., lSOSQLITE = .F.
+         LETO_tables(cSrvAddr, "*."+TABLEEXT, .T., .F.)
+      ELSEIF nKey == 50
+         LETO_DBFTOSRV(cSrvAddr)
+      ELSEIF nKey == 51
+         LETO_SRVTODBF(cSrvAddr)
+      ELSEIF nKey == 52
+         LETO_DELDBF(cSrvAddr)
+      ELSEIF nKey == 53
+         leto_expformat(cSrvAddr)
+      ENDIF
+   ENDDO
+RETURN .T.
 
 /*
 private Mydbf:="//127.0.0.1:2812/\Testdbf.dbf"
