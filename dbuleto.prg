@@ -1091,11 +1091,12 @@ FUNCTION LETO_GESTAOMENU(cSrvAddr)
 
    IF nConnect >= 0
       WHILE .T.
-         hb_DispBox(12,18,17,55,B_DOUBLE+" ")
+         hb_DispBox(12,18,18,55,B_DOUBLE+" ")
          @ 12,24 SAY " MENU GESTAO "
          OPCAO(13,20,"&Lock/Unlock (Conexoes)    ",76)   // L
          OPCAO(14,20,"&Disconnect user (Kill)    ",68)   // D
-         OPCAO(15,20,"&Backup Geral (ZIP)        ",66)   // B
+         OPCAO(15,20,"&Backup Geral (Srv ZIP)    ",66)   // B
+         OPCAO(16,20,"Backup Local (C&li ZIP)    ",76)   // L
          KEY := menu(1,0)
          
          DO CASE
@@ -1105,6 +1106,8 @@ FUNCTION LETO_GESTAOMENU(cSrvAddr)
             Leto_KillUser()
          CASE KEY = 3
             Leto_ServerBackup(cSrvAddr)   
+         CASE KEY = 4
+            Leto_ClientBackup(cSrvAddr)   
          OTHERWISE
             EXIT
          ENDCASE
@@ -1238,6 +1241,109 @@ STATIC FUNCTION Leto_ServerBackup(cSrvAddr)
    ENDIF
 
 Return NIL
+
+*+--------------------------------------------------------------------
+*+    Sub-rotina: Backup Local (Copia arq a arq e Zipa no Cliente)
+*+--------------------------------------------------------------------
+STATIC FUNCTION Leto_ClientBackup(cSrvAddr)
+   LOCAL cDestPasta, cDestZip, cArqSrv, cDestArquivo
+   LOCAL cExtTable := "", cExtMemo := "", cExtIndex := ""
+   LOCAL aMasks := {}, aServerFiles := {}, aLocalFiles := {}
+   LOCAL aDirRes
+   LOCAL nConnect, i, j
+
+   // 1. Captura as extensoes da RDD atual
+   TRY
+      cExtTable := hb_rddInfo(RDDI_TABLEEXT)
+   CATCH
+   END
+   TRY
+      cExtMemo := hb_rddInfo(RDDI_MEMOEXT)
+   CATCH
+   END
+   TRY
+      cExtIndex := hb_rddInfo(RDDI_ORDBAGEXT)
+   CATCH
+   END
+
+   // Aplica os padroes (dbf, fpt, cdx) caso a RDD nao retorne nada
+   IF Empty(cExtTable); cExtTable := ".DBF"; ENDIF
+   IF Empty(cExtMemo);  cExtMemo  := ".FPT"; ENDIF
+   IF Empty(cExtIndex); cExtIndex := ".CDX"; ENDIF
+
+   // Garante que todas possuem o ponto '.'
+   IF At(".", cExtTable) == 0; cExtTable := "." + cExtTable; ENDIF
+   IF At(".", cExtMemo)  == 0; cExtMemo  := "." + cExtMemo;  ENDIF
+   IF At(".", cExtIndex) == 0; cExtIndex := "." + cExtIndex; ENDIF
+
+   // 2. Monta o vetor de mascaras
+   AAdd(aMasks, "*" + cExtTable)
+   AAdd(aMasks, "*" + cExtMemo)
+   AAdd(aMasks, "*" + cExtIndex)
+   AAdd(aMasks, "*.sqlite")
+   AAdd(aMasks, "*.db")
+   AAdd(aMasks, "*.db3")
+   AAdd(aMasks, "*.fossil")
+
+   // 3. Pede para o usuario escolher a pasta local de destino
+   cDestPasta := SelectFolder("Selecione a pasta local para salvar e zipar", hb_cwd(), .F.)
+   
+   IF !Empty(cDestPasta)
+      nConnect := LETO_CONNECT(cSrvAddr)
+      
+      IF nConnect >= 0
+         MDT("Mapeando arquivos no servidor...")
+         
+         // 4. Mapeia os arquivos no servidor usando as mascaras
+         FOR i := 1 TO Len(aMasks)
+            aDirRes := leto_directory(aMasks[i])
+            FOR j := 1 TO Len(aDirRes)
+               // Adiciona o nome do arquivo encontrado na lista final
+               AAdd(aServerFiles, aDirRes[j, 1])
+            NEXT
+         NEXT
+         
+         IF Len(aServerFiles) > 0
+            MDT("Baixando " + LTrim(Str(Len(aServerFiles))) + " arquivos. Aguarde...")
+            
+            // 5. Copia arquivo a arquivo para a pasta local
+            FOR i := 1 TO Len(aServerFiles)
+               cArqSrv := aServerFiles[i]
+               cDestArquivo := cDestPasta + "\" + cArqSrv
+               
+               Leto_FCopyFromSrv(cArqSrv, cDestArquivo)
+               
+               // Guarda o caminho completo do arquivo local para zipar depois
+               AAdd(aLocalFiles, cDestArquivo)
+            NEXT
+            
+            MDT("Compactando " + LTrim(Str(Len(aLocalFiles))) + " arquivos localmente...")
+            cDestZip := cDestPasta + "\bkp_cli_" + DToS(Date()) + "_" + StrTran(Time(), ":", "") + ".zip"
+            
+            // 6. Zipa os arquivos localmente na maquina cliente (Nivel 9 = maximo)
+            IF hb_ZipFile( cDestZip, aLocalFiles, 9, , .T., , .F., , , .F. )
+               
+               // 7. Apaga os arquivos soltos que foram baixados
+               FOR i := 1 TO Len(aLocalFiles)
+                  FErase( aLocalFiles[i] )
+               NEXT
+               
+               MDT("Backup Cliente concluido com sucesso em: " + cDestZip)
+            ELSE
+               MDT("Erro ao tentar compactar os arquivos localmente.")
+            ENDIF
+            
+         ELSE
+            MDT("Nenhum arquivo de dados encontrado no servidor.")
+         ENDIF
+         
+         leto_disconnect()
+      ELSE
+         leto_errocon(nConnect)
+      ENDIF
+   ENDIF
+
+RETURN NIL
 
 /*
 private Mydbf:="//127.0.0.1:2812/\Testdbf.dbf"
