@@ -91,7 +91,8 @@ WHILE .T.
    OPCAO(7,24,"&Exportar  DBF             ",69)   // E
    OPCAO(8,24,"&Apagar Tabela             ",65)   // A
    OPCAO(9,24,"Exportar &Formatos         ",70)   // F
-   OPCAO(10,24,"&Usuarios                 ",85)   // U  <- NOVA OPÇÃO
+   OPCAO(10,24,"&Usuarios                 ",85)   // U 
+   OPCAO(11,24,"S&QLite                   ",81)   // Q 
    //opcao backup zip
    KEY := menu(1,0)
    DO CASE
@@ -108,7 +109,9 @@ WHILE .T.
    CASE KEY = 6
       leto_expformat(cSERVERX)
    CASE KEY = 7
-      LETO_USERS(cSERVERX)   
+      LETO_USERS(cSERVERX) 
+   CASE KEY = 8
+      LETO_SQLITEMENU(cSERVERX)     
    OTHERWISE
       EXIT
    ENDCASE
@@ -479,42 +482,61 @@ RETURN cInfo
 *+
 *+
 *+
-FUNCTION leto_tables(cSrvAddr)
+*+--------------------------------------------------------------------
+*+    Function leto_tables()
+*+--------------------------------------------------------------------
+FUNCTION leto_tables(cSrvAddr, cMASK, lSODBF, lSOSQLITE)
 
+   LOCAL aResult, nChoices, i, aRETU
+   LOCAL aAMBIENTE, cDir, cName, cExt
+   LOCAL aSqExt := {".SQLITE", ".DB", ".SQLITE3", ".DB3", ".FOSSIL"}
 
-LOCAL aResult,nChoices,I,aRETU
-LOCAL aAMBIENTE
-nChoices  := 0
-aAMBIENTE := SALVAA()
-aRESULT   := {}
+   // Default config conforme especificado
+   IF cMASK == NIL;     cMASK := "*.*";      ENDIF
+   IF lSODBF == NIL;    lSODBF := .F.;       ENDIF
+   IF lSOSQLITE == NIL; lSOSQLITE := .F.;    ENDIF
 
+   nChoices  := 0
+   aAMBIENTE := SALVAA()
+   aRESULT   := {}
 
+   nConnect := LETO_CONNECT(cSrvAddr)
 
-nConnect := LETO_CONNECT(cSrvAddr)
+   IF nConnect >= 0
+      aRETU := leto_directory(cMASK) // Busca respeitando a mascara atual
 
-IF nConnect >= 0
+      FOR i := 1 TO Len(aRETU)
+         hb_FNameSplit(aRETU[i,1], @cDir, @cName, @cExt)
+         cExt := Upper(cExt)
 
-   aRETU := leto_directory("*."+TABLEEXT)
+         // Se nenhuma flag for exigida, lista tudo que encontrar na cMASK
+         IF !lSODBF .AND. !lSOSQLITE
+            AAdd(aRESULT, aRETU[i,1])
+         ELSE
+            // Se for arquivo de dados DBF e a flag estiver ativada
+            IF lSODBF .AND. cExt == "." + Upper(TABLEEXT)
+               AAdd(aRESULT, aRETU[i,1])
+            ENDIF
+            
+            // Se for base SQLite (checando vetor) e a flag estiver ativada
+            IF lSOSQLITE .AND. AScan(aSqExt, cExt) > 0
+               AAdd(aRESULT, aRETU[i,1])
+            ENDIF
+         ENDIF
+      NEXT i
 
-   FOR i := 1 TO Len(aRETU)
-      AAdd(aRESULT,aRETU[i,1])
-   NEXT i
-
-
-   IF Len(aResult) > 0
-      hb_DispBox(3,22,22,55,B_DOUBLE+" ")
-      nChoices := AChoice(4,23,21,54,aResult)
+      IF Len(aResult) > 0
+         hb_DispBox(3,22,22,55,B_DOUBLE+" ")
+         nChoices := AChoice(4,23,21,54,aResult)
+      ENDIF
+   ELSE
+      leto_errocon(nConnect)
    ENDIF
-else
-   leto_errocon(nConnect)
-endif
 
-leto_disconnect()
+   leto_disconnect()
+   RESTAA(aAMBIENTE)
 
-RESTAA(aAMBIENTE)
-
-RETURN (iif(nChoices > 0,aResult[nChoices],""))
-
+RETURN (iif(nChoices > 0, aResult[nChoices], ""))
 
 *+--------------------------------------------------------------------
 *+    Function LETO_USERS()
@@ -823,6 +845,157 @@ STATIC FUNCTION Leto_VarsList()
       MDT("Erro reading variables list")
    ENDIF
 RETURN .T.
+
+
+*+--------------------------------------------------------------------
+*+    Function LETO_SQLITEMENU()
+*+--------------------------------------------------------------------
+FUNCTION LETO_SQLITEMENU(cSrvAddr)
+   LOCAL nKey := 0
+   LOCAL nConnect := LETO_CONNECT(cSrvAddr)
+
+   IF nConnect >= 0
+      DO WHILE nKey != 48
+         hb_DispBox(12,18,17,55,B_DOUBLE+" ")
+         @ 12,24 SAY " MENU SQLITE "
+         @ 13,20 SAY "1 Criar base"
+         @ 14,20 SAY "2 Copiar base (Local p/ Srv)"
+         @ 15,20 SAY "3 Copiar do servidor (Srv p/ Local)"
+         @ 16,20 SAY "0 Exit"
+         
+         nKey := Inkey( 0 )
+         
+         IF nKey == 49
+            Leto_SQLTCriar(cSrvAddr)
+         ELSEIF nKey == 50
+            Leto_SQLTCopiar(cSrvAddr)
+         ELSEIF nKey == 51
+            Leto_SQLTCopiarSrv(cSrvAddr)
+         ENDIF
+      ENDDO
+      leto_disconnect()
+   ELSE
+      leto_errocon(nConnect)
+   ENDIF
+RETURN .T.
+
+*+--------------------------------------------------------------------
+*+    Sub-rotina 1: Criar Base SQLite no Servidor
+*+--------------------------------------------------------------------
+STATIC FUNCTION Leto_SQLTCriar(cSrvAddr)
+   LOCAL cNome := Space(30), hDb
+   LOCAL nConnect
+   
+   @ 18, 20 SAY "Nome do arquivo :" GET cNome PICT "@!"
+   READ
+   
+   IF LastKey() == 27
+      @ 18, 0 CLEAR TO 18, 79
+      RETURN NIL
+   ENDIF
+   
+   cNome := AllTrim(cNome)
+   IF Empty(cNome)
+      @ 18, 0 CLEAR TO 18, 79
+      RETURN NIL
+   ENDIF
+
+   // Adiciona a extensao padrao caso falte
+   IF At(".", cNome) == 0
+      cNome += ".sqlite"
+   ENDIF
+
+   nConnect := LETO_CONNECT(cSrvAddr)
+   IF nConnect >= 0
+      // Checa pelo arquivo conforme test_sqlt_1
+      IF leto_file(cNome)
+         MDT("Arquivo ja existe no servidor: " + cNome)
+      ELSE
+         // Cria a base
+         hDb := leto_sqlt_Create( cNome )
+         IF Empty(hDb)
+            MDT("Falha: nao foi possivel criar a base.")
+         ELSE
+            leto_sqlt_Close( hDb ) // Fecha apos instanciar o arquivo zerado
+            MDT("Base criada com sucesso.")
+         ENDIF
+      ENDIF
+      leto_disconnect()
+   ELSE
+      leto_errocon(nConnect)
+   ENDIF
+   
+   @ 18, 0 CLEAR TO 18, 79 // Limpa barra de interacao
+RETURN NIL
+
+*+--------------------------------------------------------------------
+*+    Sub-rotina 2: Copiar Base (Local para o Servidor)
+*+--------------------------------------------------------------------
+STATIC FUNCTION Leto_SQLTCopiar(cSrvAddr)
+   LOCAL cFileName, cDir := "", cName := "", cExt := ""
+   LOCAL nConnect
+   
+   // Selecionador de arquivos com mascaras especificas
+   cFileName := win_GetOpenFileName(, "SQLite Files", hb_cwd(), "SQLite", ;
+      { { 'SQLite', '*.sqlite' }, { 'SQLite db', '*.DB' }, ;
+      { 'SQLite3', '*.sqlite3' }, { 'SQLite db3', '*.DB3' }, ;
+      { 'SQLite Fossil', '*.fossil' }, { 'All Files', '*.*' } }, 1 )
+
+   IF !Empty(cFileName) .AND. File(cFileName)
+      hb_FNameSplit(cFileName, @cDir, @cName, @cExt)
+      IF At(".", cExt) == 0
+         cExt := "." + cExt
+      ENDIF
+      
+      // Abre a conexao e aplica logica identica ao LETO_DBFSRV
+      nConnect := LETO_CONNECT(cSrvAddr)
+      IF nConnect >= 0
+         IF leto_File( cName + cExt )
+            MDT("Arquivo ja existe no servidor: " + cName + cExt)
+         ELSE
+            Leto_FCopyToSrv( cFileName, cName + cExt )
+            MDT("Base importada para o servidor com sucesso.")
+         ENDIF
+         leto_disconnect()
+      ELSE
+         leto_errocon(nConnect)
+      ENDIF
+   ENDIF
+RETURN NIL
+
+*+--------------------------------------------------------------------
+*+    Sub-rotina 3: Copiar Base do Servidor (Srv para Local)
+*+--------------------------------------------------------------------
+STATIC FUNCTION Leto_SQLTCopiarSrv(cSrvAddr)
+   LOCAL cArqSrv, cDestPasta, cDestArquivo
+   LOCAL nConnect
+
+   // Chama listagem do servidor bloqueando DBFs e permitindo apenas extensoes SQLite (.T.)
+   cArqSrv := leto_tables(cSrvAddr, "*.*", .F., .T.)
+
+   IF !Empty(cArqSrv)
+      // Seleciona a pasta de destino usando Try/Catch local
+      cDestPasta := SelectFolder("Selecione o destino para: " + cArqSrv, hb_cwd(), .F.)
+      
+      IF !Empty(cDestPasta)
+         nConnect := LETO_CONNECT(cSrvAddr)
+         IF nConnect >= 0
+            cDestArquivo := cDestPasta + "\" + cArqSrv
+            
+            // Verifica na maquina do cliente se ira sobrescrever algo
+            IF File(cDestArquivo)
+               MDT("Arquivo ja existe no destino local.")
+            ELSE
+               Leto_FCopyFromSrv( cArqSrv, cDestArquivo )
+               MDT("Download concluido com sucesso.")
+            ENDIF
+            leto_disconnect()
+         ELSE
+            leto_errocon(nConnect)
+         ENDIF
+      ENDIF
+   ENDIF
+RETURN NIL
 
 /*
 private Mydbf:="//127.0.0.1:2812/\Testdbf.dbf"
