@@ -136,7 +136,7 @@ cARQORI   := LETO_tables(cSrvAddr, "*."+TABLEEXT, .T., .F.)
 cARQUIVO  := TIRAEXT(cARQORI)
 cEXTMEMO  := ".FPT"
 cEXTINDEX := ".CDX"
-nConnect  := LETO_CONNECT(cSrvAddr)
+nConnect  := leto_conexao(cSrvAddr)
 IF nConnect >= 0
    IF .NOT. File(cARQORI)
       Leto_FCopyFromSrv(cARQORI,cARQORI)
@@ -173,7 +173,7 @@ cARQUIVO  := TIRAEXT(cARQORI)
 cEXTMEMO  := ".FPT"
 cEXTINDEX := ".CDX"
 IF MDG('Excluir '+cARQORI)
-   nConnect := LETO_CONNECT(cSrvAddr)
+   nConnect := leto_conexao(cSrvAddr)
    IF nConnect >= 0
       Leto_FERASE(cARQORI,cARQORI)
       Leto_FERASE(cARQUIVO+cEXTMEMO)
@@ -188,34 +188,60 @@ RETURN .T.
 
 
 *+--------------------------------------------------------------------
-*+
-*+
-*+
-*+    Function leto_errocon()
-*+
-*+
-*+
+*+    Function leto_conexao()
+*+    Wrapper para centralizar conexao LetoDB com Timeout e Alertas
 *+--------------------------------------------------------------------
-*+
-*+
-*+
-function leto_errocon(nConnect)
-
-LOCAL nRES
-IF nConNect == - 1
-   nRes := leto_Connect_Err()
-   IF nRes == LETO_ERR_LOGIN
-      mdt("Falha ao Logar")
-   ELSEIF nRes == LETO_ERR_RECV
-      mdt("Error ao conectar")
-   ELSEIF nRes == LETO_ERR_SEND
-      mdt("Erro de envio")
-   ELSE
-      mdt("NÆo connectado ao servidor: "+cPath)
+FUNCTION leto_conexao( cSrvAddr,cUserName, cPassword, nTimeOut, lmes )
+   LOCAL nConnect
+   
+   // 1. Define um timeout padrao (ex: 5 segundos) se nao for informado na chamada
+   IF nTimeOut == NIL
+      nTimeOut := 5 
    ENDIF
-ENDIF
-RETURN
+   
+   // 2. Define o comportamento padrao do alerta (lmes)
+   IF ValType( lmes ) != "L"
+      lmes := .T. // Assume .T. para exibir o erro caso o parametro seja omitido
+   ENDIF
 
+   // 3. Executa a conexao passando NIL para usuario e senha, injetando o timeout[cite: 33]
+   nConnect := LETO_CONNECT( cSrvAddr, cUserName, cPassword, nTimeOut )
+
+   // 4. Se falhar (-1) e lmes for verdadeiro, dispara a mensagem[cite: 33]
+   IF nConnect == -1 .AND. lmes
+      leto_errocon( nConnect, cSrvAddr )
+   ENDIF
+
+   RETURN nConnect
+
+*+--------------------------------------------------------------------
+*+    Function leto_errocon()
+*+    Interpreta o codigo de erro da conexao
+*+--------------------------------------------------------------------
+FUNCTION leto_errocon( nConnect, cSrvAddr )
+   LOCAL nRes
+   
+   // Previne quebra caso cSrvAddr venha nulo
+   IF cSrvAddr == NIL
+      cSrvAddr := ""
+   ENDIF
+
+   IF nConnect == -1
+      nRes := leto_Connect_Err()
+      
+      IF nRes == LETO_ERR_LOGIN
+         mdt("Falha ao Logar no servidor.")
+      ELSEIF nRes == LETO_ERR_RECV
+         mdt("Erro ao conectar (Falha de recepcao).")
+      ELSEIF nRes == LETO_ERR_SEND
+         mdt("Erro de envio de dados para o servidor.")
+      ELSE
+         // Corrigido de cPath para cSrvAddr para mostrar a rota real que falhou
+         mdt("Nao conectado ao servidor: " + cSrvAddr) 
+      ENDIF
+   ENDIF
+   
+RETURN NIL
 
 
 *+--------------------------------------------------------------------
@@ -247,7 +273,7 @@ PegcsUB(tDOC)   // pegar o subtipo conforme tipo
 cDESTINO := cTABELAX+"_"+cTIPOSQL+"_leto."+zEXPOREXT
 MDT(cDESTINO)
 MDT("abrindo arquivo de origem: "+cTABELAX)
-nConnect := LETO_CONNECT(cSrvAddr)
+nConnect := leto_conexao(cSrvAddr)
 IF nConnect >= 0
    //DBUseArea( <lNewArea> , <cDriver> , <cName>, <xcAlias> , <lShared> , <lReadOnly>,<cCodePage>,<nConnection> ) -> lSuccess
    dbUseArea(.T.,,cTABELAX,,.T.)
@@ -327,7 +353,7 @@ if at(".",cEXTENSAO)=0
 endif
 //*.dbf, *.fpt, *.dbt, *.smt
 //.CDX, .IDX, .MDX, .NTX, .NDX
-nConnect := LETO_CONNECT(cSrvAddr)
+nConnect := leto_conexao(cSrvAddr)
 IF nConnect >= 0
    iF leto_File(cARQUIVO+cEXTENSAO)
       alert("Arquivo ja existe no servidor"+cARQUIVO)
@@ -363,13 +389,13 @@ RETURN .T.
 *+
 FUNCTION LETO_INFO(cSrvAddr,cLogFile,cOptions)
 
-LOCAL nConnect := LETO_CONNECT()
+LOCAL nConnect := leto_conexao()
 LOCAL cInfo    := ""
 LOCAL cTmp,nTmp
 
 #ifndef __XHARBOUR__   /* there is no useable LETO_UDF :-( */
 IF nConnect < 0 .AND. !EMPTY(cSrvAddr)
-   nConnect := LETO_CONNECT(cSrvAddr)
+   nConnect := leto_conexao(cSrvAddr)
 ENDIF
 #endif
 
@@ -490,7 +516,7 @@ FUNCTION leto_tables(cSrvAddr, cMASK, lSODBF, lSOSQLITE)
    aAMBIENTE := SALVAA()
    aRESULT   := {}
 
-   nConnect := LETO_CONNECT(cSrvAddr)
+   nConnect := leto_conexao(cSrvAddr)
 
    IF nConnect >= 0
       aRETU := leto_directory(cMASK) // Busca respeitando a mascara atual
@@ -533,7 +559,7 @@ RETURN (iif(nChoices > 0, aResult[nChoices], ""))
 *+--------------------------------------------------------------------
 FUNCTION LETO_USERS(cSrvAddr)
    LOCAL KEY := 0, arr
-   LOCAL nConnect := LETO_CONNECT(cSrvAddr)
+   LOCAL nConnect := leto_conexao(cSrvAddr)
 
    IF nConnect >= 0
       WHILE .T.
@@ -667,7 +693,7 @@ RETURN { cUser, cPass, cRights }
 *+--------------------------------------------------------------------
 FUNCTION LETO_INFOMENU(cSrvAddr)
    LOCAL KEY := 0
-   LOCAL nConnect := LETO_CONNECT(cSrvAddr)
+   LOCAL nConnect := leto_conexao(cSrvAddr)
 
    IF nConnect >= 0
       WHILE .T.
@@ -845,17 +871,18 @@ RETURN .T.
 *+--------------------------------------------------------------------
 FUNCTION LETO_SQLITEMENU(cSrvAddr)
    LOCAL KEY := 0
-   LOCAL nConnect := LETO_CONNECT(cSrvAddr)
+   LOCAL nConnect := leto_conexao(cSrvAddr)
 
    IF nConnect >= 0
       WHILE .T.
-         hb_DispBox(12,18,19,55,B_DOUBLE+" ")
+         hb_DispBox(12,18,20,55,B_DOUBLE+" ")
          @ 12,24 SAY " MENU SQLITE "
          OPCAO(13,20,"C&riar base                ",82)   // R
          OPCAO(14,20,"&Copiar base (Loc->Srv)    ",67)   // C
          OPCAO(15,20,"Copiar &do servidor        ",68)   // D
          OPCAO(16,20,"&Listar bases SQLite       ",76)   // L
          OPCAO(17,20,"&Excluir base SQLite       ",69)   // E
+         OPCAO(18,20,"&Importar DBF p/ SQLite    ",73)   // I
          
          KEY := menu(1,0)
          
@@ -870,6 +897,8 @@ FUNCTION LETO_SQLITEMENU(cSrvAddr)
             Leto_SQLTListar(cSrvAddr)
          CASE KEY = 5
             Leto_SQLTExcluir(cSrvAddr)
+        CASE KEY = 6
+            Leto_SQLTImportDBF(cSrvAddr)    
          OTHERWISE
             EXIT
          ENDCASE
@@ -911,7 +940,7 @@ STATIC FUNCTION Leto_SQLTExcluir(cSrvAddr)
       // Pede a confirmacao usando a funcao MDG padrao do sistema
       IF MDG('Excluir ' + cArqSrv + ' ?')
          
-         nConnect := LETO_CONNECT(cSrvAddr)
+         nConnect := leto_conexao(cSrvAddr)
          IF nConnect >= 0
             // Deleta o arquivo selecionado
             Leto_FERASE(cArqSrv, cArqSrv)
@@ -953,7 +982,7 @@ STATIC FUNCTION Leto_SQLTCriar(cSrvAddr)
       cNome += ".sqlite"
    ENDIF
 
-   nConnect := LETO_CONNECT(cSrvAddr)
+   nConnect := leto_conexao(cSrvAddr)
    IF nConnect >= 0
       // Checa pelo arquivo conforme test_sqlt_1
       IF leto_file(cNome)
@@ -996,7 +1025,7 @@ STATIC FUNCTION Leto_SQLTCopiar(cSrvAddr)
       ENDIF
       
       // Abre a conexao e aplica logica identica ao LETO_DBFSRV
-      nConnect := LETO_CONNECT(cSrvAddr)
+      nConnect := leto_conexao(cSrvAddr)
       IF nConnect >= 0
          IF leto_File( cName + cExt )
             MDT("Arquivo ja existe no servidor: " + cName + cExt)
@@ -1026,7 +1055,7 @@ STATIC FUNCTION Leto_SQLTCopiarSrv(cSrvAddr)
       cDestPasta := SelectFolder("Selecione o destino para: " + cArqSrv, hb_cwd(), .F.)
       
       IF !Empty(cDestPasta)
-         nConnect := LETO_CONNECT(cSrvAddr)
+         nConnect := leto_conexao(cSrvAddr)
          IF nConnect >= 0
             cDestArquivo := cDestPasta + "\" + cArqSrv
             
@@ -1087,7 +1116,7 @@ RETURN .T.
 *+--------------------------------------------------------------------
 FUNCTION LETO_GESTAOMENU(cSrvAddr)
    LOCAL KEY := 0
-   LOCAL nConnect := LETO_CONNECT(cSrvAddr)
+   LOCAL nConnect := leto_conexao(cSrvAddr)
 
    IF nConnect >= 0
       WHILE .T.
@@ -1210,7 +1239,7 @@ STATIC FUNCTION Leto_ServerBackup(cSrvAddr)
    cDestPasta := SelectFolder("Selecione a pasta local para salvar o backup", hb_cwd(), .F.)
    
    IF !Empty(cDestPasta)
-      nConnect := LETO_CONNECT(cSrvAddr)
+      nConnect := leto_conexao(cSrvAddr)
       
       IF nConnect >= 0
          MDT("Gerando ZIP no servidor. Isso pode demorar, aguarde...")
@@ -1289,7 +1318,7 @@ STATIC FUNCTION Leto_ClientBackup(cSrvAddr)
    cDestPasta := SelectFolder("Selecione a pasta local para salvar e zipar", hb_cwd(), .F.)
    
    IF !Empty(cDestPasta)
-      nConnect := LETO_CONNECT(cSrvAddr)
+      nConnect := leto_conexao(cSrvAddr)
       
       IF nConnect >= 0
          MDT("Mapeando arquivos no servidor...")
@@ -1344,6 +1373,197 @@ STATIC FUNCTION Leto_ClientBackup(cSrvAddr)
    ENDIF
 
 RETURN NIL
+
+*+--------------------------------------------------------------------
+*+    Sub-rotina 6: Importar DBF para SQLite Remoto
+*+--------------------------------------------------------------------
+STATIC FUNCTION Leto_SQLTImportDBF(cSrvAddr)
+   LOCAL cArqSrv, nConnect, hDb
+   LOCAL nOLDTIPO, nORITIPO, cORIDRIVER, lincdados
+   LOCAL cARQORI, cPASTA, cOldTipoSQL
+
+   // 1. Escolhe a tabela SQLite no servidor usando leto_tables[cite: 30]
+   cArqSrv := leto_tables(cSrvAddr, "*.*", .F., .T.) 
+
+   IF !Empty(cArqSrv)
+      nConnect := leto_conexao(cSrvAddr)
+      IF nConnect >= 0
+         
+         // 2. Abre a conexao do banco SQLite via LetoDB
+         hDb := leto_sqlt_Open( cArqSrv ) 
+         
+         IF !Empty(hDb)
+            // Esqueleto da interface dbusqlite[cite: 30]
+            nOLDTIPO := TIPODBF
+            alertX( "escolha origem" )
+            tipodbfesc()
+            nORITIPO   := TIPODBF
+            cORIDRIVER := RDDNOME( TIPODBF )
+            lincdados  := mdg("Incluir Dados")
+
+            // Forca o dialeto para SQLite para garantir que funcoes geradoras de metadados 
+            // funcionem corretamente durante a importacao
+            cOldTipoSQL := cTIPOSQL
+            cTIPOSQL    := "SQLITE" 
+
+            IF MDG("Arquivo individual")
+               cARQORI := win_GetOpenFileName(, "Arquivos de Origem", hb_cwd(), "Arquivos de Origem", "*."+TABLEEXT, 1 )
+               IF File( cARQORI )
+                  Leto_export2sql( hDb, cARQORI, lincdados )
+               ENDIF
+            ELSE
+               cPASTA := SelectFolder()
+               cPASTA += "\*."+TABLEEXT 
+               FAZERDBF( {|| Leto_export2sql( hDb, cCAMINHOCOMPLETO, lincdados ) }, .F., , , cPASTA, .F. )
+            ENDIF   
+            
+            // Retorna o RDD e o Dialeto anteriores
+            cTIPOSQL := cOldTipoSQL
+            RDDNOME( nOLDTIPO ) 
+
+            // Fecha a base SQLite remota[cite: 25, 30]
+            leto_sqlt_Close( hDb ) 
+            MDT("Conexao com base SQLite encerrada.")
+         ELSE
+            MDT("Falha ao abrir base SQLite no servidor LetoDB.")
+         ENDIF
+         
+         leto_disconnect()
+      ELSE
+         leto_errocon(nConnect)
+      ENDIF
+   ENDIF
+
+RETURN NIL
+
+
+*+--------------------------------------------------------------------
+*+    Engine: Cria tabela, índices e envia os inserts ao Servidor
+*+--------------------------------------------------------------------
+STATIC FUNCTION Leto_export2sql( hDb, cDBFFILE, lincdados )
+   LOCAL aStruct := {}, i, j, mFldNm, mSql
+   LOCAL aRETUMETA, cSqlFields, cSqlIndexes, aMETADBF
+   LOCAL cTablename, aINDICES, nIndexes, nLASTREC
+
+   IF Empty(hDb)
+      msgstop( "Sem conexao ativa com a base SQLite no LetoDB!" )
+      RETURN NIL
+   ENDIF
+   IF !File( cDBFFILE )
+      RETURN NIL
+   ENDIF
+   IF ValType(lincdados) <> "L"
+      lincdados := .T.
+   ENDIF
+
+   // Extrai o nome padrao da tabela baseado no arquivo
+   cTablename := HB_FNAMENAME(cDBFFILE) 
+
+   // Como e uma importacao via LetoDB e a comunicacao de estruturas complexas na memoria (table info) 
+   // pode onerar a rede, adotamos a abordagem direta do DROP IF EXISTS.
+   IF MDG( "A tabela " + cTablename + " sera recriada. Continuar?" )
+      leto_sqlt_Exec( hDb, "DROP TABLE IF EXISTS " + cTablename ) //[cite: 25, 30]
+   ELSE
+      RETURN NIL
+   ENDIF
+
+   // --- PROCESSAMENTO DE METADADOS (Espelhado do sqlite.prg original) ---
+   TRY
+      aRETUMETA := GeraSQLMetadata()
+      cSqlFields  := aRETUMETA[1] 
+      cSqlIndexes := aRETUMETA[2]
+      IF !Empty( cSqlFields ); leto_sqlt_Exec( hDb, cSqlFields ); ENDIF //[cite: 25, 30]
+      IF !Empty( cSqlIndexes ); leto_sqlt_Exec( hDb, cSqlIndexes ); ENDIF //[cite: 25, 30]
+   CATCH
+   END
+
+   leto_sqlt_Exec( hDb, "DELETE FROM table_metadata WHERE nome_tabela = " + c2sql(cTablename) ) //[cite: 25, 30]
+   leto_sqlt_Exec( hDb, "DELETE FROM index_metadata WHERE nome_tabela = " + c2sql(cTablename) ) //[cite: 25, 30]
+
+   // Abre o DBF para importacao
+   dbUseArea( .T., ( RDDNOME(TIPODBF) ), ( cDBFFILE ), , .T., .F. ) 
+   aStruct := dbStruct()
+
+   // Grava metadata do dbf[cite: 28]
+   TRY
+      aMETADBF := GeradbfSchema( cTablename, aStruct )
+      FOR j := 1 TO LEN(aMETADBF)
+          leto_sqlt_Exec( hDb, aMETADBF[j] ) //[cite: 25, 30]
+      NEXT j
+   CATCH
+   END
+
+   // --- CRIACAO DA TABELA E INDICES NO LETODB ---
+   mSQL := SqliteCreateTable( cTablename, aStruct, "SQLITE" )
+   IF leto_sqlt_Exec( hDb, mSql ) != 0 //[cite: 25, 30]
+      alertx( 'Table Creation Error no LetoDB!', 'DBF2SQLite' )
+      MemoWrit( "sql_create_" + cTablename + ".txt", msql )
+      dbCloseArea()
+      RETURN NIL
+   ENDIF
+
+   aINDICES := GeraINDICES(cTABLENAME)
+   nIndexes := LEN(aINDICES)
+   FOR j := 1 TO nIndexes
+      // Envia o Create index
+      leto_sqlt_Exec( hDb, aINDICES[j, 1] ) //[cite: 25, 30]
+      // Envia os metadados do indice
+      leto_sqlt_Exec( hDb, aINDICES[j, 2] ) //[cite: 25, 30]
+   NEXT j
+
+   // --- TRANSFERENCIA DE DADOS (TRANSACTION) ---
+// --- TRANSFERENCIA DE DADOS (TRANSACTION) ---
+   IF lincdados
+      nLASTREC := RecCount() 
+      zei_fort( nLASTREC,,, 0 )
+      dbGoTop()
+      
+      nCont := 0 // Inicializa o contador
+
+      // Inicia bloco transacional direto na memoria do servidor SQLite
+      IF leto_sqlt_Exec( hDb, 'BEGIN TRANSACTION;' ) != 0 //
+         dbCloseArea()
+         RETURN NIL
+      ENDIF
+      
+      DO WHILE !Eof()
+         zei_fort( nLASTREC,,, 1 )
+
+         mSql := "INSERT INTO " + cTablename + " VALUES ("
+         FOR i := 1 TO Len( aStruct )
+            mFldNm := aStruct[ i, 1 ] //[cite: 32]
+            IF i > 1
+               mSql += ", "
+            ENDIF
+            mSql += c2sql( &mFldNm ) // Usa a global c2sql para sanitizar dados[cite: 32]
+         NEXT
+         mSql += ")"
+         
+         IF leto_sqlt_Exec( hDb, mSql ) != 0 //[cite: 32]
+            alertx( "Problem in Query: " + mSql )
+            EXIT
+         ENDIF
+         
+         nCont++
+         
+         // Bloco de Commit em lote (Bulk Insert) a cada 500 registros
+         IF nCont % 500 == 0
+            leto_sqlt_Exec( hDb, 'COMMIT;' )
+            leto_sqlt_Exec( hDb, 'BEGIN TRANSACTION;' )
+         ENDIF
+
+         dbSkip()
+      ENDDO
+      
+      // Garante o commit dos registros residuais (que nao fecharam o lote exato de 500)
+      leto_sqlt_Exec( hDb, 'COMMIT;' ) //[cite: 32]
+   ENDIF
+   
+   dbCloseArea()
+   MDT( "Tabela " + cTablename + " importada com sucesso para o LetoDB!" )
+
+RETURN NIL
+
 
 /*
 private Mydbf:="//127.0.0.1:2812/\Testdbf.dbf"
