@@ -91,6 +91,7 @@ WHILE .T.
    OPCAO(7,24,"S&QLite                   ",81)   // Q 
    OPCAO(8,24,"&Gestao (Server/User)     ",71)   // G
    
+   
    KEY := menu(1,0)
    DO CASE
    CASE KEY = 1
@@ -275,6 +276,7 @@ MDT(cDESTINO)
 MDT("abrindo arquivo de origem: "+cTABELAX)
 nConnect := leto_conexao(cSrvAddr)
 IF nConnect >= 0
+   //LETO_SETSKIPBUFFER( 10 )
    //DBUseArea( <lNewArea> , <cDriver> , <cName>, <xcAlias> , <lShared> , <lReadOnly>,<cCodePage>,<nConnection> ) -> lSuccess
    dbUseArea(.T.,,cTABELAX,,.T.)
    nLASTREC := LastRec()
@@ -1120,12 +1122,13 @@ FUNCTION LETO_GESTAOMENU(cSrvAddr)
 
    IF nConnect >= 0
       WHILE .T.
-         hb_DispBox(12,18,18,55,B_DOUBLE+" ")
+         hb_DispBox(12,18,19,55,B_DOUBLE+" ")
          @ 12,24 SAY " MENU GESTAO "
          OPCAO(13,20,"&Lock/Unlock (Conexoes)    ",76)   // L
          OPCAO(14,20,"&Disconnect user (Kill)    ",68)   // D
          OPCAO(15,20,"&Backup Geral (Srv ZIP)    ",66)   // B
          OPCAO(16,20,"Backup Local (C&li ZIP)    ",76)   // L
+         OPCAO(17,20,"&Skip Buffer (Otimizacao)  ",83)   // S
          KEY := menu(1,0)
          
          DO CASE
@@ -1136,7 +1139,9 @@ FUNCTION LETO_GESTAOMENU(cSrvAddr)
          CASE KEY = 3
             Leto_ServerBackup(cSrvAddr)   
          CASE KEY = 4
-            Leto_ClientBackup(cSrvAddr)   
+            Leto_ClientBackup(cSrvAddr) 
+         CASE KEY = 5
+            Leto_ConfigSkipBuffer()      
          OTHERWISE
             EXIT
          ENDCASE
@@ -1146,6 +1151,39 @@ FUNCTION LETO_GESTAOMENU(cSrvAddr)
       leto_errocon(nConnect)
    ENDIF
 RETURN .T.
+
+*+--------------------------------------------------------------------
+*+    Sub-rotina: Configurar Skip Buffer (Leitura em Lote)
+*+--------------------------------------------------------------------
+STATIC FUNCTION Leto_ConfigSkipBuffer()
+   LOCAL nSize := 10 // Valor padrao do LetoDB[cite: 33]
+   LOCAL nStat := 0
+
+   // Tenta pegar a estatistica atual sem quebrar caso nao tenha workarea aberta
+   TRY
+      nStat := LETO_SETSKIPBUFFER() //[cite: 33]
+   CATCH
+      nStat := 0
+   END
+
+   // Exibe a estatistica na tela e pede o novo valor
+   @ 20, 20 SAY "Estatistica Atual: " + LTrim(Str(nStat)) 
+   @ 21, 20 SAY "Tamanho (Registros):" GET nSize PICT "99999"
+   READ
+
+   IF LastKey() != 27 .AND. nSize > 0
+      TRY
+         LETO_SETSKIPBUFFER( nSize ) //[cite: 33]
+         MDT( "Skip Buffer ajustado para " + LTrim(Str(nSize)) + " registros." )
+      CATCH
+         MDT( "Aviso: Nenhuma tabela (Workarea) ativa no momento." )
+      END
+   ENDIF
+   
+   // Limpa as linhas de input da tela
+   @ 20, 0 CLEAR TO 21, 79 
+
+RETURN NIL
 
 *+--------------------------------------------------------------------
 *+    Sub-rotina: Lock/Unlock (Bloquear novas conexoes)
