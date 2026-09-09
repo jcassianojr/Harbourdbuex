@@ -571,24 +571,23 @@ RETURN (iif(nChoices > 0, aResult[nChoices], ""))
 *+    Function LETO_USERS()
 *+--------------------------------------------------------------------
 FUNCTION LETO_USERS(cSrvAddr)
-   LOCAL nKey := 0, arr
+   LOCAL KEY := 0, arr
    LOCAL nConnect := LETO_CONNECT(cSrvAddr)
 
    IF nConnect >= 0
-      DO WHILE nKey != 48
-         // Aumentando a altura da caixa para caber a nova opção
-         hb_DispBox(12,18,20,55,B_DOUBLE+" ")
+      WHILE .T.
+         hb_DispBox(12,18,19,55,B_DOUBLE+" ")
          @ 12,24 SAY " MENU USUARIOS "
-         @ 13,20 SAY "1 Add user"
-         @ 14,20 SAY "2 Change password"
-         @ 15,20 SAY "3 Change access rights"
-         @ 16,20 SAY "4 Flush changes"
-         @ 17,20 SAY "5 List users"
-         @ 18,20 SAY "0 Exit"
+         OPCAO(13,20,"&Add user                  ",65)   // A
+         OPCAO(14,20,"&Change password           ",67)   // C
+         OPCAO(15,20,"Change &rights             ",82)   // R
+         OPCAO(16,20,"&Flush changes             ",70)   // F
+         OPCAO(17,20,"&List users                ",76)   // L
          
-         nKey := Inkey( 0 )
+         KEY := menu(1,0)
          
-         IF nKey == 49
+         DO CASE
+         CASE KEY = 1
             IF( arr := Leto_GetUser( .T., .T. ) ) != Nil
                IF leto_useradd( arr[ 1 ], arr[ 2 ], arr[ 3 ] )
                   MDT( "User is added" )
@@ -598,7 +597,7 @@ FUNCTION LETO_USERS(cSrvAddr)
             ELSE
                MDT( "Operation canceled" )
             ENDIF
-         ELSEIF nKey == 50
+         CASE KEY = 2
             IF( arr := Leto_GetUser( .T., .F. ) ) != Nil
                IF leto_userpasswd( arr[ 1 ], arr[ 2 ] )
                   MDT( "Password is changed" )
@@ -608,7 +607,7 @@ FUNCTION LETO_USERS(cSrvAddr)
             ELSE
                MDT( "Operation canceled" )
             ENDIF
-         ELSEIF nKey == 51
+         CASE KEY = 3
             IF( arr := Leto_GetUser( .F., .T. ) ) != Nil
                IF leto_userrights( arr[ 1 ], arr[ 3 ] )
                   MDT( "Rights are changed" )
@@ -618,12 +617,14 @@ FUNCTION LETO_USERS(cSrvAddr)
             ELSE
                MDT( "Operation canceled" )
             ENDIF
-         ELSEIF nKey == 52
+         CASE KEY = 4
             leto_userflush()
             MDT( "Flush changes OK" )
-         ELSEIF nKey == 53
-            Leto_UsersList()   // <- CHAMADA PARA LISTAR USUÁRIOS
-         ENDIF
+         CASE KEY = 5
+            Leto_UsersList()
+         OTHERWISE
+            EXIT
+         ENDCASE
       ENDDO
       leto_disconnect()
    ELSE
@@ -704,33 +705,35 @@ RETURN { cUser, cPass, cRights }
 *+    Function LETO_INFOMENU()
 *+--------------------------------------------------------------------
 FUNCTION LETO_INFOMENU(cSrvAddr)
-   LOCAL nKey := 0
+   LOCAL KEY := 0
    LOCAL nConnect := LETO_CONNECT(cSrvAddr)
 
    IF nConnect >= 0
-      DO WHILE nKey != 48
-         hb_DispBox(12,18,20,55,B_DOUBLE+" ")
+      WHILE .T.
+         hb_DispBox(12,18,19,55,B_DOUBLE+" ")
          @ 12,24 SAY " INFORMACOES "
-         @ 13,20 SAY "1 Basic Info"
-         @ 14,20 SAY "2 Tables Info"
-         @ 15,20 SAY "3 Locks Info"
-         @ 16,20 SAY "4 Ping"
-         @ 17,20 SAY "5 Vars List"
-         @ 18,20 SAY "0 Exit"
+         OPCAO(13,20,"&Basic Info                ",66)   // B
+         OPCAO(14,20,"&Tables Info               ",84)   // T
+         OPCAO(15,20,"&Locks Info                ",76)   // L
+         OPCAO(16,20,"&Ping                      ",80)   // P
+         OPCAO(17,20,"&Vars List                 ",86)   // V
          
-         nKey := Inkey( 0 )
+         KEY := menu(1,0)
          
-         IF nKey == 49       // Opção 1 - Info Connection
+         DO CASE
+         CASE KEY = 1
             Leto_BasicInfo()
-         ELSEIF nKey == 50   // Opção 2 - Tables
+         CASE KEY = 2
             Leto_TablesInfo()
-         ELSEIF nKey == 51   // Opção 3 - Locks
+         CASE KEY = 3
             Leto_LocksInfo()
-         ELSEIF nKey == 52   // Opção 4 - Ping
+         CASE KEY = 4
             Leto_PingAction()
-         ELSEIF nKey == 53   // Opção 5 - Vars
+         CASE KEY = 5
             Leto_VarsList()
-         ENDIF
+         OTHERWISE
+            EXIT
+         ENDCASE
       ENDDO
       leto_disconnect()
    ELSE
@@ -880,41 +883,41 @@ RETURN .T.
 *+    Function LETO_SQLITEMENU()
 *+--------------------------------------------------------------------
 FUNCTION LETO_SQLITEMENU(cSrvAddr)
-   LOCAL nKey := 0
+   LOCAL KEY := 0
    LOCAL nConnect := LETO_CONNECT(cSrvAddr)
 
    IF nConnect >= 0
-      DO WHILE nKey != 48
-         // Aumentando a caixa para caber as novas opcoes
+      WHILE .T.
          hb_DispBox(12,18,19,55,B_DOUBLE+" ")
          @ 12,24 SAY " MENU SQLITE "
-         @ 13,20 SAY "1 Criar base"
-         @ 14,20 SAY "2 Copiar base (Local p/ Srv)"
-         @ 15,20 SAY "3 Copiar do servidor (Srv p/ Local)"
-         @ 16,20 SAY "4 Listar bases SQLite"
-         @ 17,20 SAY "5 Excluir base SQLite"
-         @ 18,20 SAY "0 Exit"
+         OPCAO(13,20,"C&riar base                ",82)   // R
+         OPCAO(14,20,"&Copiar base (Loc->Srv)    ",67)   // C
+         OPCAO(15,20,"Copiar &do servidor        ",68)   // D
+         OPCAO(16,20,"&Listar bases SQLite       ",76)   // L
+         OPCAO(17,20,"&Excluir base SQLite       ",69)   // E
          
-         nKey := Inkey( 0 )
+         KEY := menu(1,0)
          
-         IF nKey == 49
+         DO CASE
+         CASE KEY = 1
             Leto_SQLTCriar(cSrvAddr)
-         ELSEIF nKey == 50
+         CASE KEY = 2
             Leto_SQLTCopiar(cSrvAddr)
-         ELSEIF nKey == 51
+         CASE KEY = 3
             Leto_SQLTCopiarSrv(cSrvAddr)
-         ELSEIF nKey == 52
+         CASE KEY = 4
             Leto_SQLTListar(cSrvAddr)
-         ELSEIF nKey == 53
+         CASE KEY = 5
             Leto_SQLTExcluir(cSrvAddr)
-         ENDIF
+         OTHERWISE
+            EXIT
+         ENDCASE
       ENDDO
       leto_disconnect()
    ELSE
       leto_errocon(nConnect)
    ENDIF
 RETURN .T.
-
 
 *+--------------------------------------------------------------------
 *+    Sub-rotina 4: Listar Bases SQLite no Servidor
@@ -1086,35 +1089,36 @@ RETURN NIL
 *+    Function LETO_DBFMENU()
 *+--------------------------------------------------------------------
 FUNCTION LETO_DBFMENU(cSrvAddr)
-   LOCAL nKey := 0
+   LOCAL KEY := 0
 
-   DO WHILE nKey != 48
+   WHILE .T.
       hb_DispBox(12,18,19,55,B_DOUBLE+" ")
       @ 12,24 SAY " MENU DBF "
-      @ 13,20 SAY "1 Tabelas (Listar)"
-      @ 14,20 SAY "2 Importar DBF"
-      @ 15,20 SAY "3 Exportar DBF"
-      @ 16,20 SAY "4 Apagar Tabela"
-      @ 17,20 SAY "5 Exportar Formatos"
-      @ 18,20 SAY "0 Exit"
+      OPCAO(13,20,"&Tabelas (Listar)          ",84)   // T
+      OPCAO(14,20,"&Importar DBF              ",73)   // I
+      OPCAO(15,20,"&Exportar DBF              ",69)   // E
+      OPCAO(16,20,"&Apagar Tabela             ",65)   // A
+      OPCAO(17,20,"E&xportar Formatos         ",88)   // X
       
-      nKey := Inkey( 0 )
+      KEY := menu(1,0)
       
-      IF nKey == 49
+      DO CASE
+      CASE KEY = 1
          // Passando mascara, lSODBF = .T., lSOSQLITE = .F.
          LETO_tables(cSrvAddr, "*."+TABLEEXT, .T., .F.)
-      ELSEIF nKey == 50
+      CASE KEY = 2
          LETO_DBFTOSRV(cSrvAddr)
-      ELSEIF nKey == 51
+      CASE KEY = 3
          LETO_SRVTODBF(cSrvAddr)
-      ELSEIF nKey == 52
+      CASE KEY = 4
          LETO_DELDBF(cSrvAddr)
-      ELSEIF nKey == 53
+      CASE KEY = 5
          leto_expformat(cSrvAddr)
-      ENDIF
+      OTHERWISE
+         EXIT
+      ENDCASE
    ENDDO
 RETURN .T.
-
 /*
 private Mydbf:="//127.0.0.1:2812/\Testdbf.dbf"
 private cfilter:='FIELD1="ABC"'
