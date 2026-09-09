@@ -89,6 +89,7 @@ WHILE .T.
    OPCAO(5,24,"&DBF                       ",68)   // D
    OPCAO(6,24,"&Usuarios                 ",85)   // U 
    OPCAO(7,24,"S&QLite                   ",81)   // Q 
+   OPCAO(8,24,"&Gestao (Server/User)     ",71)   // G
    
    KEY := menu(1,0)
    DO CASE
@@ -100,6 +101,8 @@ WHILE .T.
       LETO_USERS(cSERVERX) 
    CASE KEY = 4
       LETO_SQLITEMENU(cSERVERX)     
+   CASE KEY = 5
+      LETO_GESTAOMENU(cSERVERX)      
    OTHERWISE
       EXIT
    ENDCASE
@@ -1077,6 +1080,165 @@ FUNCTION LETO_DBFMENU(cSrvAddr)
       ENDCASE
    ENDDO
 RETURN .T.
+
+
+*+--------------------------------------------------------------------
+*+    Function LETO_GESTAOMENU()
+*+--------------------------------------------------------------------
+FUNCTION LETO_GESTAOMENU(cSrvAddr)
+   LOCAL KEY := 0
+   LOCAL nConnect := LETO_CONNECT(cSrvAddr)
+
+   IF nConnect >= 0
+      WHILE .T.
+         hb_DispBox(12,18,17,55,B_DOUBLE+" ")
+         @ 12,24 SAY " MENU GESTAO "
+         OPCAO(13,20,"&Lock/Unlock (Conexoes)    ",76)   // L
+         OPCAO(14,20,"&Disconnect user (Kill)    ",68)   // D
+         OPCAO(15,20,"&Backup Geral (ZIP)        ",66)   // B
+         KEY := menu(1,0)
+         
+         DO CASE
+         CASE KEY = 1
+            Leto_ToggleLock()
+         CASE KEY = 2
+            Leto_KillUser()
+         CASE KEY = 3
+            Leto_ServerBackup(cSrvAddr)   
+         OTHERWISE
+            EXIT
+         ENDCASE
+      ENDDO
+      leto_disconnect()
+   ELSE
+      leto_errocon(nConnect)
+   ENDIF
+RETURN .T.
+
+*+--------------------------------------------------------------------
+*+    Sub-rotina: Lock/Unlock (Bloquear novas conexoes)
+*+--------------------------------------------------------------------
+STATIC FUNCTION Leto_ToggleLock()
+   STATIC lLocked := .F. // Mantem o estado na sessao
+
+   IF MDG( iif( lLocked, "Unlock server (Permitir conexoes)?", "Lock server (Bloquear conexoes)?" ) )
+      IF leto_LockConn( !lLocked )
+         lLocked := !lLocked
+         MDT( iif( lLocked, "Servidor BLOQUEADO para novas conexoes.", "Servidor DESBLOQUEADO." ) )
+      ELSE
+         MDT( "Falha ao alterar estado do servidor." )
+      ENDIF
+   ENDIF
+RETURN NIL
+
+*+--------------------------------------------------------------------
+*+    Sub-rotina: Disconnect/Kill User (Derrubar conexao especifica)
+*+--------------------------------------------------------------------
+STATIC FUNCTION Leto_KillUser()
+   LOCAL aInfo, aDisp := {}, aIds := {}, nChoice, i
+
+   // Busca a lista de usuarios ativos no servidor
+   IF ( aInfo := leto_MgGetUsers() ) != Nil .AND. Len(aInfo) > 0
+      
+      // Monta os arrays de exibicao e o array paralelo de IDs
+      FOR i := 1 TO Len( aInfo )
+         // aInfo[i,1] contem o ID necessario para a exclusao
+         AAdd( aIds, aInfo[ i, 1 ] )
+         
+         // aInfo[2] Nome, aInfo[3] Tipo
+         AAdd( aDisp, PadR( aInfo[ i, 2 ], 15 ) + " | " + aInfo[ i, 3 ] )
+      NEXT
+
+      // Usa a funcao auxiliar que ja criamos para exibir em AChoice
+      nChoice := ShowInChoice( aDisp, "Selecione o usuario para derrubar" )
+
+      IF nChoice > 0
+         IF MDG( "Really kill " + AllTrim(aInfo[nChoice, 2]) + " ?" )
+            // Passa o ID do usuario para a funcao leto_mgKill
+            leto_mgKill( aIds[nChoice] )
+            MDT( "Comando de desconexao enviado." )
+         ENDIF
+      ENDIF
+
+   ELSE
+      MDT("Nenhum usuario conectado ou erro ao listar.")
+   ENDIF
+
+RETURN NIL
+
+*+--------------------------------------------------------------------
+*+    Sub-rotina: Backup Geral (Zipar via Servidor e Salvar Local)
+*+--------------------------------------------------------------------
+STATIC FUNCTION Leto_ServerBackup(cSrvAddr)
+   LOCAL cDestPasta, cDestArquivo, cArqSrv := ""
+   LOCAL cExtTable := "", cExtMemo := "", cExtIndex := ""
+   LOCAL aMasks := {}
+   LOCAL nConnect, cRetorno
+
+   TRY
+      cExtTable := hb_rddInfo(RDDI_TABLEEXT)
+   CATCH
+   END
+   TRY
+      cExtMemo := hb_rddInfo(RDDI_MEMOEXT)
+   CATCH
+   END
+   TRY
+      cExtIndex := hb_rddInfo(RDDI_ORDBAGEXT)
+   CATCH
+   END
+
+   IF Empty(cExtTable); cExtTable := ".DBF"; ENDIF
+   IF Empty(cExtMemo);  cExtMemo  := ".FPT"; ENDIF
+   IF Empty(cExtIndex); cExtIndex := ".CDX"; ENDIF
+
+   IF At(".", cExtTable) == 0; cExtTable := "." + cExtTable; ENDIF
+   IF At(".", cExtMemo)  == 0; cExtMemo  := "." + cExtMemo;  ENDIF
+   IF At(".", cExtIndex) == 0; cExtIndex := "." + cExtIndex; ENDIF
+
+   AAdd(aMasks, "*" + cExtTable)
+   AAdd(aMasks, "*" + cExtMemo)
+   AAdd(aMasks, "*" + cExtIndex)
+   AAdd(aMasks, "*.sqlite")
+   AAdd(aMasks, "*.db")
+   AAdd(aMasks, "*.db3")
+   AAdd(aMasks, "*.fossil")
+
+   cDestPasta := SelectFolder("Selecione a pasta local para salvar o backup", hb_cwd(), .F.)
+   
+   IF !Empty(cDestPasta)
+      nConnect := LETO_CONNECT(cSrvAddr)
+      
+      IF nConnect >= 0
+         MDT("Gerando ZIP no servidor. Isso pode demorar, aguarde...")
+         
+         cRetorno := leto_udf("leto_Zip", "", aMasks, 9, .T., , , , .F.)
+         
+         IF ValType(cRetorno) == "C" .AND. !Empty(cRetorno)
+            cArqSrv := cRetorno
+            cDestArquivo := cDestPasta + "\bkp_" + DToS(Date()) + "_" + StrTran(Time(), ":", "") + ".zip"
+            
+            IF leto_File( cArqSrv )
+               Leto_FCopyFromSrv( cArqSrv, cDestArquivo )
+               MDT("Backup concluido com sucesso em: " + cDestArquivo)
+               
+               // Remove o arquivo temporario do servidor apos o download
+               Leto_FErase( cArqSrv )
+            ELSE
+               MDT("Falha: Arquivo ZIP de backup nao encontrado no servidor.")
+            ENDIF
+         ELSE
+            MDT("Falha ao gerar o arquivo de compactacao no servidor.")
+         ENDIF
+         
+         leto_disconnect()
+      ELSE
+         leto_errocon(nConnect)
+      ENDIF
+   ENDIF
+
+Return NIL
+
 /*
 private Mydbf:="//127.0.0.1:2812/\Testdbf.dbf"
 private cfilter:='FIELD1="ABC"'
