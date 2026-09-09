@@ -91,6 +91,7 @@ WHILE .T.
    OPCAO(7,24,"&Exportar  DBF             ",69)   // E
    OPCAO(8,24,"&Apagar Tabela             ",65)   // A
    OPCAO(9,24,"Exportar &Formatos         ",70)   // F
+   OPCAO(10,24,"&Usuarios                 ",85)   // U  <- NOVA OPÇÃO
    //opcao backup zip
    KEY := menu(1,0)
    DO CASE
@@ -106,6 +107,8 @@ WHILE .T.
       LETO_DELDBF(cSERVERX)
    CASE KEY = 6
       leto_expformat(cSERVERX)
+   CASE KEY = 7
+      LETO_USERS(cSERVERX)   
    OTHERWISE
       EXIT
    ENDCASE
@@ -505,6 +508,143 @@ RESTAA(aAMBIENTE)
 
 RETURN (iif(nChoices > 0,aResult[nChoices],""))
 
+
+*+--------------------------------------------------------------------
+*+
+*+    Function LETO_USERS()
+*+
+*+--------------------------------------------------------------------
+FUNCTION LETO_USERS(cSrvAddr)
+
+   LOCAL nKey := 0, arr
+   LOCAL nConnect := LETO_CONNECT(cSrvAddr)
+
+   IF nConnect >= 0
+      DO WHILE nKey != 48
+         // Limpa a tela ou cria uma nova caixa para o submenu
+         hb_DispBox(12,18,19,55,B_DOUBLE+" ")
+         @ 12,24 SAY " MENU USUARIOS "
+         @ 13,20 SAY "1 Add user"
+         @ 14,20 SAY "2 Change password"
+         @ 15,20 SAY "3 Change access rights"
+         @ 16,20 SAY "4 Flush changes"
+         @ 17,20 SAY "0 Exit"
+         
+         nKey := Inkey( 0 )
+         
+         IF nKey == 49
+            IF( arr := Leto_GetUser( .T., .T. ) ) != Nil
+               IF leto_useradd( arr[ 1 ], arr[ 2 ], arr[ 3 ] )
+                  MDT( "User is added" )
+               ELSE
+                  MDT( "User is not added" )
+               ENDIF
+            ELSE
+               MDT( "Operation canceled" )
+            ENDIF
+            
+         ELSEIF nKey == 50
+            IF( arr := Leto_GetUser( .T., .F. ) ) != Nil
+               IF leto_userpasswd( arr[ 1 ], arr[ 2 ] )
+                  MDT( "Password is changed" )
+               ELSE
+                  MDT( "Password is not changed" )
+               ENDIF
+            ELSE
+               MDT( "Operation canceled" )
+            ENDIF
+            
+         ELSEIF nKey == 51
+            IF( arr := Leto_GetUser( .F., .T. ) ) != Nil
+               IF leto_userrights( arr[ 1 ], arr[ 3 ] )
+                  MDT( "Rights are changed" )
+               ELSE
+                  MDT( "Rights are not changed" )
+               ENDIF
+            ELSE
+               MDT( "Operation canceled" )
+            ENDIF
+            
+         ELSEIF nKey == 52
+            leto_userflush()
+            MDT( "Flush changes OK" )
+         ENDIF
+      ENDDO
+      leto_disconnect()
+   ELSE
+      leto_errocon(nConnect)
+   ENDIF
+
+RETURN .T.
+
+*+--------------------------------------------------------------------
+*+
+*+    Function Leto_GetUser()
+*+
+*+--------------------------------------------------------------------
+STATIC FUNCTION Leto_GetUser( lPass, lRights )
+
+   LOCAL cUser := Space(15), cPass := Space(15), cRights := ""
+   LOCAL cAdmin := "N", cManage := "N", cWrite := "N", cExecute := "N"
+   LOCAL cExistingRights
+
+   @ 20, 20 SAY "User name :" GET cUser PICT "@!"
+   READ
+   
+   IF LastKey() == 27
+      RETURN NIL
+   ENDIF
+   
+   cUser := AllTrim(cUser)
+   IF Empty( cUser )
+      RETURN NIL
+   ENDIF
+
+   IF lPass
+      @ 21, 20 SAY "Password  :" GET cPass 
+      READ
+      
+      IF LastKey() == 27
+         RETURN NIL
+      ENDIF
+      
+      cPass := AllTrim(cPass)
+      IF Empty( cPass )
+         RETURN NIL
+      ENDIF
+   ENDIF
+
+   IF lRights
+      // Busca os direitos atuais do usuário utilizando a função nativa do rddleto
+      cExistingRights := leto_usergetrights( cUser )
+      
+      // Se retornar uma string válida (ex: "YNNN"), preenche as variáveis de GET
+      IF ValType( cExistingRights ) == "C" .AND. Len( cExistingRights ) >= 4
+         cAdmin   := SubStr( cExistingRights, 1, 1 )
+         cManage  := SubStr( cExistingRights, 2, 1 )
+         cWrite   := SubStr( cExistingRights, 3, 1 )
+         cExecute := SubStr( cExistingRights, 4, 1 )
+      ENDIF
+
+      // Exibe os GETs na tela (estarão preenchidos com os direitos atuais ou com 'N')
+      @ 22, 20 SAY "Admin   (Y/N) :" GET cAdmin   PICT "!" VALID cAdmin   $ "YN"
+      @ 23, 20 SAY "Manage  (Y/N) :" GET cManage  PICT "!" VALID cManage  $ "YN"
+      @ 24, 20 SAY "Write   (Y/N) :" GET cWrite   PICT "!" VALID cWrite   $ "YN"
+      @ 25, 20 SAY "Execute (Y/N) :" GET cExecute PICT "!" VALID cExecute $ "YN"
+      READ
+      
+      IF LastKey() == 27
+         RETURN NIL
+      ENDIF
+
+      // Monta a string concatenando as respostas para retornar e gravar
+      cRights := cAdmin + cManage + cWrite + cExecute
+   ENDIF
+
+   // Limpa as linhas de input da tela
+   @ 20, 0 CLEAR TO 25, 79 
+
+RETURN { cUser, cPass, cRights }
 
 /*
 private Mydbf:="//127.0.0.1:2812/\Testdbf.dbf"

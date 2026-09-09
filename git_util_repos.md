@@ -40,6 +40,9 @@ https://pctoledo.org/viewtopic.php?t=6772
 dbfcdxex
 https://github.com/carles9000/dbfcdxex
 
+HBnfeEmail
+https://github.com/malcarli1/Nova-HbNfeEmail
+
 hmg
 https://www.hmgextended.com/
 https://github.com/ivanilmarcelino/OpenMinigui
@@ -76,3 +79,9 @@ SQLITE
 https://www.sqlite.org/index.html
 http://www.ch-werner.de/sqliteodbc/
 https://letos.org/
+
+LETODB
+https://sourceforge.net/projects/letodb/
+https://github.com/elchs/LetoDBf
+https://github.com/alkresin/letodb
+
