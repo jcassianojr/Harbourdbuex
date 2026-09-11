@@ -699,13 +699,14 @@ FUNCTION LETO_INFOMENU(cSrvAddr)
 
    IF nConnect >= 0
       WHILE .T.
-         hb_DispBox(12,18,19,55,B_DOUBLE+" ")
+         hb_DispBox(12,18,20,55,B_DOUBLE+" ")
          @ 12,24 SAY " INFORMACOES "
          OPCAO(13,20,"&Basic Info                ",66)   // B
          OPCAO(14,20,"&Tables Info               ",84)   // T
          OPCAO(15,20,"&Locks Info                ",76)   // L
          OPCAO(16,20,"&Ping                      ",80)   // P
          OPCAO(17,20,"&Vars List                 ",86)   // V
+         OPCAO(18,20,"&INI Config (letodb.ini)   ",73)   // I
          
          KEY := menu(1,0)
          
@@ -720,6 +721,8 @@ FUNCTION LETO_INFOMENU(cSrvAddr)
             Leto_PingAction()
          CASE KEY = 5
             Leto_VarsList()
+         CASE KEY = 6
+            Leto_IniList(cSrvAddr)   
          OTHERWISE
             EXIT
          ENDCASE
@@ -1602,6 +1605,131 @@ STATIC FUNCTION Leto_export2sql( hDb, cDBFFILE, lincdados )
 
 RETURN NIL
 
+*+--------------------------------------------------------------------
+*+    Exibe as configuracoes do letodb.ini
+*+--------------------------------------------------------------------
+STATIC FUNCTION Leto_IniList(cSrvAddr)
+   LOCAL cTempFile := "temp_leto.ini"
+   LOCAL cIniData, aIni, aDisp := {}, i, j
+   
+   // Tenta buscar o arquivo letodb.ini do servidor remotamente
+   cIniData := leto_MemoRead( cSrvAddr + "letodb.ini" )
+   
+   // Fallback: Tenta ler localmente se falhar a leitura remota
+   IF Empty( cIniData )
+      IF File( "letodb.ini" )
+         cIniData := MemoRead( "letodb.ini" )
+      ELSE
+         MDT("Erro: letodb.ini nao encontrado no servidor nem localmente.")
+         RETURN .F.
+      ENDIF
+   ENDIF
+   
+   // Grava em arquivo temporario para o RDINI (que usa FOPEN local) processar
+   MemoWrit( cTempFile, cIniData )
+   
+   aIni := RDINI( cTempFile ) //[cite: 18]
+   
+   IF !Empty( aIni )
+      FOR i := 1 TO Len( aIni )
+         AAdd( aDisp, "[" + aIni[i, 1] + "]" )
+         FOR j := 1 TO Len( aIni[i, 2] )
+            AAdd( aDisp, "   " + PadR( aIni[i, 2, j, 1], 20 ) + " = " + aIni[i, 2, j, 2] )
+         NEXT
+         AAdd( aDisp, "-------------------------------------" )
+      NEXT
+      ShowInChoice( aDisp, "letodb.ini (Chaves e Valores)" )
+   ELSE
+      MDT("Erro ao processar o letodb.ini ou arquivo vazio.")
+   ENDIF
+   
+   // Limpeza
+   FErase( cTempFile )
+   
+RETURN .T.
+
+
+*+--------------------------------------------------------------------
+*+    Rotinas originais do Harbour Project para leitura de INI
+*+--------------------------------------------------------------------
+#define STR_BUFLEN  1024
+
+STATIC FUNCTION RDINI( fname )
+LOCAL han, stroka, strfull, poz1, vname, arr
+LOCAL strbuf := Space(STR_BUFLEN), poz := STR_BUFLEN+1
+
+   IF ( han := FOPEN( fname, FO_READ + FO_SHARED ) ) != - 1 //[cite: 18]
+      arr := {}
+      strfull := ""
+      DO WHILE .T.
+         IF LEN( stroka := RDSTR( han,@strbuf,@poz,STR_BUFLEN ) ) = 0
+            EXIT
+         ENDIF
+         IF Right( stroka,1 ) == '&'
+            strfull += Left( stroka,Len(stroka)-1 )
+            LOOP
+         ELSE
+            IF !Empty( strfull )
+               stroka := strfull + stroka
+            ENDIF
+            strfull := ""
+         ENDIF
+         
+         IF Left( stroka,1 ) == "["
+            stroka := UPPER( SUBSTR( stroka, 2, AT( "]", stroka ) - 2 ) )
+            AADD( arr, { stroka, {} } )
+         ELSEIF Left( stroka,1 ) <> ";"
+            poz1 := AT( "=", stroka )
+            IF poz1 != 0
+               IF Empty( arr )
+                  AADD( arr, { "MAIN", {} } )
+               ENDIF
+               vname  := RTRIM( LEFT( stroka, poz1 - 1 ) )
+               stroka := ALLTRIM( SUBSTR( stroka, poz1 + 1 ) )
+               AADD( arr[ LEN( arr ), 2 ], { UPPER( vname ), stroka } )
+            ENDIF           
+         ENDIF
+      ENDDO
+      FCLOSE( han )
+   ENDIF
+
+RETURN arr
+
+STATIC FUNCTION RDSTR( han, strbuf, poz, buflen )
+LOCAL stro := "", rez, oldpoz, poz1
+      oldpoz := poz
+      poz    := AT( CHR( 10 ), SUBSTR( strbuf, poz ) )
+      IF poz = 0
+         IF han <> Nil
+            stro += SUBSTR( strbuf, oldpoz )
+            rez  := FREAD( han, @strbuf, buflen ) //[cite: 18]
+            IF rez = 0
+               RETURN ""
+            ELSEIF rez < buflen
+               strbuf := SUBSTR( strbuf, 1, rez ) + CHR( 10 ) + CHR( 13 )
+            ENDIF
+            poz  := AT( CHR( 10 ), strbuf )
+            stro += SUBSTR( strbuf, 1, poz )
+         ELSE
+            stro += Rtrim( SUBSTR( strbuf, oldpoz ) )
+            poz  := oldpoz + Len( stro )
+            IF Len( stro ) == 0
+               RETURN ""
+            ENDIF
+         ENDIF
+      ELSE
+         stro += SUBSTR( strbuf, oldpoz, poz )
+         poz  += oldpoz - 1
+      ENDIF
+      poz ++
+   poz1 := LEN( stro )
+   IF poz1 > 2 .AND. RIGHT( stro, 1 ) $ CHR( 13 ) + CHR( 10 )
+      IF SUBSTR( stro, poz1 - 1, 1 ) $ CHR( 13 ) + CHR( 10 )
+         poz1 --
+      ENDIF
+      stro := SUBSTR( stro, 1, poz1 - 1 )
+   ENDIF
+RETURN stro
 
 /*
 private Mydbf:="//127.0.0.1:2812/\Testdbf.dbf"
