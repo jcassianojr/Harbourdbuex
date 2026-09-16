@@ -147,6 +147,11 @@ FUNCTION PegcsUB( tDOC )
       lDOCDAD := .T.
       lDOCRECNO := .F. // A id do recno ja faz parte do json
    ENDIF
+   IF  tDOC = 16  //yaml
+      lDOCCAB := .T. // Exporta a estrutura
+      lDOCDAD := .T. // Exporta os dados
+      lDOCRECNO := .F.
+   ENDIF
 
 
 // +||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -193,7 +198,9 @@ FUNCTION multidocs
 	  CASE tdoc = 14
           GeraMDdbml(cMASK)	
       CASE tdoc = 15
-          FAZERDBF( {|| Fazerodsclass() }, .F.,,, cMASK )	  
+          FAZERDBF( {|| Fazerodsclass() }, .F.,,, cMASK )	
+      CASE tdoc = 16
+          FAZERDBF( {|| FazerYAML() }, .F.,,, cMASK )	 // <-- Chamada inserida      
       OTHERWISE
            FAZERDBF( {|| multidocg( lDOCCAB, lDOCDAD, lDOCRECNO, cSUBTIPO ) }, .F.,,, cMASK )
    ENDCASE
@@ -370,6 +377,8 @@ FUNCTION GRAVADOC( tdoc, cARQ, aESTRU, aVAL, lDOCCAB, lDOCDAD, cSUBTIPO, lDOCREC
       cARQGRV += ".XML"
    CASE tDOC = 8     //json
       cARQGRV += ".JSON"
+    CASE tDOC = 16    //yaml
+      cARQGRV += ".YAML"  
    ENDCASE
    IF File( cARQGRV )
       FErase( cARQGRV )

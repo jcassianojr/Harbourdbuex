@@ -608,9 +608,10 @@ OPCAO(16,14,"TSV            TA&B                 ",66)  //B 12
 OPCAO(17,14,"S&QL   insert into                  ",81)  //Q 13
 OPCAO(18,14,"Mar&kdown                           ",75)  //K 14
 OPCAO(19,14,"ODS (Open Document Sheet)           ",75)  //K 15
+OPCAO(20,14,"&YAML                               ",89)  //Y 16
 
 IF lincdbf
-   OPCAO(20,14,"DB&F                                ",70)   //F 15-->90
+   OPCAO(21,14,"DB&F                                ",70)   //F 17-->90
 ENDIF
 tdoc := menu(2,0)
 
@@ -644,8 +645,10 @@ CASE tDOC = 13
 CASE tDOC = 14
     zEXPOREXT :="MD"  //-->14 Mar&kdown MD   
 CASE tDOC = 15
-    zEXPOREXT :="ODS"  //-->15 ODS     
+    zEXPOREXT :="ODS"  //-->15 ODS 
 CASE tDOC = 16
+    zEXPOREXT :="YAML"  //-->15 ODS         
+CASE tDOC = 17
    zEXPOREXT := "DBF"  //como vao incluindos novos tipos o dbf fica travando no 90 evitando a cada novo tipo verre fontes para correcao da posicao
    tdoc=90 
 ENDCASE
@@ -726,6 +729,10 @@ ENDIF
 IF zEXPOREXT = "JSON" 
    zDELIMITE := ""
 ENDIF
+IF zEXPOREXT = "YAML" 
+   zDELIMITE := ""
+ENDIF
+
 RESTAA(aAMBIENTE)
 layout()
 return nil
@@ -806,6 +813,7 @@ DO CASE
        zDELIMITE := ","
     CASE zEXPOREXT = "JSON"
 	CASE zEXPOREXT = "MD"
+    CASE zEXPOREXT = "YAML"
     OTHERWISE
    lRETU := .F.
 ENDCASE
@@ -870,8 +878,8 @@ endif
 altd()
 LCOPIANAT := .F.
 IF nTIPOPR = 1
-   //     XML         TAM             TEC           dbe            xml            json            sql       md markdown
-   IF tDOC = 1  .OR. tDOC = 2  .OR. tDOC = 3  .OR. tDOC = 4  .OR. tDOC = 7  .OR. tDOC = 8  .OR. tDOC = 13  .OR. tDOC = 14
+   //     XML         TAM             TEC           dbe            xml            json            sql       md markdown    YAML
+   IF tDOC = 1  .OR. tDOC = 2  .OR. tDOC = 3  .OR. tDOC = 4  .OR. tDOC = 7  .OR. tDOC = 8  .OR. tDOC = 13  .OR. tDOC = 14 .OR. tDOC = 16
      LCOPIANAT:=.F.
    ELSE
      LCOPIANAT := MDG("Copia Nativa(copy to)(SIM) Interna(gerada)(NAO)")
