@@ -2543,5 +2543,166 @@ FUNCTION Dialeto_PK( cTargetDB, cTabela, cUsuario )
    
    RETURN cCOMANDO
 
+/* Funcões SQL Convertidas para Harbour */
+
+#include "hbclass.ch"
+
+FUNCTION TrocaSQLOrder( cSQL, cSUBORDER )
+    LOCAL nPOS, cSELECT
+    cSELECT := cSQL
+    nPOS := At( "ORDER BY", Upper( cSQL ) )
+    
+    IF nPOS > 0
+        cSELECT := Left( cSQL, nPOS - 1 )
+    ENDIF
+    
+    RETURN cSELECT + " Order By " + cSUBORDER
+
+FUNCTION TrocaSqlWhere( cSQL, cSUBWHERE )
+    LOCAL nPOS, nPOS2
+    LOCAL cSELECT := ""
+    LOCAL cORDER  := ""
+    
+    nPOS  := At( "WHERE", Upper( cSQL ) )
+    nPOS2 := At( "ORDER BY", Upper( cSQL ) )
+    
+    IF nPOS > 0
+        cSELECT := Left( cSQL, nPOS - 1 )
+    ENDIF
+    
+    IF nPOS2 > 0
+        cORDER := SubStr( cSQL, nPOS2 - 1 )
+        IF nPOS == 0
+            cSELECT := Left( cSQL, nPOS2 - 1 )
+        ENDIF
+    ENDIF
+    
+    IF nPOS == 0 .AND. nPOS2 == 0
+        cSELECT := cSQL
+    ENDIF
+    
+    IF Len( cSUBWHERE ) > 0
+        RETURN AllTrim( cSELECT ) + " WHERE " + cSUBWHERE + cORDER
+    ELSE
+        RETURN AllTrim( cSELECT ) + " " + cORDER
+    ENDIF
+
+FUNCTION NomeTableSql( cSQL, cEXTENSAO )
+    LOCAL nPOS, cNOME := ""
+    
+    hb_default( @cEXTENSAO, "" )
+    
+    cSQL := Upper( cSQL )
+    cSQL := StrTran( cSQL, Chr(13), " " )
+    cSQL := StrTran( cSQL, Chr(10), " " )
+    
+    nPOS := At( "FROM", cSQL )
+    
+    IF nPOS > 0
+        cNOME := SubStr( cSQL, nPOS + 5 )
+        nPOS := At( " ", cNOME )
+        IF nPOS > 0
+            cNOME := Left( cNOME, nPOS - 1 )
+        ENDIF
+        cNOME += cEXTENSAO
+        RETURN cNOME
+    ELSE
+        IF cEXTENSAO == ".DBF"
+            RETURN cSQL + cEXTENSAO
+        ENDIF
+    ENDIF
+    
+    RETURN ""
+
+FUNCTION MontaFiltrosql( aCAM, aFOR, eBUSCA, nIndex )
+    LOCAL cMontaFiltro := ""
+    
+    // Em Harbour os arrays são base 1, portanto ignoramos o nIndex - 1 do VB6
+    
+    DO CASE
+        CASE aFOR[ nIndex ] == "="
+            cMontaFiltro := " (" + aCAM[ nIndex ] + " =" + hb_ValToStr( eBUSCA ) + ") "
+        CASE aFOR[ nIndex ] == "B"
+            cMontaFiltro := " (" + aCAM[ nIndex ] + ") "
+        CASE aFOR[ nIndex ] == "L%"
+            cMontaFiltro := " (" + aCAM[ nIndex ] + " LIKE '%" + hb_ValToStr( eBUSCA ) + "%'" + ") "
+        CASE aFOR[ nIndex ] == "L*"
+            cMontaFiltro := " (" + aCAM[ nIndex ] + " LIKE '*" + hb_ValToStr( eBUSCA ) + "*'" + ") "
+    ENDCASE
+    
+    RETURN cMontaFiltro
+
+FUNCTION IsQuerySafe( cSQL )
+    LOCAL cCleanSQL := Upper( cSQL )
+    LOCAL cNewSQL := ""
+    LOCAL i, charCode, aTokens
+    LOCAL aForbiddenWords := { "DELETE", "DROP", "UPDATE", "INSERT", ;
+                               "CREATE", "ALTER", "TRUNCATE", "EXEC", ;
+                               "EXECUTE", "GRANT", "REVOKE", "INTO" }
+                               
+    // 1 e 2. Normaliza para maiúsculas e substitui não-alfanuméricos
+    FOR i := 1 TO Len( cCleanSQL )
+        charCode := Asc( SubStr( cCleanSQL, i, 1 ) )
+        IF ( charCode >= 65 .AND. charCode <= 90 ) .OR. ( charCode >= 48 .AND. charCode <= 57 )
+            cNewSQL += SubStr( cCleanSQL, i, 1 )
+        ELSE
+            cNewSQL += " "
+        ENDIF
+    NEXT
+    
+    // 3. Remove excesso de espaços
+    cCleanSQL := AllTrim( cNewSQL )
+    DO WHILE "  " $ cCleanSQL
+        cCleanSQL := StrTran( cCleanSQL, "  ", " " )
+    ENDDO
+    
+    // 4. Verifica se a primeira palavra é SELECT
+    aTokens := hb_ATokens( cCleanSQL, " " )
+    IF Len( aTokens ) == 0 .OR. aTokens[1] != "SELECT"
+        RETURN .F.
+    ENDIF
+    
+    // 5 e 6. Verifica palavras proibidas
+    FOR i := 1 TO Len( aForbiddenWords )
+        IF aForbiddenWords[i] $ cCleanSQL
+            //RegistrarLogSeguranca( cSQL )
+            RETURN .F.
+        ENDIF
+    NEXT
+    
+    RETURN .T.
+
+FUNCTION IsQueryDestructive( cSQL )
+    LOCAL cCleanSQL := Upper( cSQL )
+    LOCAL cNewSQL := ""
+    LOCAL i, charCode
+    LOCAL aDestrutivos := { "DROP", "ALTER", "CREATE", "TRUNCATE", "GRANT", "REVOKE" }
+    
+    // 1 e 2. Limpeza profunda
+    FOR i := 1 TO Len( cCleanSQL )
+        charCode := Asc( SubStr( cCleanSQL, i, 1 ) )
+        IF ( charCode >= 65 .AND. charCode <= 90 ) .OR. ( charCode >= 48 .AND. charCode <= 57 )
+            cNewSQL += SubStr( cCleanSQL, i, 1 )
+        ELSE
+            cNewSQL += " "
+        ENDIF
+    NEXT
+    
+    // 3. Remove espaços extras
+    cCleanSQL := AllTrim( cNewSQL )
+    DO WHILE "  " $ cCleanSQL
+        cCleanSQL := StrTran( cCleanSQL, "  ", " " )
+    ENDDO
+    
+    // 4 e 5. Verifica se há comandos destrutivos
+    FOR i := 1 TO Len( aDestrutivos )
+        IF aDestrutivos[i] $ cCleanSQL
+            //RegistrarLogSeguranca( cSQL )
+            RETURN .T.
+        ENDIF
+    NEXT
+    
+    RETURN .F.
+
 // + EOF: dbudialeto.prg
 // +
