@@ -1255,8 +1255,11 @@ FUNCTION SqliteCreateTable( cTablename, aStruct, cTIPOSQL, lINDEX ,lPK,lINCSR)
                mSql += "CHAR (" + LTrim( Str( mFldLen ) ) + ")"
             ENDIF
 
-         CASE mFldType = "C" .AND. cTIPOSQL = "SQLITE"
-            mSql += "TEXT NOT NULL DEFAULT ('')"    
+        CASE mFldType = "C" .AND. cTIPOSQL = "SQLITE"
+            mSql += "VARCHAR(" + LTrim( Str( mFldLen ) ) + ") NOT NULL DEFAULT ('')"
+        
+            
+            
          CASE mFldType = "C" .AND. cTIPOSQL = "FIREBIRD"
             mSql += "VARCHAR(" + LTrim( Str( mFldLen ) ) + ")"  
          // Exemplo de como fica a sua função adaptada
@@ -1270,14 +1273,19 @@ FUNCTION SqliteCreateTable( cTablename, aStruct, cTIPOSQL, lINDEX ,lPK,lINCSR)
             mSql += "CHAR(" + LTrim( Str( mFldLen ) ) + ")"
 
          // Varchar (V)
+        
          CASE mFldType = "V" .AND. cTIPOSQL = "SQLITE"
-            mSql += "TEXT NOT NULL DEFAULT ('')"
+            mSql += "VARCHAR(" + LTrim( Str( mFldLen ) ) + ") NOT NULL DEFAULT ('')"
+        
          CASE mFldType = "V" .AND. ( cTIPOSQL = "MYSQL" .OR. cTIPOSQL = "MYSQL64" .OR. cTIPOSQL = "MARIADB" )
             IF mFldDec > 0
                mSql += "TEXT(" + hb_ntos( mFldDec ) + ")"
             ELSE
                mSql += "TEXT "
             ENDIF
+        
+        
+        
          CASE mFldType = "V" .AND. ( cTIPOSQL = "MSSQL" .OR. cTIPOSQL = "SQLSERVER" ;
                                .OR. cTIPOSQL = "PGSQL" .OR. cTIPOSQL = "PGSQL64" .OR. cTIPOSQL = "POSTGRESQL" ;
                                .OR. cTIPOSQL == "CUBRID" ;
