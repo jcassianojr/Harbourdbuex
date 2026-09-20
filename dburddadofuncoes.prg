@@ -574,7 +574,12 @@ ENDIF
 
 lgravasql := mdg("gravar sql")
 aINDICES  := {}
-dbUseArea( .F.,, cDBFARQ,, .T., .F. )
+IF ! dbUseArea( .F.,, cDBFARQ,, .T., .F. )
+      MDT("Não foi possível abrir o arquivo DBF: " + cDBFARQ)
+      RETURN .F.
+ENDIF
+
+
 //use &cDBFARQ.
 aSTRU    := DBSTRUCT()
 nLASTREC := reccount()
@@ -663,20 +668,18 @@ IF cTIPOSQL = "PGSQL" .OR. cTIPOSQL = "POSTGRESQL" .OR. cTIPOSQL = "PGSQL64"  //
    ENDIF   
 ENDIF
 
-if nLASTREC > 0 .AND. lincdados  //nao importa se nao tiver registros
-   try
-      opencmdbarq()
-   //Criar opcao de append from insert into usando
-      try
-         append from &cDBFARQ. WHILE zei_fort(nLASTREC,,,1)
-      catch oErR
-          MDT("Erro anexando dados")
-      end
-   catch oErR
-      MDT("Erro ao abrir nova tabela")
-   end
-   dbcloseall()
-endif
+IF nLASTREC > 0 .AND. lincdados
+      IF ! opencmdbarq()
+         MDT("Erro ao abrir nova tabela para importação via RDDADOX")
+      ELSE
+         TRY
+            APPEND FROM ( cDBFARQ ) WHILE zei_fort(nLASTREC,,,1)
+         CATCH oErR
+            MDT("Erro anexando dados no APPEND FROM")
+         END
+      ENDIF
+      dbcloseall()
+ENDIF
 
 Set(_SET_DATEFORMAT,"dd/mm/yyyy")
 
@@ -849,10 +852,51 @@ IF cTIPOSQL == "CUBRID"
       cUSERX := PADR("dba",30," ")  
    ENDIF
 ENDIF
+IF lFDB 
+   IF EMPTY(cSERVERX)
+       cSERVERX := PADR("localhost", 30, " ")
+   ENDIF
+   IF EMPTY(cUSERX)
+      cUSERX := PADR("SYSDBA",30," ")  
+   ENDIF
+   IF EMPTY(cPORTAX)
+      cPORTAX:= PADR("3050",30," ")
+   ENDIF
+ENDIF
 RETURN
 
+*+--------------------------------------------------------------------
+*+    Function IsSQLiteExt( cFileName )
+*+--------------------------------------------------------------------
+FUNCTION IsSQLiteExt( cFileName )
+   LOCAL cExt
 
+   IF Empty( cFileName ) .OR. ValType( cFileName ) != "C"
+      RETURN .F.
+   ENDIF
 
+   cExt := Lower( hb_FNameExt( cFileName ) )
+
+   RETURN ( cExt == ".sqlite" .OR. ;
+            cExt == ".sqlite3" .OR. ;
+            cExt == ".db3"     .OR. ;
+            cExt == ".fossil" )
+
+*+--------------------------------------------------------------------
+*+    Function IsFirebirdExt( cFileName )
+*+--------------------------------------------------------------------
+FUNCTION IsFirebirdExt( cFileName )
+   LOCAL cExt
+
+   IF Empty( cFileName ) .OR. ValType( cFileName ) != "C"
+      RETURN .F.
+   ENDIF
+
+   cExt := Lower( hb_FNameExt( cFileName ) )
+
+   RETURN ( cExt == ".fdb" .OR. ;
+            cExt == ".gdb" .OR. ;
+            cExt == ".ib" )
 
 
 *+--------------------------------------------------------------------
@@ -1013,7 +1057,7 @@ IF cTIPOINFO = "TABELA"
                       "AND MSysObjects.name NOT LIKE '~*' AND MSysObjects.name NOT LIKE 'MSys%' " + ;
                       "ORDER BY MSysObjects.name;"
 
-       CASE cTIPOSQL == "SQLITE" .OR. At( ".SQLITE", Upper( cdatabaseX ) ) > 0
+       CASE cTIPOSQL == "SQLITE" .OR. IsSQLiteExt( cDatabaseX )
           cCOMANDO := "SELECT name AS TABLE_NAME FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name;"
 
        CASE cTIPOSQL == "MYSQL" .OR. cTIPOSQL == "MYSQL64" .OR. cTIPOSQL == "MARIADB"
@@ -1112,7 +1156,7 @@ IF cTIPOINFO = "__INDEX__"
                   "WHERE t.name = '" + cTabela + "' AND ind.is_primary_key = 0 " + ;
                   "ORDER BY ind.name, ic.key_ordinal;"
 
-   CASE cTIPOSQL == "SQLITE" .OR. At( ".SQLITE", Upper( cdatabaseX ) ) > 0
+   CASE cTIPOSQL == "SQLITE" .OR. IsSQLiteExt( cDatabaseX )
       // Nota: O SQLite exige comandos em lote ou PRAGMA. Para leitura via Recordset genérico, 
       // o mais seguro é ler os metadados diretamente da tabela sqlite_master caso queira a query pura,
       // mas o comando pragma nativo é: "PRAGMA index_list('" + cTabela + "')"
@@ -1186,7 +1230,7 @@ IF lOPEN
             nFieldDec    := fixnum( ors:Fields("FIELD_DEC"):Value )
          CATCH
             // Tratamento de contingência para o SQLite antigo (caso o PRAGMA nativo ignore aliases)
-            IF cTIPOSQL == "SQLITE" .OR. At(".SQLITE", Upper(cdatabase)) > 0
+            IF cTIPOSQL == "SQLITE" .OR. IsSQLiteExt( cDatabaseX )
                TRY
                   cFieldName   := Upper(AllTrim( hb_valToStr(ors:Fields("name"):Value) ))
                   cFieldType   := Upper(AllTrim( hb_valToStr(ors:Fields("type"):Value) ))
@@ -1215,7 +1259,7 @@ IF lOPEN
               cCHAVECAMPO := Upper(AllTrim( hb_valToStr(ors:Fields("COLUMN_NAME"):Value) ))
            CATCH
               // Contingência para o SQLite se o driver do PRAGMA nativo for utilizado diretamente
-              IF cTIPOSQL == "SQLITE" .OR. At(".SQLITE", Upper(cdatabase)) > 0
+              IF cTIPOSQL == "SQLITE" .OR. IsSQLiteExt( cDatabase )
                  TRY
                     cCHAVENAME  := Upper(AllTrim( hb_valToStr(ors:Fields("name"):Value) ))
                     cCHAVECAMPO := "" // Índices do SQLite puro exigem um segundo passo (index_info) se lidos via pragma nativo
@@ -1648,7 +1692,7 @@ CASE Laccdb .or. at(".ACCDB",upper(cCAMBASE)) > 0
    ELSE
       cCONN := "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq="+cDATABASEX+";Mode=Share Deny None"
    ENDIF
-CASE cTIPOSQL = "SQLITE" .or. at(".SQLITE",upper(cCAMBASE)) > 0
+CASE cTIPOSQL = "SQLITE" .OR. IsSQLiteExt( cCAMBASE )
    cConn := "Driver={SQLite3 ODBC Driver};Database="+cCAMBASE+";"   //mesmo nome de driver para 32 e 64 ambos devem estar instaldos
    
 CASE cTIPOSQL = "DUCKDB" 
@@ -1671,67 +1715,52 @@ CASE cTIPOSQL = "MYSQL" .OR. cTIPOSQL = "MYSQL64"
          cConn := "Driver={MySQL ODBC 9.0 ANSI Driver};Server="+cSERVERX+";Database="+cDATABASEX+";Uid="+CUSERX+";Pwd="+cPASSX+";"  //64 driver versao 9
       endif
    endif
-case cTIPOSQL = "MARIADB"   //mesmo nome de driver para 32 e 64 ambos devem estar instaldos
-   if empty(cDATABASEX)
-      cConn := "DRIVER={MariaDB ODBC 3.2 Driver};SERVER="+cSERVERX+";UID="+cUSERX+";PASSWORD="+cPASSX
-   else
-      cConn := "DRIVER={MariaDB ODBC 3.2 Driver};DATABASE="+cDATABASEX+";SERVER="+cSERVERX+";UID="+cUSERX+";PASSWORD="+cPASSX
-   endif
-case cTIPOSQL = "PGSQL" .OR. cTIPOSQL = "PGSQL64" .OR. cTIPOSQL = "POSTGRESQL"
-   //Driver={PostgreSQL ANSI};Server=IP address;Port=5432;Database=myDataBase;Uid=myUsername;Pwd=myPassword;
-   if empty(cDATABASEX)
-      if loledb
-         cConn := "DRIVER={PostgreSQL ANSI};Server="+cSERVERX+";Uid="+cUSERX+";Pwd="+cPASSX +"; ConnSettings=SET client_encoding TO 'WIN1252';"  //+";pqopt={search_path=myschema,public}" //32 driver versao
-      else
-         cConn := "DRIVER={PostgreSQL ANSI(x64)};Server="+cSERVERX+";Uid="+cUSERX+";Pwd="+cPASSX +"; ConnSettings=SET client_encoding TO 'WIN1252';" //+";pqopt={search_path=myschema,public}"  //64 driver versao x64
-      endif
-   else
-      if loledb
-         cConn := "DRIVER={PostgreSQL ANSI};Database="+cDATABASEX+";Server="+cSERVERX+";Uid="+cUSERX+";Pwd="+cPASSX +"; ConnSettings=SET client_encoding TO 'WIN1252';"  //+";pqopt={search_path=myschema,public}"  //32 driver versao
-      else
-         cConn := "DRIVER={PostgreSQL ANSI(x64)};Database="+cDATABASEX+";Server="+cSERVERX+";Uid="+cUSERX+";Pwd="+cPASSX +"; ConnSettings=SET client_encoding TO 'WIN1252';" //+";pqopt={search_path=myschema,public}" //64 driver versao 964
-      endif
-   endif
-CASE cTIPOSQL = "MSSQL" .OR. cTIPOSQL = "SQLSERVER" .OR. cTIPOSQL = "SQL"
+CASE cTIPOSQL == "MARIADB"
+   cConn := "DRIVER={MariaDB ODBC 3.2 Driver};" + ;
+            "SERVER=" + AllTrim( cSERVERX ) + ";" + ;
+            iif( !Empty(cPORTAX), "PORT=" + AllTrim( cPORTAX ) + ";", "" ) + ;
+            iif( !Empty(cDATABASEX), "DATABASE=" + AllTrim( cDATABASEX ) + ";", "" ) + ;
+            "UID=" + AllTrim( cUSERX ) + ";" + ;
+            "PWD=" + cPASSX + ";"
+   
+   
+   
+CASE cTIPOSQL == "PGSQL" .OR. cTIPOSQL == "PGSQL64" .OR. cTIPOSQL == "POSTGRESQL"
+   cConn := "DRIVER={" + iif( loledb, "PostgreSQL ANSI", "PostgreSQL ANSI(x64)" ) + "};" + ;
+            "Server=" + AllTrim( cSERVERX ) + ";" + ;
+            iif( !Empty(cPORTAX), "Port=" + AllTrim( cPORTAX ) + ";", "" ) + ;
+            iif( !Empty(cDATABASEX), "Database=" + AllTrim( cDATABASEX ) + ";", "" ) + ;
+            "Uid=" + AllTrim( cUSERX ) + ";" + ;
+            "Pwd=" + cPASSX + ";" + ;
+            "ConnSettings=SET client_encoding TO 'WIN1252';"
+   
+CASE cTIPOSQL == "MSSQL" .OR. cTIPOSQL == "SQLSERVER" .OR. cTIPOSQL == "SQL"
    IF EMPTY(cUSERX)
       cSQLUSER := "; Trusted_Connection=True;"
    ELSE
-      cSQLUSER := "; Uid="+cUSERX+"; Pwd="+cPASSX+";"
+      cSQLUSER := "; Uid=" + AllTrim(cUSERX) + "; Pwd=" + cPASSX + ";"
    ENDIF
-   if empty(cDATABASEX)
-      IF lPROVIDER
-         cCONN := "Provider=SQLOLEDB;Server="+cSERVERX+";Database="+cDATABASEX+cSQLUSER
-      ELSE
-         cCONN := "Driver={SQL Server};Server="+cSERVERX+";Database="+cDATABASEX+cSQLUSER
-      ENDIF
-   else
-      IF lPROVIDER
-         cCONN := "Provider=SQLOLEDB;Server="+cSERVERX+cSQLUSER
-      ELSE
-         cCONN := "Driver={SQL Server};Server="+cSERVERX+cSQLUSER
-      ENDIF
-   endif
+   
+   cConn := iif( lPROVIDER, "Provider=SQLOLEDB;", "Driver={SQL Server};" ) + ;
+            "Server=" + AllTrim( cSERVERX ) + iif( !Empty(cPORTAX), "," + AllTrim( cPORTAX ), "" ) + ";" + ;
+            iif( !Empty(cDATABASEX), "Database=" + AllTrim( cDATABASEX ) + ";", "" ) + ;
+            cSQLUSER
+            
 CASE cTIPOSQL = "JETFOX"
    cCONN = "Provider=VFPOLEDB.1;Data Source=" + cCAMDIR + ";Mode=ReadWrite|Share Deny None;Persist Security Info=False;Collating Sequence=MACHINE;DELETED=True;"  //'NULL=NO"
 CASE cTIPOSQL = "DBASE"
    cCONN := "Provider=Microsoft.Jet.OLEDB.4.0;Data Source="+cCAMDIR+";Extended Properties=dBASE IV;"
 CASE lFDB 
-   //altd()
    IF EMPTY(cUSERX)
       cUSERX:="SYSDBA"
    ENDIF
-    IF EMPTY(cPASSX)
-      cPASSX:="masterkey"
-   ENDIF
-   cUSERX:=ALLTRIM(cUSERX)
-   cPASSX:=ALLTRIM(CPASSX)
-   IF EMPTY(cCAMBASE)
-      cCONN := "DRIVER={"+DriverFirebird()+"};UID="+cUSERX+"; PWD="+cPASSX
-   ELSE
-      cCONN := "DRIVER={"+DriverFirebird()+"};UID="+cUSERX+"; PWD="+cPASSX+"; DBNAME="+cCAMBASE
-   ENDIF
-   //alert(cCONN)   
-   //memowrit("connn.txt",cCONN)
+   cUSERX := ALLTRIM(cUSERX)
+   
+   cConn := "DRIVER={" + DriverFirebird() + "};" + ;
+            "UID=" + cUSERX + ";" + ;
+            "PWD=" + cPASSX + ";" + ;
+            iif( !Empty(cPORTAX), "PORT=" + AllTrim( cPORTAX ) + ";", "" ) + ;
+            iif( !Empty(cCAMBASE), "DBNAME=" + AllTrim( cCAMBASE ) + ";", "" )
 CASE cTIPOSQL = "PARADOX"   // ADOPX
    cCONN := "Provider=Microsoft.Jet.OLEDB.4.0;Data Source="+cCAMDIR+";Extended Properties=Paradox 5.x;"
 CASE cTIPOSQL == "XMLDB"  // ADOXML
@@ -1742,16 +1771,15 @@ CASE cTIPOSQL = "XLS"   // ADOXLS
    cCONN := "Provider=Microsoft.Jet.OLEDB.4.0;Data Source="+cCAMBASE+";Extended Properties=Excel 8.0;HDR=Yes;IMEX=1"
 CASE cTIPOSQL = "REMOTE"  // ADORDS
    cCONN := "Provider=MS Remote;Remote Provider=Microsoft.Jet.OLEDB.4.0;Data Source="+cDATABASEX+";Remote Server="+cSERVERX
-Case cTIPOSQL = "ORACLE" .OR. cTIPOSQL = "OCI"
-   cSQLUSER := ";User ID="+cUSERX+";Password="+cPASSX
+Case cTIPOSQL == "ORACLE" .OR. cTIPOSQL == "OCI"
+   cSQLUSER := ";User ID=" + AllTrim(cUSERX) + ";Password=" + cPASSX
    IF lPROVIDER
-      cCONN := "Provider=MSDAORA.1;Persist Security Info=False;Data source="+cDATABASEX+cSQLUSER
+      cConn := "Provider=MSDAORA.1;Persist Security Info=False;Data source=" + AllTrim(cDATABASEX) + cSQLUSER
    ELSE
-      cCONN := "DRIVER={Microsoft ODBC For Oracle};SERVER="+cSERVERX+"; UID= "+cUSERX+";PWD="+cPASSX
+      cConn := "DRIVER={Microsoft ODBC For Oracle};SERVER=" + AllTrim(cSERVERX) + ;
+               iif( !Empty(cPORTAX), ":" + AllTrim(cPORTAX), "" ) + ";" + ;
+               "UID=" + AllTrim(cUSERX) + ";PWD=" + cPASSX
    ENDIF
-   //Provider=OraOLEDB.Oracle.1;Persist Security Info=False;User ID=someuser;Data Source=someserver;
-   //"Provider=OraOLEDB.Oracle;dbq=localhost:1521/XE;Database=myDataBase;", User, Pass
-   //"Provider=MSDAORA.1;Password=[pwd];User ID=[schema name];Data Source=[db name];Persist Security Info=True")
 ENDCASE
 RETURN cConn
 
@@ -1762,65 +1790,65 @@ RETURN cConn
 *+
 *+--------------------------------------------------------------------
 *+
-Function executacmd(cCAMBASE,eCOMANDO)
 
-LOCAL cCHAVEV
-LOCAL cConn
-LOCAL aCOMANDOS := {}
-LOCAL nFIM
-LOCAL cCOMANDO  := ""
-local i
+Function executacmd(cCAMBASE, eCOMANDO)
+   LOCAL cConn, aCOMANDOS := {}, nFIM, cCOMANDO := "", i
+   LOCAL lRet := .T.
+   LOCAL oConn, oComm, oErr
 
-//Gera array para casos sejam mutilplos comando em uma matriz
-//evitando abrir e fechar a conecao para comando em sequencia
-IF VALTYPE(eCOMANDO) = "C"
-   AAdd(aCOMANDOS,eCOMANDO)
-ELSE
-   aCOMANDOS := eCOMANDO
-ENDIF
-nFIM := LEN(aCOMANDOS)
+   IF VALTYPE(eCOMANDO) = "C"
+      AAdd(aCOMANDOS, eCOMANDO)
+   ELSE
+      aCOMANDOS := eCOMANDO
+   ENDIF
+   nFIM := LEN(aCOMANDOS)
 
-cCHAVEV := ""
-cConn   := geraconn(cCAMBASE)
+   cConn := geraconn(cCAMBASE)
+   IF EMPTY(cConn)
+      RETURN .F.
+   ENDIF
 
-IF EMPTY(cConn)
-   return .f.
-endif
+   BEGIN SEQUENCE
+      oConn := WIN_OLECreateObject("ADODB.Connection")
+      oConn:ConnectionString := cConn
+      oConn:Open()
 
-try
-oConn := WIN_OLECreateObject("ADODB.Connection")
-with object oConn
-:ConnectionString := cConn
-:Open()
-END   //end do with
-catch oErr
-ShowAdoError(oERR,oCoNn)
-return .f.
-end
+      oComm := WIN_OLECreateObject("ADODB.Command")
+   RECOVER USING oErr
+      ShowAdoError(oErr, oConn)
+      lRet := .F.
+   END SEQUENCE
 
-try
-oComm := WIN_OLECreateObject("ADODB.Command")
-catch oErr
-ShowAdoError(oERR,oCoNn)
-return .f.
-end
+   IF lRet
+      FOR i := 1 TO nFIM
+         cCOMANDO := aCOMANDOS[i]
+         IF ! EMPTY(cCOMANDO)
+            BEGIN SEQUENCE
+               oComm:CommandText      := cCOMANDO
+               oComm:CommandType      := adCmdText
+               oComm:ActiveConnection := oConn
+               oComm:Execute()
+            RECOVER USING oErr
+               ShowADOError(oErr, oConn, cCOMANDO)
+               lRet := .F.
+               EXIT
+            END SEQUENCE
+         ENDIF
+      NEXT i
+   ENDIF
 
-for i := 1 to nfim
-   cCOMANDO := aCOMANDOS[I]
-   IF .NOT. EMPTY(cCOMANDO)
-      try
-      with object oComm
-      :CommandText      := cCOMANDO
-      :CommandType      := adCmdText
-      :ActiveConnection := oConn
-      :Execute()
-   end
-end
-ENDIF
-next i
-oConn:Close()
-oConn := NIL
-RETURN .t.
+   IF oComm != NIL
+      oComm := NIL
+   ENDIF
+
+   IF oConn != NIL
+      IF oConn:State != 0
+         oConn:Close()
+      ENDIF
+      oConn := NIL
+   ENDIF
+
+   RETURN lRet
 
 *+--------------------------------------------------------------------
 *+
@@ -1876,7 +1904,7 @@ FUNCTION CreateAccessDatabase(cDatabase, cUserName, cPassword, lEncrypt)
                  "JET OLEDB:Engine Type=5;") 
              ENDIF
 
-          CASE cTIPOSQL = "SQLITE" .OR. cEXTENSAO == ".sqlite" .OR. cEXTENSAO == ".sqlite3" .OR. cEXTENSAO == ".fossil" .OR. cEXTENSAO == ".db3"
+          CASE cTIPOSQL = "SQLITE" .OR. IsSQLiteExt( cDatabase ) //.OR. cEXTENSAO == ".sqlite" .OR. cEXTENSAO == ".sqlite3" .OR. cEXTENSAO == ".fossil" .OR. cEXTENSAO == ".db3"
              oCatalog:Create("DRIVER=SQLite3 ODBC Driver;Database=" + cDatabase) 
 
           CASE cTIPOSQL = "XLS" .OR. cEXTENSAO == ".xls"

@@ -103,69 +103,105 @@ lFDB   := .f.
 return nil
 
 FUNCTION opencmdbarq()
-   LOCAL lRETU := .T.
+   LOCAL lRETU := .F.
+
    DO CASE
    CASE lMDB
-      RDDADOX_SetTable(cTABELA) 
+      RDDADOX_SetTable( AllTrim(cTABELA) ) 
       RDDADOX_SetEngine( iif(loledb, "ACCESS", "ACEOLEDB") )
-      dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
-   CASE lACCDB
-      RDDADOX_SetTable(cTABELA) 
-      RDDADOX_SetEngine("ACEOLEDB") 
-      dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
-   CASE lFDB 
-      RDDADOX_SetTable(cTABELA) 
-      RDDADOX_SetEngine("FIREBIRD") 
-      RDDADOX_SetUser(CUSERX) 
-      RDDADOX_SetPassword(CPASSX) 
-      dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
-   CASE cTIPOSQL == "SQLITE"
-      RDDADOX_SetTable(cTABELA) 
-      RDDADOX_SetEngine("SQLITE") 
-      dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
-   CASE cTIPOSQL == "MYSQL" .OR. cTIPOSQL == "MYSQL64"
-      RDDADOX_SetTable(cTABELA) 
-      RDDADOX_SetEngine( iif(loledb, "MYSQL", "MYSQL64") ) 
-      RDDADOX_SetServer(cSERVERx)
-      RDDADOX_SetUser(CUSERX)
-      RDDADOX_SetPassword(CPASSX) 
-      dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
-   CASE cTIPOSQL == "MARIADB"
-      RDDADOX_SetTable(cTABELA) 
-      RDDADOX_SetEngine("MARIADB") 
-      RDDADOX_SetServer(cSERVERx)
-      RDDADOX_SetUser(CUSERX)
-      RDDADOX_SetPassword(CPASSX) 
-      dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
-   CASE cTIPOSQL == "MSSQL" .OR. cTIPOSQL == "SQLSERVER"
-      RDDADOX_SetTable(cTABELA) 
-      RDDADOX_SetEngine("SQL") 
-      RDDADOX_SetServer(cSERVERx)
-      RDDADOX_SetUser(CUSERX)
-      RDDADOX_SetPassword(CPASSX) 
-      dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
-   CASE cTIPOSQL == "PGSQL" .OR. cTIPOSQL == "PGSQL64" .OR. cTIPOSQL == "POSTGRESQL"
-         RDDADOX_SetTable(cTABELA) 
-         RDDADOX_SetEngine( iif(loledb, "PGSQL", "PGSQL64") ) 
-         RDDADOX_SetServer(cSERVERx)
-         RDDADOX_SetUser(CUSERX)
-         RDDADOX_SetPassword(CPASSX) 
-         dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
-   CASE cTIPOSQL == "PARADOX"
-      RDDADOX_SetTable(cTABELA)
-      RDDADOX_SetEngine("PARADOX")
-      dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
-  CASE cTIPOSQL == "DUCKDB"
-      RDDADOX_SetTable(cTABELA)
-      RDDADOX_SetEngine("DUCKDB")
-      dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)
-   CASE cTIPOSQL == "ORACLE" .OR. cTIPOSQL == "OCI"
-      RDDADOX_SetTable(cTABELA)
-      RDDADOX_SetEngine("ORACLE")
-      RDDADOX_SetServer(cSERVERx)
-      RDDADOX_SetUser(CUSERX)
-      RDDADOX_SetPassword(CPASSX)
-      dbUseArea(.F., "RDDADOX", (cMDBARQ), , .T., .F.)    
+      IF dbUseArea(.F., "RDDADOX", cMDBARQ, , .T., .F.)
+         lRETU := .T.
+      ENDIF
       
+   CASE lACCDB
+      RDDADOX_SetTable( AllTrim(cTABELA) ) 
+      RDDADOX_SetEngine("ACEOLEDB") 
+      IF dbUseArea(.F., "RDDADOX", cMDBARQ, , .T., .F.)
+         lRETU := .T.
+      ENDIF
+      
+   CASE lFDB 
+      RDDADOX_SetTable( AllTrim(cTABELA) ) 
+      RDDADOX_SetEngine("FIREBIRD")
+      RDDADOX_SetServer( AllTrim(cSERVERX) ) 
+      RDDADOX_SetUser( AllTrim(cUSERX) ) 
+      RDDADOX_SetPassword( cPASSX ) 
+      IF dbUseArea(.F., "RDDADOX", cMDBARQ, , .T., .F.)
+         lRETU := .T.
+      ENDIF
+      
+   CASE cTIPOSQL == "SQLITE"
+      RDDADOX_SetTable( AllTrim(cTABELA) ) 
+      RDDADOX_SetEngine("SQLITE") 
+      IF dbUseArea(.F., "RDDADOX", cMDBARQ, , .T., .F.)
+         lRETU := .T.
+      ENDIF
+      
+   CASE cTIPOSQL == "MYSQL" .OR. cTIPOSQL == "MYSQL64"
+      RDDADOX_SetTable( AllTrim(cTABELA) ) 
+      RDDADOX_SetEngine( iif(loledb, "MYSQL", "MYSQL64") ) 
+      RDDADOX_SetServer( AllTrim(cSERVERX) )
+      RDDADOX_SetUser( AllTrim(cUSERX) )
+      RDDADOX_SetPassword( cPASSX ) 
+      IF dbUseArea(.F., "RDDADOX", cMDBARQ, , .T., .F.)
+         lRETU := .T.
+      ENDIF
+      
+   CASE cTIPOSQL == "MARIADB"
+      RDDADOX_SetTable( AllTrim(cTABELA) ) 
+      RDDADOX_SetEngine("MARIADB") 
+      RDDADOX_SetServer( AllTrim(cSERVERX) )
+      RDDADOX_SetUser( AllTrim(cUSERX) )
+      RDDADOX_SetPassword( cPASSX ) 
+      IF dbUseArea(.F., "RDDADOX", cMDBARQ, , .T., .F.)
+         lRETU := .T.
+      ENDIF
+      
+   CASE cTIPOSQL == "MSSQL" .OR. cTIPOSQL == "SQLSERVER"
+      RDDADOX_SetTable( AllTrim(cTABELA) ) 
+      RDDADOX_SetEngine("SQL") 
+      RDDADOX_SetServer( AllTrim(cSERVERX) )
+      RDDADOX_SetUser( AllTrim(cUSERX) )
+      RDDADOX_SetPassword( cPASSX ) 
+      IF dbUseArea(.F., "RDDADOX", cMDBARQ, , .T., .F.)
+         lRETU := .T.
+      ENDIF
+      
+   CASE cTIPOSQL == "PGSQL" .OR. cTIPOSQL == "PGSQL64" .OR. cTIPOSQL == "POSTGRESQL"
+      RDDADOX_SetTable( AllTrim(cTABELA) ) 
+      RDDADOX_SetEngine( iif(loledb, "PGSQL", "PGSQL64") ) 
+      RDDADOX_SetServer( AllTrim(cSERVERX) )
+      RDDADOX_SetUser( AllTrim(cUSERX) )
+      RDDADOX_SetPassword( cPASSX ) 
+      IF dbUseArea(.F., "RDDADOX", cMDBARQ, , .T., .F.)
+         lRETU := .T.
+      ENDIF
+      
+   CASE cTIPOSQL == "PARADOX"
+      RDDADOX_SetTable( AllTrim(cTABELA) )
+      RDDADOX_SetEngine("PARADOX")
+      IF dbUseArea(.F., "RDDADOX", cMDBARQ, , .T., .F.)
+         lRETU := .T.
+      ENDIF
+      
+   CASE cTIPOSQL == "DUCKDB"
+      RDDADOX_SetTable( AllTrim(cTABELA) )
+      RDDADOX_SetEngine("DUCKDB")
+      IF dbUseArea(.F., "RDDADOX", cMDBARQ, , .T., .F.)
+         lRETU := .T.
+      ENDIF
+      
+   CASE cTIPOSQL == "ORACLE" .OR. cTIPOSQL == "OCI"
+      RDDADOX_SetTable( AllTrim(cTABELA) )
+      RDDADOX_SetEngine("ORACLE")
+      RDDADOX_SetServer( AllTrim(cSERVERX) )
+      RDDADOX_SetUser( AllTrim(cUSERX) )
+      RDDADOX_SetPassword( cPASSX )
+      IF dbUseArea(.F., "RDDADOX", cMDBARQ, , .T., .F.)
+         lRETU := .T.
+      ENDIF    
    ENDCASE
+
    RETURN lRETU
+
+
