@@ -865,38 +865,7 @@ IF lFDB
 ENDIF
 RETURN
 
-*+--------------------------------------------------------------------
-*+    Function IsSQLiteExt( cFileName )
-*+--------------------------------------------------------------------
-FUNCTION IsSQLiteExt( cFileName )
-   LOCAL cExt
 
-   IF Empty( cFileName ) .OR. ValType( cFileName ) != "C"
-      RETURN .F.
-   ENDIF
-
-   cExt := Lower( hb_FNameExt( cFileName ) )
-
-   RETURN ( cExt == ".sqlite" .OR. ;
-            cExt == ".sqlite3" .OR. ;
-            cExt == ".db3"     .OR. ;
-            cExt == ".fossil" )
-
-*+--------------------------------------------------------------------
-*+    Function IsFirebirdExt( cFileName )
-*+--------------------------------------------------------------------
-FUNCTION IsFirebirdExt( cFileName )
-   LOCAL cExt
-
-   IF Empty( cFileName ) .OR. ValType( cFileName ) != "C"
-      RETURN .F.
-   ENDIF
-
-   cExt := Lower( hb_FNameExt( cFileName ) )
-
-   RETURN ( cExt == ".fdb" .OR. ;
-            cExt == ".gdb" .OR. ;
-            cExt == ".ib" )
 
 
 *+--------------------------------------------------------------------
