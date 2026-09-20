@@ -114,7 +114,7 @@ FUNCTION mysqlmenu()
       CASE KEY = 8
         myExecArqSql()   
       OTHERWISE
-         RETURN
+         EXIT
       ENDCASE
    ENDDO
 
@@ -147,7 +147,7 @@ FUNCTION MYDELTABLE()
       IF MDG( "Apagar " + cTABELAX + " apagara todas informacoes" )
          oServer:DeleteTable( cTABELAX )
          IF oServer:NetErr()
-            MDT( oServer:ErrorMSG() )
+            MDT( oServer:Error() ) // Alterado de ErrorMSG() para Error()
             RETURN .F.
          ENDIF
       ELSE
@@ -156,7 +156,6 @@ FUNCTION MYDELTABLE()
    ENDIF
 
    RETURN .T.
-
 
 // +--------------------------------------------------------------------
 // +
@@ -433,6 +432,10 @@ FUNCTION mysql_DBF(cARQORI,lincdados)
         cCHAVES     :=aINDICES[j,6]
         aFNAMES    := hb_ATokens( cCHAVES, "," )
         oSERVER:CreateIndex( cINDEXNAME, cTable, aFNames, .F. )
+        // Nova validação de erro na criação do índice
+        IF oServer:NetErr()
+           MDT( "Erro no índice " + cINDEXNAME + ": " + oServer:Error() )
+        ENDIF
      NEXT j
 
 
@@ -485,12 +488,19 @@ LOCAL cCOMANDO := ""
 LOCAL cARQIMP  := ""
 
 cARQIMP := win_GetOPENFileName(,"Arquivos SQL",HB_CWD(),"Arquivos SQL","*.SQL",1)
-//cARQORI := OPENTIPOARQ()
 
 IF FILE(cARQIMP)
    //nao pode ser linha a linha pois um comando pode estar em mais de uma linha
    cCOMANDO:=MEMOREAD(cARQIMP)
    oServer:Query(cCOMANDO)
+   
+   // Nova validação de erros
+   IF oServer:NetErr()
+      MDT( oServer:Error() )
+      RETURN .F.
+   ELSE
+      MDT( "Arquivo SQL executado com sucesso!" )
+   ENDIF
 endif
 return .t.
 
