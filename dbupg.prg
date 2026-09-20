@@ -106,7 +106,7 @@ FUNCTION pgsqlmenu()
       CASE KEY = 8
          pgExecArqSql()   
       OTHERWISE
-         RETURN
+         EXIT
       ENDCASE
    ENDDO
 
@@ -214,16 +214,15 @@ FUNCTION PGSELECTTABLE()
 // +
 // +
 FUNCTION pgsetdatabase( ldestroy )
-
-   IF lDESTROY
+   IF lDESTROY .AND. oServer != NIL
       oserver:destroy()
    ENDIF
-   oServer := TPQServer():New( cserverx, cDatabasex, cUserx, cPassx,, cPathx )
+   // Aplicação de AllTrim() ao Host, Database e User. A senha (cPassx) é preservada intacta.
+   oServer := TPQServer():New( AllTrim( cserverx ), AllTrim( cDatabasex ), AllTrim( cUserx ), cPassx,, AllTrim( cPathx ) )
    IF oServer:NetErr()
       Alert( oServer:ErrorMSG() )
       RETURN .F.
    ENDIF
-
    RETURN .T.
 
 
@@ -240,8 +239,8 @@ FUNCTION pgsetdatabase( ldestroy )
 // +
 // +
 // +
+// 3. Blindagem de Identificadores (CREATE DATABASE)
 FUNCTION PGsqlnewdatabase()
-
    cnewDATABASEX := INPUTBOX( Space( 30 ), "Novo database" )
    cnewDATABASEX := AllTrim( cnewDATABASEX )
    IF ! Empty( cnewDATABASEX )
@@ -249,7 +248,8 @@ FUNCTION PGsqlnewdatabase()
          MDT( "Ja existe Database " + cnewDATABASEX )
          RETURN .F.
       ELSE
-	     oSERVER:EXECUTE( "CREATE DATABASE  " + Cnewdatabasex )
+         // Proteção robusta contra injeção de SQL encapsulando em aspas duplas
+         oSERVER:EXECUTE( 'CREATE DATABASE "' + StrTran( cnewDATABASEX, '"', '""' ) + '"' )
          IF oServer:NetErr()
             Alert( oServer:ErrorMSG() )
             RETURN .F.
@@ -258,7 +258,6 @@ FUNCTION PGsqlnewdatabase()
          pgsetdatabase( .T. )
       ENDIF
    ENDIF
-
    RETURN .T.
 
 
@@ -276,13 +275,11 @@ FUNCTION PGsqlnewdatabase()
 // +
 FUNCTION PGstrudbf()
 
-   LOCAL aRETU
-
-   aRETU := {}
-
-   cCOMANDO := "SELECT   column_name,  udt_name,   character_maximum_length,   numeric_precision,  numeric_scale ,  data_type "
-   cCOMANDO += " FROM   information_schema.columns "
-   cCOMANDO += " WHERE   table_name = '" + cTABELAX + "' ORDER BY ordinal_position ;"
+  LOCAL aRETU := {}
+   // Adicionado 'table_schema = cPathx' para evitar conflito com tabelas homónimas noutros schemas
+   cCOMANDO := "SELECT column_name, udt_name, character_maximum_length, numeric_precision, numeric_scale, data_type "
+   cCOMANDO += " FROM information_schema.columns "
+   cCOMANDO += " WHERE table_schema = '" + cPathx + "' AND table_name = '" + cTABELAX + "' ORDER BY ordinal_position ;"
 
    oQuery := oServer:Query( cCOMANDO )
    WHILE ! oQuery:Eof()
@@ -335,12 +332,13 @@ FUNCTION PGstrutodbf()
    dbCreate( ctabelaX + "_pgsql", aRETU, "DBFCDX" )
    dbUseArea( .T., "DBFCDX", ctabelaX + "_pgsql",, .F., .F. )
 
-   oQuery2 := oServer:Query( "SELECT * FROM " + Chr( 34 ) + cTABELAx + Chr( 34 ) )   // aspas duplas tenta maiscula
+   oQuery2 := oServer:Query( "SELECT * FROM " + Chr( 34 ) + cTABELAx + Chr( 34 ) )
    IF oServer:NetErr()
       MDT( oServer:ErrorMSG() )
+      IF oQuery2 != NIL; oQuery2:Destroy(); ENDIF // Limpeza garantida
       RETURN .F.
    ENDIF
-
+   
    nFIM     := oQuery2:FCount()
    nLASTREC := oQuery2:LastRec()
    zei_fort( nLASTREC,,, 0 )
@@ -370,7 +368,7 @@ FUNCTION PGstrutodbf()
       zei_fort( nLASTREC,,, 1 )
       oQuery2:skip()
    ENDDO
-
+oQuery2:Destroy() // Limpeza no fluxo de sucesso
    dbCloseAll()
 
    RETURN .T.
