@@ -122,7 +122,7 @@ rddleto.hbc
 #
 #      --- exportacao
 #
-\develop\harbour\dbu\dbuxml.prg
+#\develop\harbour\dbu\dbuxml.prg
 #\develop\harbour\dbu\dbu2md.prg
 \develop\harbour\dbu\dbuXLSclass.prg
 \develop\harbour\privado\dbu\XLSXClass.prg
