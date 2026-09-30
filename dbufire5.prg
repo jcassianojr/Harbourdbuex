@@ -96,7 +96,8 @@ STATIC FUNCTION fireconnect( lIncluiDB )
       cConnString := cSrv + ":"
    ENDIF
 
-   oServer := Fb5class():New( cConnString, cUsr, cPwd, nDialect )
+   //oServer := Fb5class():New( cConnString, cUsr, cPwd, nDialect )
+   oServer := Fb5class():New( cConnString, cUsr, cPwd, nDialect, cCharSet )
 
    IF oServer:NetErr()
       Alert( "Falha na conexao Nativa Firebird: " + oServer:Error() )
@@ -303,7 +304,8 @@ FUNCTION fire_impdbf( cARQORI, lincdados )
             oServer:Rollback()
             dbCloseArea()
             oServer:Destroy()
-            RETURN .F.
+            // Substituído o RETURN por um Throw controlado ou flag
+            Throw( ErrorNew( "FIRE", 0, 0, "Importação cancelada pelo usuário." ) )
          ELSE
             oServer:Execute( "DROP TABLE " + cTABLE )
          ENDIF  
@@ -351,6 +353,7 @@ FUNCTION fire_impdbf( cARQORI, lincdados )
          FOR i := 1 TO Len( aSTRU )
             IF i > 1; msql += ", "; ENDIF
             msql += c2sql( &( aSTRU[i, DBS_NAME] ) )
+            //msql += c2sql( FieldGet( i ), aSTRU[i, DBS_TYPE] )
          NEXT i
          msql += ")"
          

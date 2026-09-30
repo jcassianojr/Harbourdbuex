@@ -62,7 +62,7 @@ hbfbird.hbc
 
 \develop\harbour\dbu\DBU.PRG  
 \develop\harbour\dbu\dbucnvmemo.prg 
-\develop\harbour\dbu\dbuxml.prg
+#\develop\harbour\dbu\dbuxml.prg
 \develop\harbour\dbu\dbucopy.prg
 \develop\harbour\dbu\dbudoc.prg  
 \develop\harbour\dbu\dbuedi.prg
@@ -84,6 +84,11 @@ hbfbird.hbc
 \develop\harbour\dbu\dbucrypto.prg
 \develop\harbour\csvrdd\FCSVRDD.prg
 \develop\harbour\jsonrdd\jsonrdd.prg
+\develop\harbour\dbu\dbuodsclass.prg
+\develop\harbour\OdsOdt\odsclass.prg
+\develop\harbour\dbu\dburddadofuncoes.prg
+\develop\harbour\dbu\dbuyaml.PRG
+
 
 #
 # sqlite
