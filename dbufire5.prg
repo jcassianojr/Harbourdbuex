@@ -74,7 +74,7 @@ FUNCTION Firebirdmenu5()
 RETURN .T. 
 
 // +--------------------------------------------------------------------
-// +    Wrapper Robusto de Conexão (FireConnect)
+// +    Wrapper Robusto de Conexï¿½o (FireConnect)
 // +--------------------------------------------------------------------
 STATIC FUNCTION fireconnect( lIncluiDB )
    LOCAL oServer, cConnString, cSrv, cDb, cUsr, cPwd
@@ -106,10 +106,10 @@ STATIC FUNCTION fireconnect( lIncluiDB )
 RETURN oServer
 
 // +--------------------------------------------------------------------
-// +    Criação de Base de Dados
+// +    Criaï¿½ï¿½o de Base de Dados
 // +--------------------------------------------------------------------
 FUNCTION firecreate5( lUSASQL )
-   LOCAL cCOMANDO, cARQORI, oServer
+   LOCAL cCOMANDO, cARQORI, oServer, nResult
 
    hb_default( @lUSASQL, .F. )
 
@@ -127,13 +127,25 @@ FUNCTION firecreate5( lUSASQL )
       oServer := fireconnect( .F. ) 
       IF oServer == NIL; RETURN .F.; ENDIF
 
-      cCOMANDO := "CREATE DATABASE '" + cARQORI + "' USER 'SYSDBA' PASSWORD 'masterkey' PAGE_SIZE = 8192 DEFAULT CHARACTER SET ISO8859_1"
+      cCOMANDO := "CREATE DATABASE '" + StrTran( AllTrim( cARQORI ), "'", "''" ) + ;
+                  "' USER '" + StrTran( AllTrim( cUSERX ), "'", "''" ) + ;
+                  "' PASSWORD '" + StrTran( AllTrim( cPASSX ), "'", "''" ) + ;
+                  "' PAGE_SIZE = " + hb_ntos( nPageSize ) + ;
+                  " DEFAULT CHARACTER SET " + AllTrim( cCharSet )
       IF !oServer:Execute( cCOMANDO )
          Alert( "Erro ao criar banco: " + oServer:Error() )
+         oServer:Destroy()
+         RETURN .F.
       ENDIF
       oServer:Destroy()
    ELSE
-      FBCreateDB( AllTrim(cSERVERX) + ":" + AllTrim(cARQORI), cUSERX, cPASSX, nPageSize, cCharSet, nDialect )
+      nResult := FBCreateDB( AllTrim( cSERVERX ) + ":" + AllTrim( cARQORI ), ;
+                             AllTrim( cUSERX ), AllTrim( cPASSX ), ;
+                             nPageSize, cCharSet, nDialect )
+      IF nResult != 1
+         Alert( "Erro ao criar banco Firebird: " + FBError( nResult ) )
+         RETURN .F.
+      ENDIF
    ENDIF
 RETURN .T.
 
@@ -156,8 +168,9 @@ FUNCTION fireexpdbf( nTipo )
    ENDIF
 
    oQuery := oServer:Query( "SELECT * FROM " + AllTrim(cTABELAX) )
-   IF oServer:NetErr()
-      Alert( "Erro ao ler tabela: " + oServer:Error() )
+   IF oQuery:NetErr()
+      Alert( "Erro ao preparar consulta da tabela: " + oQuery:Error() )
+      oQuery:Destroy()
       oServer:Destroy()
       RETURN .F.
    ENDIF
@@ -175,6 +188,12 @@ FUNCTION fireexpdbf( nTipo )
    ENDIF
 
    nLASTREC := oQuery:LastRec()
+   IF nLASTREC < 0
+      Alert( "Erro ao contar registros: " + FBError( oQuery:LastRecError() ) )
+      oQuery:Destroy()
+      oServer:Destroy()
+      RETURN .F.
+   ENDIF
    zei_fort( nLASTREC,,, 0 )
 
    cDESTINO := AllTrim(cTABELAX) + "_FIREBIRD"
@@ -187,8 +206,7 @@ FUNCTION fireexpdbf( nTipo )
       dbCreate( "mem:destino", aSTRU,, .T., "DESTINO" )
    ENDIF
 
-   oQuery:GoTop()
-   DO WHILE !oQuery:Eof()
+   DO WHILE oQuery:Fetch()
       aVALOR := {}
       oRow   := oQuery:GetRow()
       
@@ -223,8 +241,19 @@ FUNCTION fireexpdbf( nTipo )
       NEXT i
       
       zei_fort( nLASTREC,,, 1 )
-      oQuery:Skip()
    ENDDO
+
+   IF oQuery:NetErr()
+      Alert( "Erro ao ler tabela: " + oQuery:Error() )
+      oQuery:Destroy()
+      oServer:Destroy()
+      dbSelectArea( "DESTINO" )
+      dbCloseArea()
+      IF nTipo == 2
+         dbDrop( "mem:destino" )
+      ENDIF
+      RETURN .F.
+   ENDIF
 
    oQuery:Destroy()
    oServer:Destroy()
@@ -248,7 +277,7 @@ FUNCTION fireexpdbf( nTipo )
 RETURN .T.
 
 // +--------------------------------------------------------------------
-// +    Importação DBF -> Firebird (Com Segurança Transacional)
+// +    Importaï¿½ï¿½o DBF -> Firebird (Com Seguranï¿½a Transacional)
 // +--------------------------------------------------------------------
 FUNCTION fire_impdbf( cARQORI, lincdados )
    LOCAL oServer
@@ -305,8 +334,8 @@ FUNCTION fire_impdbf( cARQORI, lincdados )
             oServer:Rollback()
             dbCloseArea()
             oServer:Destroy()
-            // Substituído o RETURN por um Throw controlado ou flag
-            Throw( ErrorNew( "FIRE", 0, 0, "Importação cancelada pelo usuário." ) )
+            // Substituï¿½do o RETURN por um Throw controlado ou flag
+            Throw( ErrorNew( "FIRE", 0, 0, "Importaï¿½ï¿½o cancelada pelo usuï¿½rio." ) )
          ELSE
             oServer:Execute( "DROP TABLE " + cTABLE )
          ENDIF  
@@ -318,13 +347,13 @@ FUNCTION fire_impdbf( cARQORI, lincdados )
       FOR iac := 1 TO Len( aCAMPOS )
          IF !Empty( aCAMPOS[iac] )
             IF !oServer:Execute( aCAMPOS[iac] )
-               // Força erro para cair no Catch
+               // Forï¿½a erro para cair no Catch
                Throw( ErrorNew( "FIRE", 0, 0, oServer:Error() ) )
             ENDIF
          ENDIF
       NEXT iac
 
-      // Criacao dos índices coletados
+      // Criacao dos ï¿½ndices coletados
       FOR i := 1 TO Len( aINDICES )
          oServer:Execute( aINDICES[i,1] ) 
          oServer:Execute( aINDICES[i,2] ) 
@@ -339,7 +368,7 @@ FUNCTION fire_impdbf( cARQORI, lincdados )
       RETURN .F.
    END
 
-   // FASE 2: INSERÇÃO EM LOTE SEGURO
+   // FASE 2: INSERï¿½ï¿½O EM LOTE SEGURO
    IF lincdados
       nCont := 0
       oServer:StartTransaction()
