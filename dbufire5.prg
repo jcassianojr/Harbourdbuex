@@ -254,6 +254,7 @@ FUNCTION fire_impdbf( cARQORI, lincdados )
    LOCAL oServer
    LOCAL aINDICES := {}, aSTRU, aRETUMETA, aMETADBF, aCAMPOS
    LOCAL i, j, nCont, cTABLE, msql, cSqlFields, cSqlIndexes, iac
+   LOCAL eVALOR
 
    cTABLE := Space( 30 )
    IF Empty( cARQORI ); RETURN .F.; ENDIF
@@ -352,8 +353,8 @@ FUNCTION fire_impdbf( cARQORI, lincdados )
          msql := "INSERT INTO " + cTABLE + " VALUES ("
          FOR i := 1 TO Len( aSTRU )
             IF i > 1; msql += ", "; ENDIF
-            msql += c2sql( &( aSTRU[i, DBS_NAME] ) )
-            //msql += c2sql( FieldGet( i ), aSTRU[i, DBS_TYPE] )
+            eVALOR=HB_FIELDGET( aSTRU[i, DBS_NAME])
+            msql += c2sql( eVALOR )
          NEXT i
          msql += ")"
          

@@ -314,6 +314,7 @@ LOCAL oServer
 LOCAL aINDICES := {}
 LOCAL nINDICES, cINDEXNAME, cINDEXUSO, msql, cTABLE
 LOCAL i,j, nCont
+LOCAL eVALOR
 
 cTABLE := Space( 30 )
 
@@ -464,7 +465,8 @@ IF lincdados
         IF i > 1
            msql += ", "
         ENDIF
-        msql += c2sql( & ( aSTRU[i, DBS_NAME] ) )
+        eVALOR=HB_FIELDGET( aSTRU[i, DBS_NAME])
+        msql += c2sql( eVALOR )
      NEXT i
      msql += ")"
      
