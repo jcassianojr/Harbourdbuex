@@ -2746,5 +2746,172 @@ FUNCTION IsFirebirdExt( cFileName )
             cExt == ".gdb" .OR. ;
             cExt == ".ib" )
 
-// + EOF: dbudialeto.prg
+
 // +
+// +--------------------------------------------------------------------
+// +
+// +
+// +
+// +    Function C2SQLTS
+// +
+// +
+// +
+// +--------------------------------------------------------------------
+// +
+// +
+// +
+// +--------------------------------------------------------------------
+// +    Function C2SQLTS()
+// +    Conversão Universal de Timestamp para Dialetos SQL
+// +--------------------------------------------------------------------
+FUNCTION C2SQLTS( dpDate, cpTime )
+   LOCAL cDate := ""
+   LOCAL cTime := ""
+   LOCAL cRetu := ""
+   LOCAL cTipoDB := Upper( AllTrim( cTIPOSQL ) )
+
+   // 1. Extração de Data e Hora (Padrão e Fallbacks)
+   IF PCount() == 0
+      cDate := DToS( Date() )
+      cTime := Time()
+   ELSE
+      DO CASE
+         CASE PCount() == 1
+            IF ValType( dpDate ) == "@" // Timestamp nativo Harbour
+               cDate := DToS( TToD( dpDate ) )
+               cTime := TToC( dpDate )
+               
+               // Limpa formatação excedente trazida pelo TToC
+               IF " " $ cTime
+                  cTime := AllTrim( SubStr( cTime, At( " ", cTime ) + 1 ) )
+               ENDIF
+               IF Empty( cTime ) .OR. cTime == "00:00:00.000"
+                  cTime := "00:00:00"
+               ENDIF
+            ELSE
+               cDate := DToS( dpDate )
+               // Normalizado para 00:00:00 para integridade matemática no SQL (Em vez de 23:59:59)
+               cTime := "00:00:00" 
+            ENDIF
+            
+         CASE PCount() == 2
+            IF ValType( dpDate ) == "@"
+               cDate := DToS( TToD( dpDate ) )
+            ELSE
+               cDate := DToS( dpDate )
+            ENDIF
+            cTime := AllTrim( cpTime )
+            IF Empty( cTime )
+               cTime := "00:00:00"
+            ENDIF
+      ENDCASE
+   ENDIF
+
+   // 2. Tratamento de Datas Vazias (O Harbour devolve "        ")
+   IF Empty( cDate ) .OR. cDate == "        "
+      IF cTipoDB == "SQLITE"
+         RETURN "''"
+      ELSE
+         RETURN "NULL"
+      ENDIF
+   ENDIF
+
+   // 3. Formatação ISO Internacional: YYYY-MM-DD HH:MM:SS
+   cRetu := SubStr( cDate, 1, 4 ) + "-" + SubStr( cDate, 5, 2 ) + "-" + SubStr( cDate, 7, 2 ) + " " + cTime
+
+   // 4. Encapsulamento Seguro por Dialeto
+   DO CASE
+      CASE cTipoDB $ "ORACLE|OCI"
+         // O Oracle exige conversão explícita para evitar falhas com o NLS_TIMESTAMP_FORMAT da sessão
+         RETURN "TO_TIMESTAMP('" + cRetu + "', 'YYYY-MM-DD HH24:MI:SS')"
+         
+      CASE cTipoDB $ "FIREBIRD|PGSQL|POSTGRESQL|PGSQL64|DUCKDB|DUCKLAKE"
+         // Utiliza o formato literal ANSI padronizado (Fortemente recomendado nestes SGBDs para evitar ambiguidades)
+         RETURN "TIMESTAMP '" + cRetu + "'"
+         
+      OTHERWISE
+         // MySQL, SQL Server (MSSQL), SQLite, e Access suportam a conversão implícita da string ISO nativamente
+         RETURN "'" + cRetu + "'"
+   ENDCASE
+
+RETURN cRetu
+
+// +--------------------------------------------------------------------
+// +    Function C2SQL()
+// +    Universal para todos os Dialetos (Firebird, Postgres, MySQL, etc)
+// +--------------------------------------------------------------------
+FUNCTION C2SQL( Value )
+   LOCAL cValue := ""
+   LOCAL cdate  := ""
+   LOCAL cTipoDB := Upper( AllTrim( cTIPOSQL ) ) // Padroniza leitura global
+
+   DO CASE
+       // --- NUMÉRICOS ---
+       CASE ValType( Value ) == "N"
+          cValue := AllTrim( Str( Value ) )
+
+       // --- DATA/HORA (TIMESTAMP) ---
+       CASE ValType( Value ) == "@"    
+          cValue := C2SQLTS( Value )
+
+       // --- DATA SIMPLES ---
+       CASE ValType( Value ) == "D"
+          IF ! Empty( Value )
+             cdate  := DToS( value )
+             // Padrão ANSI ISO: 'YYYY-MM-DD' - Universal para todos os SGBDs
+             cValue := "'" + SubStr( cDate, 1, 4 ) + "-" + SubStr( cDate, 5, 2 ) + "-" + SubStr( cDate, 7, 2 ) + "'"
+          ELSE
+             // SQLite exige strings vazias; SGBDs corporativos usam NULL
+             IF cTipoDB == "SQLITE"
+                cValue := "''"
+             ELSE
+                cValue := "NULL"
+             ENDIF
+          ENDIF
+
+       // --- STRINGS E MEMOS ---
+       CASE ValType( Value ) $ "CM"
+          IF Empty( Value )
+             IF cTipoDB == "SQLITE"
+                cValue := "''"
+             ELSE
+                cValue := "NULL"
+             ENDIF
+          ELSE
+             cVALUE := VALUE
+             
+             // 1. Padrão ANSI Universal: Escapar aspas simples duplicando-as (ex: D''Artagnan)
+             // Substitui o antigo StrTran( cVALUE, "'", " " ) que destruía dados.
+             cVALUE := StrTran( cVALUE, "'", "''" )
+             
+             // 2. Tratamento específico para MySQL/MariaDB que sofrem com contra-barras
+             IF cTipoDB $ "MYSQL|MYSQL64|MARIADB"
+                cVALUE := StrTran( cVALUE, "\", "\\" )
+             ENDIF
+             
+             cVALUE := AllTrim( cVALUE ) 
+             cValue := "'" + cvalue + "'"
+          ENDIF
+
+       // --- LÓGICOS (BOOLEANOS) ---
+       CASE ValType( Value ) == "L"
+          // O Harbour usa .T. / .F. nativamente, o que quebra INSERTs SQL.
+          
+          // 1. Motores com tipo BOOLEAN estrito (ver SqliteCreateTable)
+          IF cTipoDB $ "PGSQL|POSTGRESQL|PGSQL64|DUCKDB|DUCKLAKE"
+             cValue := iif( Value == .F., "FALSE", "TRUE" )
+             
+          // 2. Motores onde o booleano é mapeado para SMALLINT, BIT, INT ou TINYINT
+          ELSEIF cTipoDB $ "FIREBIRD|SQLITE|MSSQL|SQLSERVER|ORACLE|OCI|MYSQL|MARIADB|ACCESS|MDB|CUBRID"
+             cValue := AllTrim( Str( iif( Value == .F., 0, 1 ) ) )
+             
+          // Fallback seguro
+          ELSE
+             cValue := iif( Value == .F., "0", "1" )
+          ENDIF
+
+   OTHERWISE
+      cValue := iif( cTipoDB == "SQLITE", "''", "NULL" )
+   ENDCASE
+
+RETURN cValue
