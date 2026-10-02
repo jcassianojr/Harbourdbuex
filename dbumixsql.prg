@@ -140,19 +140,19 @@ METHOD SQLMIXEXT:New()
    ELSEIF ::cMsgLang = 'PT' // Portuguese PT
 
       ::aMsgs[ 1 ] := 'SQL: Conectando...'
-      ::aMsgs[ 2 ] := 'Erro de conexão!'
+      ::aMsgs[ 2 ] := 'Erro de conexï¿½o!'
       ::aMsgs[ 3 ] := 'SQL: Processando...'
       ::aMsgs[ 4 ] := 'Erro de tipo de dados da coluna INSERT/UPDATE'
-      ::aMsgs[ 5 ] := 'Erro de tipo de parâmetro INSERT cTable'
+      ::aMsgs[ 5 ] := 'Erro de tipo de parï¿½metro INSERT cTable'
       ::aMsgs[ 6 ] := 'INSERT aHash Param Type Error'
-      ::aMsgs[ 7 ] := 'DELETE erro de tipo de parâmetro cTable'
-      ::aMsgs[ 8 ] := 'DELETE cWhere Erro de tipo de parâmetro'
-      ::aMsgs[ 9 ] := 'ATUALIZAR erro de tipo de parâmetro cTable'
-      ::aMsgs[ 10 ] := 'ATUALIZAR erro de tipo de parâmetro cWhere'
-      ::aMsgs[ 11 ] := 'ATUALIZAR erro de tipo de parâmetro aHash'
+      ::aMsgs[ 7 ] := 'DELETE erro de tipo de parï¿½metro cTable'
+      ::aMsgs[ 8 ] := 'DELETE cWhere Erro de tipo de parï¿½metro'
+      ::aMsgs[ 9 ] := 'ATUALIZAR erro de tipo de parï¿½metro cTable'
+      ::aMsgs[ 10 ] := 'ATUALIZAR erro de tipo de parï¿½metro cWhere'
+      ::aMsgs[ 11 ] := 'ATUALIZAR erro de tipo de parï¿½metro aHash'
       ::aMsgs[ 12 ] := 'Erro EXEC indefinido'
       ::aMsgs[ 13 ] := 'ERRO SQL'
-      ::aMsgs[ 14 ] := 'ShowMessage() Erro de tipo de parâmetro'
+      ::aMsgs[ 14 ] := 'ShowMessage() Erro de tipo de parï¿½metro'
 
 
    ENDIF
@@ -179,7 +179,6 @@ METHOD SQLMIXEXT:Destroy()
  */
 
    ::Disconnect()
-   ::CloseAreas()
 
    ::aMsgs := NIL
    ::aWorkAreas := NIL
@@ -211,12 +210,13 @@ METHOD SQLMIXEXT:CloseAreas()
  */
    LOCAL i, n := 0
 
-   FOR i := 1 TO Len( ::aWorkAreas )
+   FOR i := Len( ::aWorkAreas ) TO 1 STEP -1
       IF Select( ::aWorkAreas[ I ] ) <> 0
          CLOSE ( ::aWorkAreas[ I ] )
          n++
       ENDIF
    NEXT i
+   ::aWorkAreas := {}
 
 RETURN n
 
@@ -230,13 +230,17 @@ METHOD SQLMIXEXT:Connect( cServer, cUser, cPassword, cDatabase, cTipoMix, cPorta
  */
    LOCAL oError, lSuccess := .F.
    LOCAL cConnStr
+   LOCAL cConnectError := ''
 
-   // Se os parâmetros opcionais foram passados, atualiza as propriedades internas
+   ::lError := .F.
+   ::cErrorDesc := ''
+
+   // Se os parï¿½metros opcionais foram passados, atualiza as propriedades internas
    IF !Empty( cTipoMix ); ::cTipoMix := Upper( AllTrim( cTipoMix ) ); ENDIF
    IF !Empty( cPorta ); ::cPorta := AllTrim( cPorta ); ENDIF
    IF !Empty( cOwner ); ::cOwner := AllTrim( cOwner ); ENDIF
 
-   // Validações básicas de acordo com o tipo de banco
+   // Validaï¿½ï¿½es bï¿½sicas de acordo com o tipo de banco
    IF ::cTipoMix $ "MYSQL|MYSQL64|PGSQL|PGSQL64|POSTGRESQL|ORACLE|OCI"
       IF Empty( cServer ) .OR. Empty( cDatabase )
          ::lError := .T.
@@ -267,8 +271,16 @@ METHOD SQLMIXEXT:Connect( cServer, cUser, cPassword, cDatabase, cTipoMix, cPorta
       CASE ::cTipoMix = "PGSQL" .OR. ::cTipoMix = "PGSQL64" .OR. ::cTipoMix = "POSTGRESQL"
          ::nConnHandle := rddInfo( RDDI_CONNECT, { "POSTGRESQL", AllTrim(cServer), AllTrim(cUser), AllTrim(cPassword), AllTrim(cDatabase) }, "SQLMIX" )
          IF ::nConnHandle > 0
-            // Força o schema e encoding no Postgres
-            rddInfo( RDDI_EXECUTE, "SET search_path TO " + If(Empty(::cOwner), "public", AllTrim(::cOwner)) + ", public; SET client_encoding TO 'WIN1252';", "SQLMIX", ::nConnHandle )
+            // Forï¿½a o schema e encoding no Postgres
+            IF ! rddInfo( RDDI_EXECUTE, "SET search_path TO " + If(Empty(::cOwner), "public", AllTrim(::cOwner)) + ", public; SET client_encoding TO 'WIN1252';", "SQLMIX", ::nConnHandle )
+               cConnectError := rddInfo( RDDI_ERROR, , "SQLMIX", ::nConnHandle )
+               IF Empty( cConnectError )
+                  cConnectError := ::aMsgs[ 12 ]
+               ENDIF
+               IF rddInfo( RDDI_DISCONNECT,, "SQLMIX", ::nConnHandle )
+                  ::nConnHandle := 0
+               ENDIF
+            ENDIF
          ENDIF
 
       CASE ::cTipoMix = "SQLITE" .OR. ::cTipoMix = "SQLITE3"
@@ -286,12 +298,12 @@ METHOD SQLMIXEXT:Connect( cServer, cUser, cPassword, cDatabase, cTipoMix, cPorta
 
      CASE ::cTipoMix = "ODBC"
          IF !Empty( cStringCom )
-            // Utiliza a string pronta passada por parâmetro
+            // Utiliza a string pronta passada por parï¿½metro
             cConnStr := AllTrim( cStringCom )
          ELSEIF !Empty( cServer ) .AND. At( "DRIVER=", Upper( cServer ) ) > 0
-            // Caso o cServer traga a string pronta de conexão
+            // Caso o cServer traga a string pronta de conexï¿½o
             cConnStr := AllTrim( cServer )
-         ELSE // Ajuste lógico para DSN se aplicável
+         ELSE // Ajuste lï¿½gico para DSN se aplicï¿½vel
             cConnStr := "Provider=MSDASQL;Data Source=" + AllTrim( cDatabase ) + ";"
             IF !Empty( cUser ); cConnStr += "Uid=" + AllTrim( cUser ) + ";"; ENDIF
             IF !Empty( cPassword ); cConnStr += "Pwd=" + AllTrim( cPassword ) + ";"; ENDIF
@@ -300,21 +312,29 @@ METHOD SQLMIXEXT:Connect( cServer, cUser, cPassword, cDatabase, cTipoMix, cPorta
          ::nConnHandle := rddInfo( RDDI_CONNECT, { "ODBC", cConnStr }, "SQLMIX" )
 
       OTHERWISE
-         // Genérico customizado
+         // Genï¿½rico customizado
          ::nConnHandle := rddInfo( RDDI_CONNECT, { ::cTipoMix, AllTrim(cServer), AllTrim(cUser), AllTrim(cPassword), AllTrim(cDatabase) }, "SQLMIX" )
       ENDCASE
 
-      lSuccess := ( ValType( ::nConnHandle ) == 'N' .AND. ::nConnHandle > 0 )
+      lSuccess := ( ValType( ::nConnHandle ) == 'N' .AND. ::nConnHandle > 0 .AND. Empty( cConnectError ) )
 
    CATCH oError
       ::lError := .T.
-      ::cErrorDesc := oError:Description
+      cConnectError := rddInfo( RDDI_ERROR, , "SQLMIX", ::nConnHandle )
+      IF Empty( cConnectError )
+         cConnectError := oError:Description
+      ENDIF
    END
 
    IF !lSuccess
-      ::nConnHandle := 0
       ::lError := .T.
-      ::cErrorDesc := ::aMsgs[ 2 ] // 'Connection Error!'
+      IF Empty( cConnectError )
+         cConnectError := rddInfo( RDDI_ERROR, , "SQLMIX", ::nConnHandle )
+      ENDIF
+      IF Empty( cConnectError )
+         cConnectError := ::aMsgs[ 2 ] // 'Connection Error!'
+      ENDIF
+      ::cErrorDesc := cConnectError
    ENDIF
 
    IF ::lShowMsgs .AND. ::lError
@@ -333,22 +353,31 @@ METHOD SQLMIXEXT:Disconnect()
 /*
  * SQLMIXEXT:Disconnect()
  *
- * Closes the database connection.
- * It releases the connection handle and resets error flags.
- *
- * Parameters:
- *   None
+ * Closes the database connection and all work areas opened by this instance.
  *
  * Returns:
- *   NIL
+ *   .T. if the connection was closed, .F. otherwise.
  */
+   LOCAL lDisconnected := .T.
 
    ::lError := .F.
    ::cErrorDesc := ''
 
-   rddInfo( RDDI_DISCONNECT,, "SQLMIX", ::nConnHandle )
+   IF ValType( ::nConnHandle ) == 'N' .AND. ::nConnHandle > 0
+      ::CloseAreas()
+      lDisconnected := rddInfo( RDDI_DISCONNECT,, "SQLMIX", ::nConnHandle )
+      IF lDisconnected
+         ::nConnHandle := 0
+      ELSE
+         ::lError := .T.
+         ::cErrorDesc := rddInfo( RDDI_ERROR, , "SQLMIX", ::nConnHandle )
+         IF Empty( ::cErrorDesc )
+            ::cErrorDesc := ::aMsgs[ 2 ]
+         ENDIF
+      ENDIF
+   ENDIF
 
-RETURN NIL
+RETURN lDisconnected
 
 *---------------------------------------------------------------------------------------------*
 METHOD SQLMIXEXT:Select( cCommand, cWorkArea )
@@ -691,6 +720,7 @@ METHOD SQLMIXEXT:Exec( cCommand )
  */
    LOCAL oError, lSuccess := .F.
    LOCAL cFinalCommand
+   LOCAL lExecuteStarted := .F.
 
    ::lError := .F.
    ::cErrorDesc := ''
@@ -712,27 +742,37 @@ METHOD SQLMIXEXT:Exec( cCommand )
          cFinalCommand := AllTrim( cCommand )
       ENDIF
 
-      // Sanitize input to prevent SQL injection
       IF Empty( cFinalCommand ) .OR. At( ';', cFinalCommand ) > 0
          ::lError := .T.
-         ::cErrorDesc := 'Invalid SQL command'
-         BREAK
-      ENDIF
+         ::cErrorDesc := 'SQL command must be non-empty and contain no semicolon'
+      ELSE
+         lExecuteStarted := .T.
+         lSuccess := rddInfo( RDDI_EXECUTE, cFinalCommand, "SQLMIX", ::nConnHandle )
+         IF ! lSuccess
+            ::lError := .T.
+            ::cErrorDesc := rddInfo( RDDI_ERROR, , "SQLMIX", ::nConnHandle )
+            IF Empty( ::cErrorDesc )
+               ::cErrorDesc := ::aMsgs[ 12 ]
+            ENDIF
+         ENDIF
 
-      lSuccess := rddInfo( RDDI_EXECUTE, cFinalCommand, "SQLMIX", ::nConnHandle )
-
-      IF ::lTrace
-         hb_MemoWrit( 'trace.log', DToC( Date() ) + ' ' + Time() + ': ' + cFinalCommand + hb_eol(), .T. )
+         IF ::lTrace
+            hb_MemoWrit( 'trace.log', DToC( Date() ) + ' ' + Time() + ': ' + cFinalCommand + hb_eol(), .T. )
+         ENDIF
       ENDIF
 
    CATCH oError
       ::lError := .T.
-      ::cErrorDesc := oError:Description
+      IF lExecuteStarted .AND. ! lSuccess
+         ::cErrorDesc := rddInfo( RDDI_ERROR, , "SQLMIX", ::nConnHandle )
+      ENDIF
+      IF Empty( ::cErrorDesc )
+         ::cErrorDesc := oError:Description
+      ENDIF
    END
 
    IF ! lSuccess
       ::lError := .T.
-      ::cErrorDesc := rddInfo( RDDI_ERROR, , "SQLMIX", ::nConnHandle )
       IF Empty( ::cErrorDesc )
          ::cErrorDesc := ::aMsgs[ 12 ] // 'EXEC Undefined Error'
       ENDIF
@@ -751,11 +791,16 @@ RETURN lSuccess
 
 METHOD SQLMIXEXT:LastInsertID()
    LOCAL nID := 0
+
+   ::lError := .F.
+   ::cErrorDesc := ''
+
    TRY
-      // Dependendo do RDD/Banco, o RDDI_LASTINSERTID recupera o ID gerado
-      nID := rddInfo( RDDI_LASTINSERTID, , "SQLMIX", ::nConnHandle )
-   CATCH
+      nID := rddInfo( RDDI_INSERTID, , "SQLMIX", ::nConnHandle )
+   CATCH oError
       nID := 0
+      ::lError := .T.
+      ::cErrorDesc := oError:Description
    END
 RETURN nID
 

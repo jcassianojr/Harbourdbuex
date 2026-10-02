@@ -89,6 +89,7 @@ sqlrddpp.hbc
 \develop\harbour\OdsOdt\odsclass.prg
 \develop\harbour\dbu\dburddadofuncoes.prg
 \develop\harbour\dbu\dbuyaml.PRG
+c:\develop\harbour\dbu\dbumixsql.prg
 #
 # sqlite
 #

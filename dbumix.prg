@@ -443,7 +443,7 @@ FUNCTION mix_impdbf(cARQORI,lincdados)
       mix_executesql( Aindices )   // Executa comando unico ou array de comandos
    ENDIF
 
-  mix_executesql( Dialeto_begin() ) // Inicia transação
+  mix_executesql( Dialeto_begin() ) // Inicia transaï¿½ï¿½o
   nCont := 0
 
    IF lincdados
@@ -457,7 +457,7 @@ FUNCTION mix_impdbf(cARQORI,lincdados)
          IF i > 1
             mSql += ", "
          ENDIF
-         mSql += c2sql( &mFldNm )
+         mSql += c2sql( hb_fieldget(mFldNm) )
       NEXT
       mSql += ")"
       mix_executesql( msql )
@@ -526,8 +526,10 @@ FUNCTION mix_executesql( eCOMANDO, lTRANS, lMES )
    LOCAL nFIM
    LOCAL i
    LOCAL lRet
+   LOCAL lAllOk := .T.
+   LOCAL cError
+   LOCAL nErrorNo
 
-   lRET := .T.
    IF ValType( LMES ) <> "L"
       lMES := .F.
    ENDIF
@@ -538,26 +540,48 @@ FUNCTION mix_executesql( eCOMANDO, lTRANS, lMES )
    ENDIF
    nFIM := Len( aCOMANDOS )
    IF lTRANS
-      rddInfo( RDDI_EXECUTE, Dialeto_begin() )
+      lRet := rddInfo( RDDI_EXECUTE, Dialeto_begin(), "SQLMIX", nConn )
+      IF ! lRet
+         cError := rddInfo( RDDI_ERROR,, "SQLMIX", nConn )
+         nErrorNo := rddInfo( RDDI_ERRORNO,, "SQLMIX", nConn )
+         lAllOk := .F.
+         IF lMES
+            MDT( cstr( cError ) + " Error " + cstr( nErrorNo ) )
+         ENDIF
+         RETURN .F.
+      ENDIF
    ENDIF
    FOR i := 1 TO nfim
       cCOMANDO := aCOMANDOS[ I ]
-      lRet     := rddInfo( RDDI_EXECUTE, cCOMANDO )
-      IF rddInfo( RDDI_ERRORNO ) = 9999
-         // da este error cuando delete no encuentra nada que borrar. No debería dar error.
-         lRet := .T.
-      ELSE
-         IF Lmes
-            MDT( cstr( rddInfo( RDDI_ERROR ) ) + " Error " + cstr( rddInfo( RDDI_ERRORNO ) ) )
+      lRet     := rddInfo( RDDI_EXECUTE, cCOMANDO, "SQLMIX", nConn )
+      IF ! lRet
+         cError := rddInfo( RDDI_ERROR,, "SQLMIX", nConn )
+         nErrorNo := rddInfo( RDDI_ERRORNO,, "SQLMIX", nConn )
+         IF nErrorNo = 9999
+         // da este error cuando delete no encuentra nada que borrar. No deberï¿½a dar error.
+            lRet := .T.
+         ELSE
+            lAllOk := .F.
+            IF Lmes
+               MDT( cstr( cError ) + " Error " + cstr( nErrorNo ) )
+            ENDIF
          ENDIF
       ENDIF
    NEXT i
    IF lTRANS
-      rddInfo( RDDI_EXECUTE, Dialeto_commit() )
+      lRet := rddInfo( RDDI_EXECUTE, Dialeto_commit(), "SQLMIX", nConn )
+      IF ! lRet
+         cError := rddInfo( RDDI_ERROR,, "SQLMIX", nConn )
+         nErrorNo := rddInfo( RDDI_ERRORNO,, "SQLMIX", nConn )
+         lAllOk := .F.
+         IF lMES
+            MDT( cstr( cError ) + " Error " + cstr( nErrorNo ) )
+         ENDIF
+      ENDIF
    ENDIF
 // RDDINFO(RDDI_EXECUTE, Dialeto_rollback())
 
-   RETURN lRet
+   RETURN lAllOk
 
 
 // +--------------------------------------------------------------------
@@ -592,6 +616,8 @@ FUNCTION mix_Query()  // returns last sql instruction
 FUNCTION mix_open()
 
    LOCAL cCONN
+   LOCAL cError
+   LOCAL nErrorNo
 
    cCONN := ""
    rddSetDefault( "SQLMIX" )
@@ -601,9 +627,13 @@ FUNCTION mix_open()
    CASE cTIPOMIX = "PGSQL" .OR. cTIPOMIX = "PGSQL64"
       nCONN := rddInfo( RDDI_CONNECT, { "POSTGRESQL", cSERVERX, cUSERX, cPASSX, cDATABASEX } )
       IF nConn > 0
-         // SE CONECTOU NO MIX, FORÇA O SCHEMA E ENCODING VIA INTERFACE RDD
-         // O comando RD_EXECUTE envia a instrução direto para a linha ativa do banco
-        rddInfo( RDDI_EXECUTE, "SET search_path TO myschema, public; SET client_encoding TO 'WIN1252';")
+         // SE CONECTOU NO MIX, FORï¿½A O SCHEMA E ENCODING VIA INTERFACE RDD
+         // O comando RD_EXECUTE envia a instruï¿½ï¿½o direto para a linha ativa do banco
+         IF ! rddInfo( RDDI_EXECUTE, "SET search_path TO myschema, public; SET client_encoding TO 'WIN1252';", "SQLMIX", nConn )
+            cError := rddInfo( RDDI_ERROR,, "SQLMIX", nConn )
+            nErrorNo := rddInfo( RDDI_ERRORNO,, "SQLMIX", nConn )
+            MDT( "Erro ao configurar PostgreSQL: " + cstr( cError ) + " Error " + cstr( nErrorNo ) )
+         ENDIF
       ENDIF
       
    CASE cTIPOMIX = "SQLITE"
@@ -624,7 +654,9 @@ FUNCTION mix_open()
    ENDCASE
    
    IF !( nConn > 0 )
-      mdt( "Erro ao connectar " + cServerx + " " + cstr( rddInfo( RDDI_ERROR ) ) + " Error" + cstr( rddInfo( RDDI_ERRORNO ) ) )
+      cError := rddInfo( RDDI_ERROR,, "SQLMIX", nConn )
+      nErrorNo := rddInfo( RDDI_ERRORNO,, "SQLMIX", nConn )
+      mdt( "Erro ao connectar " + cServerx + " " + cstr( cError ) + " Error" + cstr( nErrorNo ) )
       nConn := 0
    ENDIF
 
@@ -646,7 +678,9 @@ FUNCTION mix_open()
 FUNCTION mix_close()
 
    IF ! Empty( nconn ) .AND. nConn <> 0
-      rddInfo( RDDI_DISCONNECT, nConn )
+      IF rddInfo( RDDI_DISCONNECT,, "SQLMIX", nConn )
+         nConn := 0
+      ENDIF
    ENDIF
 
 
@@ -666,7 +700,7 @@ function mix_AFFECTEDROWS()
 LOCAL nRetVal
 nRetVal:=0
 IF ! Empty( nconn ) .AND. nConn <> 0
-     nRetVal := rddInfo( RDDI_AFFECTEDROWS,,, nConn )
+     nRetVal := rddInfo( RDDI_AFFECTEDROWS,, "SQLMIX", nConn )
 ENDIF
 return nRetVal
 
@@ -687,13 +721,11 @@ return nRetVal
 FUNCTION mix_Conn()
 
    IF HB_ISNIL( nConn )
-      // Select the default connection.
-      nConn := rddInfo( RDDI_CONNECTION )  // esto NO selecciona una conexion, siempre regresa cero 0
+      // Read the connection selected in this thread.
+      nConn := rddInfo( RDDI_CONNECTION )
    ELSE
-      // Select the current connection.
-      // msgbox("Seleccionando conexcion "+str(nConn))
-      // RDDINFO(RDDI_CONNECTION,,,nConn)
-      nConn := rddInfo( RDDI_CONNECTION,,, nConn )
+      // Select this handle for the current thread; the return value is the previous handle.
+      rddInfo( RDDI_CONNECTION, nConn )
    ENDIF
 
    RETURN nConn

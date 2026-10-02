@@ -100,7 +100,6 @@ sqlrddpp.hbc
 
 \develop\harbour\dbu\DBU.PRG  
 \develop\harbour\dbu\dbucnvmemo.prg 
-\develop\harbour\dbu\dbuxml.prg
 \develop\harbour\dbu\dbucopy.prg
 \develop\harbour\dbu\dbudoc.prg  
 \develop\harbour\dbu\dbuedi.prg
@@ -143,7 +142,7 @@ sqlrddpp.hbc
 #
 \develop\harbour\dbu\dbupg.prg
 \develop\harbour\dbu\dbupgexp.prg
-\develop\harbour\privado\dbu\pgrdd.prg
+c:\develop\harbour\pgrdd\pgrdd.prg
 #
 \develop\harbour\dbu\dbumix.prg
 #
