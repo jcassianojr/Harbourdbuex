@@ -31,6 +31,9 @@
 #require "hbfbird"
 
 
+FUNCTION Firebirdmenu5()
+Firebirdmenu()
+
 // +--------------------------------------------------------------------
 // +    Function firebirdmenu()
 // +--------------------------------------------------------------------
@@ -133,6 +136,9 @@ RESTAA(aAMBIENTE)
 LAYOUT() 
 
 RETURN .T. 
+
+FUNCTION firecreate5( lUSASQL )
+firecreate(lUSASQL)
 
 // +--------------------------------------------------------------------
 // +    Function firecreate()
