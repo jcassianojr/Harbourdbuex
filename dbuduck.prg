@@ -1,10 +1,29 @@
-// +--------------------------------------------------------------------
-// +
-// +    Programa  : dbuduck.prg
-// +    Sistema   : Utilitário de Gerenciamento DuckDB para Harbour
-// +    Linguagem : Harbour
-// +    Autor     : jcassiano (Adaptado para DuckDB)
-// +--------------------------------------------------------------------
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Programa  : dbuduck.prg
+*+
+*+
+*+
+*+     Sistema:
+*+
+*+     Linguagem: Harbour
+*+
+*+     Autor: jcassiano
+*+
+*+     Copyright (c) 2024,  jcassiano
+*+
+*+     
+*+
+*+
+*+
+*+    Documentado em 15-Out-2026 as  2:12 pm
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
 
 #include "BOX.CH"
 #include "TRY.CH"
@@ -18,238 +37,240 @@
 // +--------------------------------------------------------------------
 FUNCTION Duckdbmenu()
 
-   LOCAL aAMBIENTE
-   LOCAL KEY
 
-   aAMBIENTE  := SALVAA() 
-   cSERVERX   := PADR("LOCAL",30)  
-   cDATABASEX := PADR("dados.duckdb",30) // Caminho padrão do arquivo DuckDB
-   cUSERX     := PADR("",30)           // DuckDB não usa usuário/senha
-   cPASSX     := PADR("",30)
-   cTABELAX   := Space(30) 
-   cBANCOX    := Space(30) 
-   cOWNERX    := Space(30)
-   cPORTAX    := SPACE(30)
-   cPATH      := "" 
-   loledb     := .T. 
-   lMDB       := .F. 
-   lACCDB     := .F. 
-   lFDB       := .F.
-   nDialect   := 0
+LOCAL aAMBIENTE
+LOCAL KEY
 
-   cOLDRDD     := RDDSETDEFAULT("DUCKDB") 
-   nOLDTIPORDD := TIPODBF 
-   cTIPOSQL    := "DUCKDB"  // Define a global para as funções de dialeto
+aAMBIENTE  := SALVAA()
+cSERVERX   := PADR("LOCAL",30)
+cDATABASEX := PADR("dados.duckdb",30)   // Caminho padrão do arquivo DuckDB
+cUSERX     := PADR("",30)   // DuckDB não usa usuário/senha
+cPASSX     := PADR("",30)
+cTABELAX   := Space(30)
+cBANCOX    := Space(30)
+cOWNERX    := Space(30)
+cPORTAX    := SPACE(30)
+cPATH      := ""
+loledb     := .T.
+lMDB       := .F.
+lACCDB     := .F.
+lFDB       := .F.
+nDialect   := 0
 
-   // Busca as credenciais e o caminho do banco dinamicamente via cofre do sistema se houver
-   IF IsFunction("pegcfgbanco")
-      pegcfgbanco() 
-   ENDIF
+cOLDRDD     := RDDSETDEFAULT("DUCKDB")
+nOLDTIPORDD := TIPODBF
+cTIPOSQL    := "DUCKDB"   // Define a global para as funções de dialeto
 
-   WHILE .T.
-      hb_DispBox(3, 12, 22, 75, B_DOUBLE+" ")  // Ajustado a largura da caixa para caber 2 colunas
-      @ 03, 24 SAY "DUCKDB " + ALLTRIM(cDATABASEX) 
-      
-      // --- COLUNA ESQUERDA (Linhas 4 a 12, Coluna 14) ---
-      OPCAO(  4, 14, "&Criar Database            ", 67 )   // C (67)
-      OPCAO(  5, 14, "&Database Selecionar       ", 68 )   // D (68)
-      OPCAO(  6, 14, "&Tabelas                   ", 84 )   // T (84)
-      OPCAO(  7, 14, "&Importar  DBF             ", 73 )   // I (73)
-      OPCAO(  8, 14, "&Exportar  DBF             ", 69 )   // E (69)
-      OPCAO(  9, 14, "&Apagar Tabela             ", 65 )   // A (65)
-      OPCAO( 10, 14, "Exportar &Formatos         ", 70 )   // F (70)
-      OPCAO( 11, 14, "&Versao Info               ", 86 )   // V (86)
-      OPCAO( 12, 14, "Executar arquivo &SQL      ", 83 )   // S (83)
-      OPCAO( 13, 14, "&Ler arquivo CSV           ", 76 )   // L (76)
-      
+// Busca as credenciais e o caminho do banco dinamicamente via cofre do sistema se houver
+IF IsFunction("pegcfgbanco")
+   pegcfgbanco()
+ENDIF
 
-      // --- COLUNA DIREITA (Linhas 4 a 12, Coluna 44) ---
-      OPCAO(  4, 44, "&Gravar arquivo CSV        ", 71 )   // G (71)
-      OPCAO(  5, 44, "&Ler arquivo JSON          ", 74 )   // J (74)
-      OPCAO(  6, 44, "Gravar arquivo J&SON       ", 78 )   // N (78)
-      OPCAO(  7, 44, "Le&r arquivo Parquet       ", 82 )   // R (82)
-      OPCAO(  8, 44, "Gravar arquivo Par&quet    ", 81 )   // Q (81)
-      OPCAO( 09, 44, "Gravar arquivo E&xcel      ", 88 )   // X (88)
-      OPCAO( 10, 44, "&Otimizar Lakehouse        ", 79 )   // O (79)
-      OPCAO( 11, 44, "Abrir via O&DBC (Access/FB)", 68 )   // D (68)
-      OPCAO( 12, 44, "Conexoes &SGBD (Nativas/ODBC)", 83 )   // S (83)
-      
-      
-      KEY := menu(1,0) 
-      DO CASE
-      CASE KEY = 1
-         duckcreate()
-      CASE KEY = 2
-         // Seleção multi-formato (DuckDB, DuckLake, SQLite, CSV, JSON, Parquet)
-         cDATABASEX := win_GetOpenFileName(, "Selecionar Origem de Dados", HB_CWD(), "DuckDB", ;
-            { {'DuckDB Database', '*.duckdb'},;
-              {'DuckLake Database', '*.ducklake'},;
-              {'SQLite Database', '*.sqlite;*.db'},;
-              {'CSV File', '*.csv'},;
-              {'JSON File', '*.json'},;
-              {'Parquet File', '*.parquet'},;
-              {'Todos os Arquivos', '*.*'} }, 1)
-              
-         IF Empty(cDATABASEX)
-            cDATABASEX := PADR("dados.duckdb", 30)
-         ELSE
-            // Atualiza a variável global mantendo o tamanho
-            cDATABASEX := PADR(cDATABASEX, 30)
-         ENDIF
-      CASE KEY = 3
-         duckTABELAS() 
-      CASE KEY = 4
-         duckimpdbf()
-      CASE KEY = 5
-         duckexpdbf( 1 )
-      CASE KEY = 6
-         duckdeltable()
-      CASE KEY = 7
-         duckexpdbf( 2 )
-      CASE KEY = 8
-         duckverinfo()
-      CASE KEY = 9
-         duckExecArqSql()
-      CASE KEY = 10
-         duckChamaLerCSV() 
-      CASE KEY = 11
-         duckChamaGravarCSV()   
-      CASE KEY = 12
-         duckChamaLerJSON()
-      CASE KEY = 13
-         duckChamaGravarJSON()        
-     CASE KEY = 14
-         duckChamaLerParquet()
-      CASE KEY = 15
-         duckChamaGravarParquet()    
-      CASE KEY = 16
-         duckChamaGravarExcel()   
-     CASE KEY = 17          // <- NOVO CASE DE CHAMADA
-         duckChamaOptimize()    
-     CASE KEY = 18 
-         duckChamaODBC()     
-     CASE KEY = 19
-         duckMenuConexoesSGBD()    
-         
-      OTHERWISE
-         EXIT 
-      ENDCASE
-   ENDDO 
+WHILE .T.
+   hb_DispBox(3,12,22,75,B_DOUBLE+" ")  // Ajustado a largura da caixa para caber 2 colunas
+   @ 03,24 SAY "DUCKDB "+ALLTRIM(cDATABASEX)         
 
-   TIPODBF := nOLDTIPORDD 
-   rddSetDefault(cOLDRDD) 
-   RDDNOME(TIPODBF) 
+   // --- COLUNA ESQUERDA (Linhas 4 a 12, Coluna 14) ---
+   OPCAO(4,14,"&Criar Database            ",67)   // C (67)
+   OPCAO(5,14,"&Database Selecionar       ",68)   // D (68)
+   OPCAO(6,14,"&Tabelas                   ",84)   // T (84)
+   OPCAO(7,14,"&Importar  DBF             ",73)   // I (73)
+   OPCAO(8,14,"&Exportar  DBF             ",69)   // E (69)
+   OPCAO(9,14,"&Apagar Tabela             ",65)   // A (65)
+   OPCAO(10,14,"Exportar &Formatos         ",70)  // F (70)
+   OPCAO(11,14,"&Versao Info               ",86)  // V (86)
+   OPCAO(12,14,"Executar arquivo &SQL      ",83)  // S (83)
+   OPCAO(13,14,"&Ler arquivo CSV           ",76)  // L (76)
 
-   RESTAA(aAMBIENTE) 
-   LAYOUT() 
 
-RETURN .T. 
+   // --- COLUNA DIREITA (Linhas 4 a 12, Coluna 44) ---
+   OPCAO(4,44,"&Gravar arquivo CSV        ",71)   // G (71)
+   OPCAO(5,44,"&Ler arquivo JSON          ",74)   // J (74)
+   OPCAO(6,44,"Gravar arquivo J&SON       ",78)   // N (78)
+   OPCAO(7,44,"Le&r arquivo Parquet       ",82)   // R (82)
+   OPCAO(8,44,"Gravar arquivo Par&quet    ",81)   // Q (81)
+   OPCAO(09,44,"Gravar arquivo E&xcel      ",88)  // X (88)
+   OPCAO(10,44,"&Otimizar Lakehouse        ",79)  // O (79)
+   OPCAO(11,44,"Abrir via O&DBC (Access/FB)",68)  // D (68)
+   OPCAO(12,44,"Conexoes &SGBD (Nativas/ODBC)",83)  // S (83)
+
+
+   KEY := menu(1,0)
+   DO CASE
+   CASE KEY = 1
+      duckcreate()
+   CASE KEY = 2
+      // Seleção multi-formato (DuckDB, DuckLake, SQLite, CSV, JSON, Parquet)
+      cDATABASEX := win_GetOpenFileName(,"Selecionar Origem de Dados",HB_CWD(),"DuckDB",;
+       {{'DuckDB Database','*.duckdb'},;
+       {'DuckLake Database','*.ducklake'},;
+       {'SQLite Database','*.sqlite;*.db'},;
+       {'CSV File','*.csv'},;
+       {'JSON File','*.json'},;
+       {'Parquet File','*.parquet'},;
+       {'Todos os Arquivos','*.*'}},1)
+
+      IF Empty(cDATABASEX)
+         cDATABASEX := PADR("dados.duckdb",30)
+      ELSE
+         // Atualiza a variável global mantendo o tamanho
+         cDATABASEX := PADR(cDATABASEX,30)
+      ENDIF
+   CASE KEY = 3
+      duckTABELAS()
+   CASE KEY = 4
+      duckimpdbf()
+   CASE KEY = 5
+      duckexpdbf(1)
+   CASE KEY = 6
+      duckdeltable()
+   CASE KEY = 7
+      duckexpdbf(2)
+   CASE KEY = 8
+      duckverinfo()
+   CASE KEY = 9
+      duckExecArqSql()
+   CASE KEY = 10
+      duckChamaLerCSV()
+   CASE KEY = 11
+      duckChamaGravarCSV()
+   CASE KEY = 12
+      duckChamaLerJSON()
+   CASE KEY = 13
+      duckChamaGravarJSON()
+   CASE KEY = 14
+      duckChamaLerParquet()
+   CASE KEY = 15
+      duckChamaGravarParquet()
+   CASE KEY = 16
+      duckChamaGravarExcel()
+   CASE KEY = 17  // <- NOVO CASE DE CHAMADA
+      duckChamaOptimize()
+   CASE KEY = 18
+      duckChamaODBC()
+   CASE KEY = 19
+      duckMenuConexoesSGBD()
+
+   OTHERWISE
+      EXIT
+   ENDCASE
+ENDDO
+
+TIPODBF := nOLDTIPORDD
+rddSetDefault(cOLDRDD)
+RDDNOME(TIPODBF)
+
+RESTAA(aAMBIENTE)
+LAYOUT()
+
+RETURN .T.
 
 // +--------------------------------------------------------------------
 // +    Function duckMenuConexoesSGBD()
 // +    Submenu de Conexoes com SGBDs Nativos e ODBC
 // +--------------------------------------------------------------------
 FUNCTION duckMenuConexoesSGBD()
-   LOCAL nOpcao
-   LOCAL cConnString, oServer
 
-   WHILE .T.
-      hb_DispBox( 5, 25, 14, 55, B_DOUBLE + " " )
-      @ 05, 30 SAY " Conectar SGBD " 
-      
-      OPCAO( 06, 28, "1. POSTGRESQL (Nativo)   ", 49 )
-      OPCAO( 07, 28, "2. MARIADB (Nativo)      ", 50 )
-      OPCAO( 08, 28, "3. MYSQL (Nativo)        ", 51 )
-      OPCAO( 09, 28, "4. MSSQL (via ODBC)      ", 52 )
-      OPCAO( 10, 28, "5. ORACLE (via ODBC)     ", 53 )
-      OPCAO( 11, 28, "6. DSN (via ODBC)        ", 54 )
-      OPCAO( 12, 28, "0. Retornar              ", 48 )
+LOCAL nOpcao
+LOCAL cConnString,oServer
 
-      nOpcao := menu( 1, 0 )
-      
-      IF nOpcao == 7 .OR. nOpcao == 0
-         EXIT
+WHILE .T.
+   hb_DispBox(5,25,14,55,B_DOUBLE+" ")
+   @ 05,30 SAY " Conectar SGBD "         
+
+   OPCAO(06,28,"1. POSTGRESQL (Nativo)   ",49)
+   OPCAO(07,28,"2. MARIADB (Nativo)      ",50)
+   OPCAO(08,28,"3. MYSQL (Nativo)        ",51)
+   OPCAO(09,28,"4. MSSQL (via ODBC)      ",52)
+   OPCAO(10,28,"5. ORACLE (via ODBC)     ",53)
+   OPCAO(11,28,"6. DSN (via ODBC)        ",54)
+   OPCAO(12,28,"0. Retornar              ",48)
+
+   nOpcao := menu(1,0)
+
+   IF nOpcao == 7 .OR. nOpcao == 0
+      EXIT
+   ENDIF
+
+   // 1. Define cTIPOCON, cTIPOSQL e nDialect
+   cConnString := ""
+   nDialect    := 0
+
+   DO CASE
+   CASE nOpcao == 1
+      cTIPOCON := "POSTGRESQL"
+      cTIPOSQL := "POSTGRESQL"
+      nDialect := 101   // DIALETO_POSTGRES
+   CASE nOpcao == 2
+      cTIPOCON := "MARIADB"
+      cTIPOSQL := "MARIADB"
+      nDialect := 100   // DIALETO_MYSQL (MariaDB usa a extensao mysql)
+   CASE nOpcao == 3
+      cTIPOCON := "MYSQL"
+      cTIPOSQL := "MYSQL"
+      nDialect := 100   // DIALETO_MYSQL
+   CASE nOpcao == 4
+      cTIPOCON := "MSSQL"
+      cTIPOSQL := "MSSQL"
+      nDialect := 106   // DIALETO_ODBC_MSSQL
+   CASE nOpcao == 5
+      cTIPOCON := "ORACLE"
+      cTIPOSQL := "ORACLE"
+      nDialect := 107   // DIALETO_ODBC_ORACLE
+   CASE nOpcao == 6
+      cTIPOCON := "DSN"
+      cTIPOSQL := "ODBC"
+      nDialect := 108   // DIALETO_ODBC_DSN
+   ENDCASE
+
+   // 2. Coleta de credenciais e Geracao da String
+   IF nOpcao == 6
+      IF IsFunction("sqlrdd_ODBC_info")
+         sqlrdd_ODBC_info()   // A funcao setara o nome em cBANCOX
+      ENDIF
+      // Nota: O DuckDB odbc_scanner usa ODBC puro. Logo, em vez de
+      // "Provider=MSDASQL", o formato nativo correto e DSN=[cite: 36]
+      cConnString := "DSN="+AllTrim(cBANCOX)+";"
+   ELSE
+      // Demais SGBDs precisam usar a tela de credenciais do sistema
+      IF IsFunction("pegcfgbanco")
+         pegcfgbanco()
       ENDIF
 
-      // 1. Define cTIPOCON, cTIPOSQL e nDialect 
-      cConnString := ""
-      nDialect    := 0
-      
       DO CASE
-         CASE nOpcao == 1
-            cTIPOCON := "POSTGRESQL"
-            cTIPOSQL := "POSTGRESQL"
-            nDialect := 101 // DIALETO_POSTGRES
-         CASE nOpcao == 2
-            cTIPOCON := "MARIADB"
-            cTIPOSQL := "MARIADB"
-            nDialect := 100 // DIALETO_MYSQL (MariaDB usa a extensao mysql)
-         CASE nOpcao == 3
-            cTIPOCON := "MYSQL"
-            cTIPOSQL := "MYSQL"
-            nDialect := 100 // DIALETO_MYSQL
-         CASE nOpcao == 4
-            cTIPOCON := "MSSQL"
-            cTIPOSQL := "MSSQL"
-            nDialect := 106 // DIALETO_ODBC_MSSQL
-         CASE nOpcao == 5
-            cTIPOCON := "ORACLE"
-            cTIPOSQL := "ORACLE"
-            nDialect := 107 // DIALETO_ODBC_ORACLE
-         CASE nOpcao == 6
-            cTIPOCON := "DSN"
-            cTIPOSQL := "ODBC"
-            nDialect := 108 // DIALETO_ODBC_DSN
+      CASE nOpcao == 1  // POSTGRESQL nativo
+         // Formato: dbname=... user=... host=...[cite: 37]
+         cConnString := "dbname="+AllTrim(cDATABASEX)+" user="+AllTrim(cUSERX)+;
+          " host="+AllTrim(cSERVERX)+" port="+AllTrim(cPORTAX)+;
+          " password="+AllTrim(cPASSX)
+
+      CASE nOpcao == 2 .OR. nOpcao == 3   // MYSQL/MARIADB nativo
+         // Formato: host=... user=... database=...[cite: 38]
+         cConnString := "host="+AllTrim(cSERVERX)+" port="+AllTrim(cPORTAX)+;
+          " database="+AllTrim(cDATABASEX)+" user="+AllTrim(cUSERX)+;
+          " password="+AllTrim(cPASSX)
+
+      CASE nOpcao == 4 .OR. nOpcao == 5   // MSSQL / ORACLE via odbc_scanner
+         IF IsFunction("geraconn")
+            // Usa sua rotina para gerar Driver=... (lPROVIDER=.F.)
+            cConnString := geraconn(AllTrim(cDATABASEX),.F.)
+         ENDIF
       ENDCASE
+   ENDIF
 
-      // 2. Coleta de credenciais e Geracao da String
-      IF nOpcao == 6
-         IF IsFunction("sqlrdd_ODBC_info")
-            sqlrdd_ODBC_info() // A funcao setara o nome em cBANCOX
-         ENDIF
-         // Nota: O DuckDB odbc_scanner usa ODBC puro. Logo, em vez de 
-         // "Provider=MSDASQL", o formato nativo correto e DSN=[cite: 36]
-         cConnString := "DSN=" + AllTrim(cBANCOX) + ";" 
+   // 3. Conecta repassando a string recem montada
+   IF !Empty(cConnString)
+      oServer := DuckDBClass():New(cDATABASEX,"","",nDialect,"UTF8",cTIPOCON,cConnString)
+
+      IF oServer != NIL .AND. !oServer:NetErr()
+         Alert("Conexao SGBD estabelecida com sucesso no DuckDB!")
+         oServer:Close()
       ELSE
-         // Demais SGBDs precisam usar a tela de credenciais do sistema
-         IF IsFunction("pegcfgbanco")
-            pegcfgbanco()
-         ENDIF
-         
-         DO CASE
-            CASE nOpcao == 1 // POSTGRESQL nativo 
-               // Formato: dbname=... user=... host=...[cite: 37]
-               cConnString := "dbname=" + AllTrim(cDATABASEX) + " user=" + AllTrim(cUSERX) + ;
-                              " host=" + AllTrim(cSERVERX) + " port=" + AllTrim(cPORTAX) + ;
-                              " password=" + AllTrim(cPASSX)
-                              
-            CASE nOpcao == 2 .OR. nOpcao == 3 // MYSQL/MARIADB nativo
-               // Formato: host=... user=... database=...[cite: 38]
-               cConnString := "host=" + AllTrim(cSERVERX) + " port=" + AllTrim(cPORTAX) + ;
-                              " database=" + AllTrim(cDATABASEX) + " user=" + AllTrim(cUSERX) + ;
-                              " password=" + AllTrim(cPASSX)
-                              
-            CASE nOpcao == 4 .OR. nOpcao == 5 // MSSQL / ORACLE via odbc_scanner
-               IF IsFunction("geraconn")
-                  // Usa sua rotina para gerar Driver=... (lPROVIDER=.F.)
-                  cConnString := geraconn( AllTrim(cDATABASEX), .F. )
-               ENDIF
-         ENDCASE
+         Alert("Erro ao conectar no DuckDB.")
       ENDIF
+   ENDIF
 
-      // 3. Conecta repassando a string recem montada 
-      IF !Empty( cConnString )
-         oServer := DuckDBClass():New( cDATABASEX, "", "", nDialect, "UTF8", cTIPOCON, cConnString )
-         
-         IF oServer != NIL .AND. !oServer:NetErr()
-            Alert( "Conexao SGBD estabelecida com sucesso no DuckDB!" )
-            oServer:Close()
-         ELSE
-            Alert( "Erro ao conectar no DuckDB." )
-         ENDIF
-      ENDIF
-
-   ENDDO
+ENDDO
 RETURN .T.
 
 
@@ -258,64 +279,65 @@ RETURN .T.
 // +    Captura o arquivo, aciona configuracoes e instancia a classe DuckDB
 // +--------------------------------------------------------------------
 FUNCTION duckChamaODBC()
-   LOCAL cArqOrigem, cExt, cConnString, nDialect := 0
-   LOCAL oServer
 
-   // 1. Pede ao usuario o arquivo fisico
-   cArqOrigem := win_GetOpenFileName(, "Selecione o Banco de Dados", HB_CWD(), "Bancos de Dados", ;
-      { {'Access (*.mdb, *.accdb)', '*.mdb;*.accdb'},;
-        {'Firebird (*.fdb, *.gdb)', '*.fdb;*.gdb'},;
-        {'Todos os Arquivos', '*.*'} }, 1)
+LOCAL cArqOrigem,cExt,cConnString,nDialect := 0
+LOCAL oServer
 
-   IF Empty( cArqOrigem )
-      RETURN .F.
-   ENDIF
-   
-   // Extrai a extensao do arquivo
-   cExt := Lower( hb_FNameExt( cArqOrigem ) )
+// 1. Pede ao usuario o arquivo fisico
+cArqOrigem := win_GetOpenFileName(,"Selecione o Banco de Dados",HB_CWD(),"Bancos de Dados",;
+ {{'Access (*.mdb, *.accdb)','*.mdb;*.accdb'},;
+ {'Firebird (*.fdb, *.gdb)','*.fdb;*.gdb'},;
+ {'Todos os Arquivos','*.*'}},1)
 
-   // 2. Define o Tipo SQL e o nDialect baseado na extensao
-   DO CASE
-      CASE cExt == ".mdb"
-         cTIPOSQL := "MDB"
-         nDialect := DIALETO_ODBC_MDB     // 103[cite: 21]
-      CASE cExt == ".accdb"
-         cTIPOSQL := "ACCDB"
-         nDialect := DIALETO_ODBC_ACCDB   // 104[cite: 21]
-      CASE cExt == ".fdb" .OR. cExt == ".gdb"
-         cTIPOSQL := "FIREBIRD"
-         nDialect := DIALETO_ODBC_FIREBIRD // 105[cite: 21]
-      OTHERWISE
-         Alert("Formato nao mapeado para conexao ODBC direta nesta rotina.")
-         RETURN .F.
-   ENDCASE
+IF Empty(cArqOrigem)
+   RETURN .F.
+ENDIF
 
-   // 3. Define a variavel global do banco com o caminho completo
-   cDATABASEX := cArqOrigem
+// Extrai a extensao do arquivo
+cExt := Lower(hb_FNameExt(cArqOrigem))
 
-   // 4. Se for Firebird, preenche as credenciais via rotina do sistema
-   IF cTIPOSQL == "FIREBIRD"
-      pegcfgbanco()
-   ENDIF
+// 2. Define o Tipo SQL e o nDialect baseado na extensao
+DO CASE
+CASE cExt == ".mdb"
+   cTIPOSQL := "MDB"
+   nDialect := DIALETO_ODBC_MDB   // 103[cite: 21]
+CASE cExt == ".accdb"
+   cTIPOSQL := "ACCDB"
+   nDialect := DIALETO_ODBC_ACCDB   // 104[cite: 21]
+CASE cExt == ".fdb" .OR. cExt == ".gdb"
+   cTIPOSQL := "FIREBIRD"
+   nDialect := DIALETO_ODBC_FIREBIRD  // 105[cite: 21]
+OTHERWISE
+   Alert("Formato nao mapeado para conexao ODBC direta nesta rotina.")
+   RETURN .F.
+ENDCASE
 
-   // 5. Gera a string usando sua funcao central com lPROVIDER = .F. (Forca gerar via 'Driver=')
-   cConnString := geraconn( AllTrim(cDATABASEX), .F. )
+// 3. Define a variavel global do banco com o caminho completo
+cDATABASEX := cArqOrigem
 
-   IF Empty( cConnString )
-      Alert("Nao foi possivel gerar a string de conexao ODBC via geraconn().")
-      RETURN .F.
-   ENDIF
+// 4. Se for Firebird, preenche as credenciais via rotina do sistema
+IF cTIPOSQL == "FIREBIRD"
+   pegcfgbanco()
+ENDIF
 
-   // 6. Instancia a classe passando o nDialect correto e a string de conexao
-   // A classe ira calcular o cAlias automaticamente e configurar o odbc_scanner
-   oServer := DuckDBClass():New( cDATABASEX, "", "", nDialect, "UTF8", , cConnString )
+// 5. Gera a string usando sua funcao central com lPROVIDER = .F. (Forca gerar via 'Driver=')
+cConnString := geraconn(AllTrim(cDATABASEX),.F.)
 
-   IF oServer != NIL .AND. !oServer:NetErr()
-      Alert( "Conexao ODBC estabelecida com sucesso no DuckDB utilizando a nova classe!" )
-      oServer:Close()
-   ELSE
-      Alert( "Erro ao conectar via ODBC na classe DuckDB." )
-   ENDIF
+IF Empty(cConnString)
+   Alert("Nao foi possivel gerar a string de conexao ODBC via geraconn().")
+   RETURN .F.
+ENDIF
+
+// 6. Instancia a classe passando o nDialect correto e a string de conexao
+// A classe ira calcular o cAlias automaticamente e configurar o odbc_scanner
+oServer := DuckDBClass():New(cDATABASEX,"","",nDialect,"UTF8",,cConnString)
+
+IF oServer != NIL .AND. !oServer:NetErr()
+   Alert("Conexao ODBC estabelecida com sucesso no DuckDB utilizando a nova classe!")
+   oServer:Close()
+ELSE
+   Alert("Erro ao conectar via ODBC na classe DuckDB.")
+ENDIF
 
 RETURN .T.
 
@@ -324,220 +346,292 @@ RETURN .T.
 // +    Function duckChamaOptimize()
 // +--------------------------------------------------------------------
 FUNCTION duckChamaOptimize()
-   LOCAL oServer
-   
-   // Tenta conectar. A própria função duckconnect() identifica o dialeto
-   oServer := duckconnect()
-   IF oServer != NIL
-      // Assume DIALETO_DUCKLAKE (2) se o arquivo tiver a extensão, ou passa a propriedade da sua classe se houver
-      IF ".ducklake" $ Lower( AllTrim(cDATABASEX) )
-         DuckOptimize( oServer, 2 )
-      ELSE
-         DuckOptimize( oServer, 1 )
-      ENDIF
-      
-      oServer:Close()
+
+LOCAL oServer
+
+// Tenta conectar. A própria função duckconnect() identifica o dialeto
+oServer := duckconnect()
+IF oServer != NIL
+   // Assume DIALETO_DUCKLAKE (2) se o arquivo tiver a extensão, ou passa a propriedade da sua classe se houver
+   IF ".ducklake" $ Lower(AllTrim(cDATABASEX))
+      DuckOptimize(oServer,2)
+   ELSE
+      DuckOptimize(oServer,1)
    ENDIF
+
+   oServer:Close()
+ENDIF
 RETURN .T.
 
 
 // +--------------------------------------------------------------------
 // +    Interface: Parquet
 // +--------------------------------------------------------------------
-FUNCTION duckChamaLerParquet()
-   LOCAL cArqParquet := win_GetOpenFileName( , "Selecione o arquivo Parquet", HB_CWD(), "Parquet Files", ;
-      {{'Arquivos Parquet','*.parquet'},{'Todos os Arquivos','*.*'}}, 1)
 
-   IF !Empty( cArqParquet )
-      ducklerparquet( cArqParquet, NIL )
-   ENDIF
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function duckChamaLerParquet()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+FUNCTION duckChamaLerParquet()
+
+LOCAL cArqParquet := win_GetOpenFileName(,"Selecione o arquivo Parquet",HB_CWD(),"Parquet Files",;
+ {{'Arquivos Parquet','*.parquet'},{'Todos os Arquivos','*.*'}},1)
+
+IF !Empty(cArqParquet)
+   ducklerparquet(cArqParquet,NIL)
+ENDIF
 RETURN .T.
 
+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function duckChamaGravarParquet()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
 FUNCTION duckChamaGravarParquet()
-   LOCAL cArqDestino
-   duckTABELAS() 
-   IF Empty( cTABELAX )
-      Alert( "Selecione uma tabela primeiro!" )
-      RETURN .F.
-   ENDIF
 
-   cArqDestino := win_GetSaveFileName( , "Salvar Parquet como", HB_CWD(), "Parquet Files", ;
-      {{'Arquivos Parquet','*.parquet'},{'Todos os Arquivos','*.*'}}, 1)
+LOCAL cArqDestino
+duckTABELAS()
+IF Empty(cTABELAX)
+   Alert("Selecione uma tabela primeiro!")
+   RETURN .F.
+ENDIF
 
-   IF !Empty( cArqDestino )
-      IF !( Lower(Right(cArqDestino, 8)) == ".parquet" )
-         cArqDestino += ".parquet"
-      ENDIF
-      duckgravarparquet( cArqDestino, AllTrim(cTABELAX) )
+cArqDestino := win_GetSaveFileName(,"Salvar Parquet como",HB_CWD(),"Parquet Files",;
+ {{'Arquivos Parquet','*.parquet'},{'Todos os Arquivos','*.*'}},1)
+
+IF !Empty(cArqDestino)
+   IF !(Lower(Right(cArqDestino,8)) == ".parquet")
+      cArqDestino += ".parquet"
    ENDIF
+   duckgravarparquet(cArqDestino,AllTrim(cTABELAX))
+ENDIF
 RETURN .T.
 
 
 // +--------------------------------------------------------------------
 // +    Motor: Parquet (com CHECKPOINT)
 // +--------------------------------------------------------------------
-FUNCTION ducklerparquet( cArquivo, cTabela )
-   LOCAL oServer, cSql
-   LOCAL cPrefixo, cTableCmd
 
-   IF Empty( cTabela )
-      hb_FNameSplit( cArquivo, nil, @cTabela, NIL )
-      cTabela := AllTrim( cTabela )
-   ENDIF
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function ducklerparquet()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+FUNCTION ducklerparquet(cArquivo,cTabela)
 
-   oServer := duckconnect()
-   IF oServer == NIL; RETURN .F.; ENDIF
+LOCAL oServer,cSql
+LOCAL cPrefixo,cTableCmd
 
-   // Resolucao do alias
-   cPrefixo := ""
-   IF oServer:dialect == DIALETO_DUCKLAKE .OR. oServer:dialect == DIALETO_SQLITE .OR. ;
-      oServer:dialect == DIALETO_MYSQL    .OR. oServer:dialect == DIALETO_POSTGRES
-      cPrefixo := oServer:cAlias + "."
-   ENDIF
-   cTableCmd := cPrefixo + cTabela
+IF Empty(cTabela)
+   hb_FNameSplit(cArquivo,nil,@cTabela,NIL)
+   cTabela := AllTrim(cTabela)
+ENDIF
 
-   IF oServer:TableExists( cTabela )
-      oServer:Execute( "DROP TABLE " + cTableCmd )
-   ENDIF
+oServer := duckconnect()
+IF oServer == NIL 
+   RETURN .F. 
+ENDIF
 
-   // Importação otimizada do Parquet
-   cSql := "CREATE TABLE " + cTableCmd + " AS SELECT * FROM read_parquet('" + cArquivo + "');"
-   oServer:Execute( cSql )
+// Resolucao do alias
+cPrefixo := ""
+IF oServer:dialect == DIALETO_DUCKLAKE .OR. oServer:dialect == DIALETO_SQLITE .OR. ;
+           oServer:dialect == DIALETO_MYSQL .OR. oServer:dialect == DIALETO_POSTGRES
+   cPrefixo := oServer:cAlias+"."
+ENDIF
+cTableCmd := cPrefixo+cTabela
 
-   oServer:Commit()
-   oServer:Execute( "CHECKPOINT;" ) 
-   oServer:Close()
-   MDT( "Arquivo Parquet importado com sucesso: " + cTabela )
+IF oServer:TableExists(cTabela)
+   oServer:Execute("DROP TABLE "+cTableCmd)
+ENDIF
+
+// Importação otimizada do Parquet
+cSql := "CREATE TABLE "+cTableCmd+" AS SELECT * FROM read_parquet('"+cArquivo+"');"
+oServer:Execute(cSql)
+
+oServer:Commit()
+oServer:Execute("CHECKPOINT;")
+oServer:Close()
+MDT("Arquivo Parquet importado com sucesso: "+cTabela)
 RETURN .T.
 
-FUNCTION duckgravarparquet( cArquivo, cTabela )
-   LOCAL oServer, cSql
-   LOCAL cPrefixo, cTableCmd
-   
-   oServer := duckconnect()
-   IF oServer == NIL; RETURN .F.; ENDIF
 
-   cPrefixo := ""
-   IF oServer:dialect == DIALETO_DUCKLAKE .OR. oServer:dialect == DIALETO_SQLITE .OR. ;
-      oServer:dialect == DIALETO_MYSQL    .OR. oServer:dialect == DIALETO_POSTGRES
-      cPrefixo := oServer:cAlias + "."
-   ENDIF
-   cTableCmd := cPrefixo + cTabela
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function duckgravarparquet()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+FUNCTION duckgravarparquet(cArquivo,cTabela)
 
-   // Exportação colunar nativa
-   cSql := "COPY " + cTableCmd + " TO '" + cArquivo + "' (FORMAT PARQUET);"
-   oServer:Execute( cSql )
+LOCAL oServer,cSql
+LOCAL cPrefixo,cTableCmd
 
-   oServer:Close()
-   MDT( "Tabela exportada para Parquet com sucesso!" )
+oServer := duckconnect()
+IF oServer == NIL 
+   RETURN .F. 
+ENDIF
+
+cPrefixo := ""
+IF oServer:dialect == DIALETO_DUCKLAKE .OR. oServer:dialect == DIALETO_SQLITE .OR. ;
+           oServer:dialect == DIALETO_MYSQL .OR. oServer:dialect == DIALETO_POSTGRES
+   cPrefixo := oServer:cAlias+"."
+ENDIF
+cTableCmd := cPrefixo+cTabela
+
+// Exportação colunar nativa
+cSql := "COPY "+cTableCmd+" TO '"+cArquivo+"' (FORMAT PARQUET);"
+oServer:Execute(cSql)
+
+oServer:Close()
+MDT("Tabela exportada para Parquet com sucesso!")
 RETURN .T.
 
 // +--------------------------------------------------------------------
 // +    Function ducklerjson( cArquivo, cTabela, aStruct )
 // +--------------------------------------------------------------------
-FUNCTION ducklerjson( cArquivo, cTabela, aStruct )
-   LOCAL oServer, cSql, cCampos := "", i
-   LOCAL cPrefixo, cTableCmd
+FUNCTION ducklerjson(cArquivo,cTabela,aStruct)
 
-   IF Empty( cArquivo ); RETURN .F.; ENDIF
+LOCAL oServer,cSql,cCampos := "",i
+LOCAL cPrefixo,cTableCmd
 
-   IF Empty( cTabela )
-      hb_FNameSplit( cArquivo, nil, @cTabela, NIL )
-      cTabela := AllTrim( cTabela )
-   ENDIF
+IF Empty(cArquivo) 
+   RETURN .F. 
+ENDIF
 
-   oServer := duckconnect()
-   IF oServer == NIL; RETURN .F.; ENDIF
+IF Empty(cTabela)
+   hb_FNameSplit(cArquivo,nil,@cTabela,NIL)
+   cTabela := AllTrim(cTabela)
+ENDIF
 
-   cPrefixo := ""
-   IF oServer:dialect == DIALETO_DUCKLAKE .OR. oServer:dialect == DIALETO_SQLITE .OR. ;
-      oServer:dialect == DIALETO_MYSQL    .OR. oServer:dialect == DIALETO_POSTGRES
-      cPrefixo := oServer:cAlias + "."
-   ENDIF
-   cTableCmd := cPrefixo + cTabela
+oServer := duckconnect()
+IF oServer == NIL 
+   RETURN .F. 
+ENDIF
 
-   IF oServer:TableExists( cTabela )
-      oServer:Execute( "DROP TABLE " + cTableCmd )
-   ENDIF
+cPrefixo := ""
+IF oServer:dialect == DIALETO_DUCKLAKE .OR. oServer:dialect == DIALETO_SQLITE .OR. ;
+           oServer:dialect == DIALETO_MYSQL .OR. oServer:dialect == DIALETO_POSTGRES
+   cPrefixo := oServer:cAlias+"."
+ENDIF
+cTableCmd := cPrefixo+cTabela
 
-   IF Empty( aStruct ) 
-      cSql := "CREATE TABLE " + cTableCmd + " AS SELECT * FROM read_json('" + cArquivo + "', auto_detect=true);"
-      oServer:Execute( cSql )
-   ELSE 
-      FOR i := 1 TO Len( aStruct )
-         cCampos += aStruct[i, 1] + " " + duck_map_type_json( aStruct[i, 2], aStruct[i, 3], aStruct[i, 4] )
-         IF i < Len( aStruct )
-            cCampos += ", "
-         ENDIF
-      NEXT
+IF oServer:TableExists(cTabela)
+   oServer:Execute("DROP TABLE "+cTableCmd)
+ENDIF
 
-      cSql := "CREATE TABLE " + cTableCmd + " (" + cCampos + ");"
-      oServer:Execute( cSql )
-      cSql := "COPY " + cTableCmd + " FROM '" + cArquivo + "' (FORMAT JSON);"
-      oServer:Execute( cSql )
-   ENDIF
+IF Empty(aStruct)
+   cSql := "CREATE TABLE "+cTableCmd+" AS SELECT * FROM read_json('"+cArquivo+"', auto_detect=true);"
+   oServer:Execute(cSql)
+ELSE
+   FOR i := 1 TO Len(aStruct)
+      cCampos += aStruct[i,1]+" "+duck_map_type_json(aStruct[i,2],aStruct[i,3],aStruct[i,4])
+      IF i < Len(aStruct)
+         cCampos += ", "
+      ENDIF
+   NEXT
 
-   oServer:Commit()
-   oServer:Close()
-   MDT( "Arquivo JSON importado com sucesso para a tabela: " + cTabela )
+   cSql := "CREATE TABLE "+cTableCmd+" ("+cCampos+");"
+   oServer:Execute(cSql)
+   cSql := "COPY "+cTableCmd+" FROM '"+cArquivo+"' (FORMAT JSON);"
+   oServer:Execute(cSql)
+ENDIF
+
+oServer:Commit()
+oServer:Close()
+MDT("Arquivo JSON importado com sucesso para a tabela: "+cTabela)
 RETURN .T.
 
 // +--------------------------------------------------------------------
 // +    Function duckgravarjson( cArquivo, cTabela )
 // +--------------------------------------------------------------------
-FUNCTION duckgravarjson( cArquivo, cTabela )
-   LOCAL oServer, cSql
-   LOCAL cPrefixo, cTableCmd
-   
-   IF Empty( cTabela ) .OR. Empty( cArquivo ); RETURN .F.; ENDIF
+FUNCTION duckgravarjson(cArquivo,cTabela)
 
-   oServer := duckconnect()
-   IF oServer == NIL; RETURN .F.; ENDIF
+LOCAL oServer,cSql
+LOCAL cPrefixo,cTableCmd
 
-   cPrefixo := ""
-   IF oServer:dialect == DIALETO_DUCKLAKE .OR. oServer:dialect == DIALETO_SQLITE .OR. ;
-      oServer:dialect == DIALETO_MYSQL    .OR. oServer:dialect == DIALETO_POSTGRES
-      cPrefixo := oServer:cAlias + "."
-   ENDIF
-   cTableCmd := cPrefixo + cTabela
+IF Empty(cTabela) .OR. Empty(cArquivo) 
+   RETURN .F. 
+ENDIF
 
-   cSql := "COPY " + cTableCmd + " TO '" + cArquivo + "' (FORMAT JSON, ARRAY true);"
-   
-   IF oServer:Execute( cSql )
-      MDT( "Tabela " + cTabela + " exportada para " + cArquivo + " com sucesso!" )
-   ELSE
-      Alert( "Erro ao exportar arquivo JSON: " + oServer:Error() )
-   ENDIF
+oServer := duckconnect()
+IF oServer == NIL 
+   RETURN .F. 
+ENDIF
 
-   oServer:Close()
+cPrefixo := ""
+IF oServer:dialect == DIALETO_DUCKLAKE .OR. oServer:dialect == DIALETO_SQLITE .OR. ;
+           oServer:dialect == DIALETO_MYSQL .OR. oServer:dialect == DIALETO_POSTGRES
+   cPrefixo := oServer:cAlias+"."
+ENDIF
+cTableCmd := cPrefixo+cTabela
+
+cSql := "COPY "+cTableCmd+" TO '"+cArquivo+"' (FORMAT JSON, ARRAY true);"
+
+IF oServer:Execute(cSql)
+   MDT("Tabela "+cTabela+" exportada para "+cArquivo+" com sucesso!")
+ELSE
+   Alert("Erro ao exportar arquivo JSON: "+oServer:Error())
+ENDIF
+
+oServer:Close()
 RETURN .T.
 
 // +--------------------------------------------------------------------
 // +    Function duckChamaGravarJSON()
 // +--------------------------------------------------------------------
 FUNCTION duckChamaGravarJSON()
-   LOCAL cArqDestino
 
-   // Seleciona tabela atual
-   duckTABELAS() 
-   
-   IF Empty( cTABELAX )
-      Alert( "Selecione uma tabela primeiro!" )
-      RETURN .F.
+LOCAL cArqDestino
+
+// Seleciona tabela atual
+duckTABELAS()
+
+IF Empty(cTABELAX)
+   Alert("Selecione uma tabela primeiro!")
+   RETURN .F.
+ENDIF
+
+cArqDestino := win_GetSaveFileName(,"Salvar arquivo JSON como",HB_CWD(),"JSON Files",;
+ {{'Arquivos JSON','*.json'},{'Todos os Arquivos','*.*'}},1)
+
+IF !Empty(cArqDestino)
+   IF !(Lower(Right(cArqDestino,5)) == ".json")
+      cArqDestino += ".json"
    ENDIF
 
-   cArqDestino := win_GetSaveFileName( , "Salvar arquivo JSON como", HB_CWD(), "JSON Files", ;
-      {{'Arquivos JSON','*.json'},{'Todos os Arquivos','*.*'}}, 1)
-
-   IF !Empty( cArqDestino )
-      IF !( Lower(Right(cArqDestino, 5)) == ".json" )
-         cArqDestino += ".json"
-      ENDIF
-
-      duckgravarjson( cArqDestino, AllTrim(cTABELAX) )
-   ELSE
-      MDT( "Exportacao de JSON cancelada." )
-   ENDIF
+   duckgravarjson(cArqDestino,AllTrim(cTABELAX))
+ELSE
+   MDT("Exportacao de JSON cancelada.")
+ENDIF
 
 RETURN .T.
 
@@ -545,31 +639,32 @@ RETURN .T.
 // +    Function duckChamaGravarCSV()
 // +--------------------------------------------------------------------
 FUNCTION duckChamaGravarCSV()
-   LOCAL cArqDestino
 
-   // Verifica se o usuário selecionou uma tabela previamente no menu (variavel global cTABELAX)
-   duckTABELAS() 
-   
-   IF Empty( cTABELAX )
-      Alert( "Selecione uma tabela primeiro!" )
-      RETURN .F.
+LOCAL cArqDestino
+
+// Verifica se o usuário selecionou uma tabela previamente no menu (variavel global cTABELAX)
+duckTABELAS()
+
+IF Empty(cTABELAX)
+   Alert("Selecione uma tabela primeiro!")
+   RETURN .F.
+ENDIF
+
+// Pede ao usuário o local e nome para salvar o novo CSV
+cArqDestino := win_GetSaveFileName(,"Salvar arquivo CSV como",HB_CWD(),"CSV Files",;
+ {{'Arquivos CSV','*.csv'},{'Todos os Arquivos','*.*'}},1)
+
+IF !Empty(cArqDestino)
+   // Garante que a extensão .csv esteja no nome
+   IF !(Lower(Right(cArqDestino,4)) == ".csv")
+      cArqDestino += ".csv"
    ENDIF
 
-   // Pede ao usuário o local e nome para salvar o novo CSV
-   cArqDestino := win_GetSaveFileName( , "Salvar arquivo CSV como", HB_CWD(), "CSV Files", ;
-      {{'Arquivos CSV','*.csv'},{'Todos os Arquivos','*.*'}}, 1)
-
-   IF !Empty( cArqDestino )
-      // Garante que a extensão .csv esteja no nome
-      IF !( Lower(Right(cArqDestino, 4)) == ".csv" )
-         cArqDestino += ".csv"
-      ENDIF
-
-      // Chama a função de gravação passando o arquivo, a tabela atual e o delimitador padrão
-      duckgravarcsv( cArqDestino, AllTrim(cTABELAX), "|" )
-   ELSE
-      MDT( "Exportacao de CSV cancelada." )
-   ENDIF
+   // Chama a função de gravação passando o arquivo, a tabela atual e o delimitador padrão
+   duckgravarcsv(cArqDestino,AllTrim(cTABELAX),"|")
+ELSE
+   MDT("Exportacao de CSV cancelada.")
+ENDIF
 
 RETURN .T.
 
@@ -578,34 +673,57 @@ RETURN .T.
 // +--------------------------------------------------------------------
 // Função auxiliar (pode ser omitida se você renomear a do CSV para geral)
 // +--------------------------------------------------------------------
-STATIC FUNCTION duck_map_type_json( cTipo, nTam, nDec )
-   SWITCH cTipo
-      CASE "C"; RETURN "VARCHAR"
-      CASE "N"
-         IF nDec > 0; RETURN "DOUBLE"; ELSE; RETURN "INTEGER"; ENDIF
-      CASE "D"; RETURN "DATE"
-      CASE "L"; RETURN "BOOLEAN"
-      CASE "M"; RETURN "VARCHAR"
-   ENDSWITCH
+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Static Function duck_map_type_json()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+STATIC FUNCTION duck_map_type_json(cTipo,nTam,nDec)
+
+SWITCH cTipo
+CASE "C" 
+   RETURN "VARCHAR"
+CASE "N"
+   IF nDec > 0 
+      RETURN "DOUBLE" 
+   ELSE 
+      RETURN "INTEGER" 
+   ENDIF
+CASE "D" 
+   RETURN "DATE"
+CASE "L" 
+   RETURN "BOOLEAN"
+CASE "M" 
+   RETURN "VARCHAR"
+ENDSWITCH
 RETURN "VARCHAR"
 
 // +--------------------------------------------------------------------
 // +    Function duckChamaLerCSV()
 // +--------------------------------------------------------------------
 FUNCTION duckChamaLerCSV()
-   LOCAL cArqCSV
 
-   // Abre a caixa de diálogo do Windows para o usuário procurar o CSV
-   cArqCSV := win_GetOpenFileName( , "Selecione o arquivo CSV", HB_CWD(), "CSV Files", ;
-      {{'Arquivos CSV','*.csv'},{'Todos os Arquivos','*.*'}}, 1)
+LOCAL cArqCSV
 
-   // Se o usuário selecionou um arquivo e não cancelou
-   IF !Empty( cArqCSV )
-      // Passa apenas o arquivo. Tabela, delimitador e estrutura ficam NIL para o DuckDB resolver
-      ducklercsv( cArqCSV, NIL, NIL, NIL )
-   ELSE
-      MDT( "Importacao de CSV cancelada." )
-   ENDIF
+// Abre a caixa de diálogo do Windows para o usuário procurar o CSV
+cArqCSV := win_GetOpenFileName(,"Selecione o arquivo CSV",HB_CWD(),"CSV Files",;
+ {{'Arquivos CSV','*.csv'},{'Todos os Arquivos','*.*'}},1)
+
+// Se o usuário selecionou um arquivo e não cancelou
+IF !Empty(cArqCSV)
+   // Passa apenas o arquivo. Tabela, delimitador e estrutura ficam NIL para o DuckDB resolver
+   ducklercsv(cArqCSV,NIL,NIL,NIL)
+ELSE
+   MDT("Importacao de CSV cancelada.")
+ENDIF
 
 RETURN .T.
 
@@ -614,157 +732,195 @@ RETURN .T.
 // +    Function duckcreate()
 // +--------------------------------------------------------------------
 FUNCTION duckcreate()
-   LOCAL cARQORI, oServer
 
-   // Filtro para os formatos que podem ser "criados" como bancos nativos
-   cARQORI := win_GetsaveFileName(, "Criar Banco de Dados", HB_CWD(), "DuckDB", ;
-      { {'DuckDB Database','*.duckdb'},;
-        {'DuckLake Database','*.ducklake'},;
-        {'All Files','*.*'} }, 1)  
+LOCAL cARQORI,oServer
 
-   IF !Empty(cARQORI)
-      cDATABASEX := PADR(cARQORI, 30)
-      
-      // Abre (ou cria) a conexão usando a rotina padronizada
-      oServer := duckconnect()
-      
-      IF oServer != NIL .AND. !oServer:NetErr()
-         MDT("Base de dados criada/aberta com sucesso!")
-         oServer:Close()
-      ELSE
-         Alert("Erro ao criar base de dados.")
-      ENDIF
+// Filtro para os formatos que podem ser "criados" como bancos nativos
+cARQORI := win_GetsaveFileName(,"Criar Banco de Dados",HB_CWD(),"DuckDB",;
+ {{'DuckDB Database','*.duckdb'},;
+ {'DuckLake Database','*.ducklake'},;
+ {'All Files','*.*'}},1)
+
+IF !Empty(cARQORI)
+   cDATABASEX := PADR(cARQORI,30)
+
+   // Abre (ou cria) a conexão usando a rotina padronizada
+   oServer := duckconnect()
+
+   IF oServer != NIL .AND. !oServer:NetErr()
+      MDT("Base de dados criada/aberta com sucesso!")
+      oServer:Close()
+   ELSE
+      Alert("Erro ao criar base de dados.")
    ENDIF
+ENDIF
 
 RETURN .T.
 
-FUNCTION duckgravarcsv( cArquivo, cTabela, cDelim )
-   LOCAL oServer, cSql
-   LOCAL cPrefixo, cTableCmd // <-- 1. Declarar variáveis
-   
-   IF Empty( cTabela ) .OR. Empty( cArquivo )
-      RETURN .F.
-   ENDIF
 
-   IF Empty( cDelim )
-      cDelim := "|" 
-   ENDIF
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function duckgravarcsv()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+FUNCTION duckgravarcsv(cArquivo,cTabela,cDelim)
 
-   oServer := duckconnect()
-   IF oServer == NIL
-      RETURN .F.
-   ENDIF
+LOCAL oServer,cSql
+LOCAL cPrefixo,cTableCmd  // <-- 1. Declarar variáveis
 
-   // <-- 2. INSERIR O BLOCO DE RESOLUÇÃO DO ALIAS -->
-   cPrefixo := ""
-   IF oServer:dialect == DIALETO_DUCKLAKE .OR. oServer:dialect == DIALETO_SQLITE .OR. ;
-      oServer:dialect == DIALETO_MYSQL    .OR. oServer:dialect == DIALETO_POSTGRES
-      cPrefixo := oServer:cAlias + "."
-   ENDIF
-   cTableCmd := cPrefixo + cTabela
-   // <---------------------------------------------->
+IF Empty(cTabela) .OR. Empty(cArquivo)
+   RETURN .F.
+ENDIF
 
-   // 3. Alterar a string SQL para usar a variável cTableCmd
-   cSql := "COPY " + cTableCmd + " TO '" + cArquivo + "' (HEADER, DELIMITER '" + cDelim + "');"
-   
-   IF oServer:Execute( cSql )
-      MDT( "Tabela " + cTabela + " exportada para " + cArquivo )
-   ELSE
-      Alert( "Erro ao exportar arquivo CSV." )
-   ENDIF
+IF Empty(cDelim)
+   cDelim := "|"
+ENDIF
 
-   oServer:Close()
+oServer := duckconnect()
+IF oServer == NIL
+   RETURN .F.
+ENDIF
+
+// <-- 2. INSERIR O BLOCO DE RESOLUÇÃO DO ALIAS -->
+cPrefixo := ""
+IF oServer:dialect == DIALETO_DUCKLAKE .OR. oServer:dialect == DIALETO_SQLITE .OR. ;
+           oServer:dialect == DIALETO_MYSQL .OR. oServer:dialect == DIALETO_POSTGRES
+   cPrefixo := oServer:cAlias+"."
+ENDIF
+cTableCmd := cPrefixo+cTabela
+// <---------------------------------------------->
+
+// 3. Alterar a string SQL para usar a variável cTableCmd
+cSql := "COPY "+cTableCmd+" TO '"+cArquivo+"' (HEADER, DELIMITER '"+cDelim+"');"
+
+IF oServer:Execute(cSql)
+   MDT("Tabela "+cTabela+" exportada para "+cArquivo)
+ELSE
+   Alert("Erro ao exportar arquivo CSV.")
+ENDIF
+
+oServer:Close()
 RETURN .T.
 
 
 // +--------------------------------------------------------------------
 // +    Function ducklercsv( cArquivo, cTabela, cDelim, aStruct )
 // +--------------------------------------------------------------------
-FUNCTION ducklercsv( cArquivo, cTabela, cDelim, aStruct )
-   LOCAL oServer, cSql, cCampos := "", i
-   LOCAL cPrefixo, cTableCmd
+FUNCTION ducklercsv(cArquivo,cTabela,cDelim,aStruct)
 
-   // 1. Validar Arquivo
-   IF Empty( cArquivo )
-      RETURN .F.
+LOCAL oServer,cSql,cCampos := "",i
+LOCAL cPrefixo,cTableCmd
+
+// 1. Validar Arquivo
+IF Empty(cArquivo)
+   RETURN .F.
+ENDIF
+
+// 2. Definir Nome da Tabela se não passado
+IF Empty(cTabela)
+   hb_FNameSplit(cArquivo,nil,@cTabela,NIL)
+   cTabela := AllTrim(cTabela)
+ENDIF
+
+oServer := duckconnect()
+IF oServer == NIL
+   RETURN .F.
+ENDIF
+
+// 3. Define o prefixo caso seja um banco anexado (ATTACH) para evitar criacao na memoria RAM
+cPrefixo := ""
+IF oServer:dialect == DIALETO_DUCKLAKE .OR. oServer:dialect == DIALETO_SQLITE .OR. ;
+           oServer:dialect == DIALETO_MYSQL .OR. oServer:dialect == DIALETO_POSTGRES
+   cPrefixo := oServer:cAlias+"."
+ENDIF
+
+cTableCmd := cPrefixo+cTabela
+
+// 4. Derruba a tabela se ela já existir para recriar
+IF oServer:TableExists(cTabela)
+   oServer:Execute("DROP TABLE "+cTableCmd)
+ENDIF
+
+// 5. Tratar Estrutura e Delimitador
+IF Empty(aStruct)
+   // MODO AUTO: O DuckDB infere as colunas automaticamente[cite: 30]
+   cSql := "CREATE TABLE "+cTableCmd+" AS SELECT * FROM read_csv('"+cArquivo+"', auto_detect=true"
+
+   IF !Empty(cDelim)
+      cSql += ", delim='"+cDelim+"'"
    ENDIF
 
-   // 2. Definir Nome da Tabela se não passado
-   IF Empty( cTabela )
-      hb_FNameSplit( cArquivo, nil, @cTabela, NIL )
-      cTabela := AllTrim( cTabela )
-   ENDIF
+   cSql += ");"
+   oServer:Execute(cSql)
 
-   oServer := duckconnect()
-   IF oServer == NIL
-      RETURN .F.
-   ENDIF
-
-   // 3. Define o prefixo caso seja um banco anexado (ATTACH) para evitar criacao na memoria RAM
-   cPrefixo := ""
-   IF oServer:dialect == DIALETO_DUCKLAKE .OR. oServer:dialect == DIALETO_SQLITE .OR. ;
-      oServer:dialect == DIALETO_MYSQL    .OR. oServer:dialect == DIALETO_POSTGRES
-      cPrefixo := oServer:cAlias + "."
-   ENDIF
-   
-   cTableCmd := cPrefixo + cTabela
-
-   // 4. Derruba a tabela se ela já existir para recriar
-   IF oServer:TableExists( cTabela )
-      oServer:Execute( "DROP TABLE " + cTableCmd ) 
-   ENDIF
-
-   // 5. Tratar Estrutura e Delimitador
-   IF Empty( aStruct ) 
-      // MODO AUTO: O DuckDB infere as colunas automaticamente[cite: 30]
-      cSql := "CREATE TABLE " + cTableCmd + " AS SELECT * FROM read_csv('" + cArquivo + "', auto_detect=true"
-      
-      IF !Empty( cDelim )
-         cSql += ", delim='" + cDelim + "'"
+ELSE
+   // MODO ESTRUTURA: Converte array do Clipper/Harbour para SQL[cite: 30]
+   FOR i := 1 TO Len(aStruct)
+      cCampos += aStruct[i,1]+" "+duck_map_type_csv(aStruct[i,2],aStruct[i,3],aStruct[i,4])
+      IF i < Len(aStruct)
+         cCampos += ", "
       ENDIF
-      
-      cSql += ");"
-      oServer:Execute( cSql )
-      
-   ELSE 
-      // MODO ESTRUTURA: Converte array do Clipper/Harbour para SQL[cite: 30]
-      FOR i := 1 TO Len( aStruct )
-         cCampos += aStruct[i, 1] + " " + duck_map_type_csv( aStruct[i, 2], aStruct[i, 3], aStruct[i, 4] )
-         IF i < Len( aStruct )
-            cCampos += ", "
-         ENDIF
-      NEXT
+   NEXT
 
-      // Cria a tabela garantindo o prefixo correto
-      cSql := "CREATE TABLE " + cTableCmd + " (" + cCampos + ");"
-      oServer:Execute( cSql )
+   // Cria a tabela garantindo o prefixo correto
+   cSql := "CREATE TABLE "+cTableCmd+" ("+cCampos+");"
+   oServer:Execute(cSql)
 
-      // Importa usando COPY garantindo o prefixo correto
-      cSql := "COPY " + cTableCmd + " FROM '" + cArquivo + "' (HEADER true"
-      IF !Empty( cDelim )
-         cSql += ", DELIMITER '" + cDelim + "'"
-      ENDIF
-      cSql += ");"
-      
-      oServer:Execute( cSql )
+   // Importa usando COPY garantindo o prefixo correto
+   cSql := "COPY "+cTableCmd+" FROM '"+cArquivo+"' (HEADER true"
+   IF !Empty(cDelim)
+      cSql += ", DELIMITER '"+cDelim+"'"
    ENDIF
+   cSql += ");"
 
-   oServer:Commit()
-   oServer:Close()
-   
-   MDT( "Arquivo CSV importado com sucesso para a tabela: " + cTabela )
+   oServer:Execute(cSql)
+ENDIF
+
+oServer:Commit()
+oServer:Close()
+
+MDT("Arquivo CSV importado com sucesso para a tabela: "+cTabela)
 RETURN .T.
 
 // Função auxiliar para mapear tipos do Harbour para SQL compatível com DuckDB
-STATIC FUNCTION duck_map_type_csv( cTipo, nTam, nDec )
-   SWITCH cTipo
-      CASE "C"; RETURN "VARCHAR"
-      CASE "N"
-         IF nDec > 0; RETURN "DOUBLE"; ELSE; RETURN "INTEGER"; ENDIF
-      CASE "D"; RETURN "DATE"
-      CASE "L"; RETURN "BOOLEAN"
-      CASE "M"; RETURN "VARCHAR"
-   ENDSWITCH
+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Static Function duck_map_type_csv()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+STATIC FUNCTION duck_map_type_csv(cTipo,nTam,nDec)
+
+SWITCH cTipo
+CASE "C" 
+   RETURN "VARCHAR"
+CASE "N"
+   IF nDec > 0 
+      RETURN "DOUBLE" 
+   ELSE 
+      RETURN "INTEGER" 
+   ENDIF
+CASE "D" 
+   RETURN "DATE"
+CASE "L" 
+   RETURN "BOOLEAN"
+CASE "M" 
+   RETURN "VARCHAR"
+ENDSWITCH
 RETURN "VARCHAR"
 
 
@@ -773,22 +929,23 @@ RETURN "VARCHAR"
 // +    Function duckverinfo()
 // +--------------------------------------------------------------------
 FUNCTION duckverinfo()
-   LOCAL oServer
-   LOCAL cVersionInfo := ""
 
-   oServer := duckconnect()
-   IF oServer != NIL
-      cVersionInfo := oServer:GetServerInfo()
-      
-      IF Empty( cVersionInfo )
-         cVersionInfo := "Nao foi possivel ler os detalhes da versao."
-      ENDIF
+LOCAL oServer
+LOCAL cVersionInfo := ""
 
-      MDT( "Conectado com Sucesso!#Versao: " + AllTrim( cVersionInfo ) )
-      oServer:Close()
-   ELSE
-      MDT( "Falha ao obter informacoes do servidor." )
+oServer := duckconnect()
+IF oServer != NIL
+   cVersionInfo := oServer:GetServerInfo()
+
+   IF Empty(cVersionInfo)
+      cVersionInfo := "Nao foi possivel ler os detalhes da versao."
    ENDIF
+
+   MDT("Conectado com Sucesso!#Versao: "+AllTrim(cVersionInfo))
+   oServer:Close()
+ELSE
+   MDT("Falha ao obter informacoes do servidor.")
+ENDIF
 
 RETURN .T.
 
@@ -796,169 +953,184 @@ RETURN .T.
 // +--------------------------------------------------------------------
 // +    Function duckTABELAS()
 // +--------------------------------------------------------------------
-FUNCTION duckTABELAS( lNATIVE )
-   LOCAL oServer, aTABELAS := {}
-   LOCAL cSchemaBusca
+FUNCTION duckTABELAS(lNATIVE)
 
-   IF VALTYPE( lNATIVE ) <> "L"
-      lNATIVE := .T.
-   ENDIF
+LOCAL oServer,aTABELAS := {}
+LOCAL cSchemaBusca
 
-   IF lNATIVE
-      oServer := duckconnect()
-      IF oServer != NIL
-         
-         // NOVO: Define o schema de busca baseado no dialeto. 
-         // Se for um banco anexado, busca no alias. Senão, usa 'main' (ou cUSERX)
-         IF oServer:dialect == DIALETO_DUCKLAKE .OR. oServer:dialect == DIALETO_SQLITE .OR. ;
-            oServer:dialect == DIALETO_MYSQL    .OR. oServer:dialect == DIALETO_POSTGRES
-            
-            cSchemaBusca := oServer:cAlias
-         ELSE
-            cSchemaBusca := iif( Empty( cUSERX ), "main", Lower( AllTrim( cUSERX ) ) )
-         ENDIF
-         
-         // Passa o schema já validado
-         aTABELAS := oServer:ListTables( cSchemaBusca )
-         
-         IF !Empty( aTABELAS )
-            mdbtabela( aTABELAS ) 
-         ELSE
-            MDT( "Nenhuma tabela encontrada no schema (" + cSchemaBusca + ")." )
-         ENDIF
-         
-         oServer:Close()
+IF VALTYPE(lNATIVE) <> "L"
+   lNATIVE := .T.
+ENDIF
+
+IF lNATIVE
+   oServer := duckconnect()
+   IF oServer != NIL
+
+      // NOVO: Define o schema de busca baseado no dialeto.
+      // Se for um banco anexado, busca no alias. Senão, usa 'main' (ou cUSERX)
+      IF oServer:dialect == DIALETO_DUCKLAKE .OR. oServer:dialect == DIALETO_SQLITE .OR. ;
+                 oServer:dialect == DIALETO_MYSQL .OR. oServer:dialect == DIALETO_POSTGRES
+
+         cSchemaBusca := oServer:cAlias
+      ELSE
+         cSchemaBusca := iif(Empty(cUSERX),"main",Lower(AllTrim(cUSERX)))
       ENDIF
-   ELSE
-      mdbtabela( cDATABASEX )
+
+      // Passa o schema já validado
+      aTABELAS := oServer:ListTables(cSchemaBusca)
+
+      IF !Empty(aTABELAS)
+         mdbtabela(aTABELAS)
+      ELSE
+         MDT("Nenhuma tabela encontrada no schema ("+cSchemaBusca+").")
+      ENDIF
+
+      oServer:Close()
    ENDIF
-   
+ELSE
+   mdbtabela(cDATABASEX)
+ENDIF
+
 RETURN .T.
 
 // +--------------------------------------------------------------------
 // +    Function duck_impdbf()
 // +--------------------------------------------------------------------
-FUNCTION duckimpdbf( cARQORI, lincdados )
-   LOCAL oServer
-   LOCAL aINDICES := {}
-   LOCAL msql, cTABLE
-   LOCAL i, j, nCont, aSTRU, nLASTREC, aRETUMETA, cSqlFields, cSqlIndexes, aMETADBF
-   LOCAL cPrefixo, cTableCmd
 
-   cTABLE := Space( 30 )
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function duckimpdbf()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+FUNCTION duckimpdbf(cARQORI,lincdados)
 
-   IF Empty( cARQORI )
-      RETURN .F.
-   ENDIF
+LOCAL oServer
+LOCAL aINDICES := {}
+LOCAL msql,cTABLE
+LOCAL i,j,nCont,aSTRU,nLASTREC,aRETUMETA,cSqlFields,cSqlIndexes,aMETADBF
+LOCAL cPrefixo,cTableCmd
 
-   hb_FNameSplit( cARQORI, nil, @cTable, NIL )
-   cTABLE := AllTrim( cTABLE )
+cTABLE := Space(30)
 
-   dbUseArea( .T., cORIDRIVER, cARQORI, cTABLE, .T., .T. )
-   aSTRU    := dbStruct()
-   nLASTREC := RecCount()
-   zei_fort( nLASTREC,,, 0 )
+IF Empty(cARQORI)
+   RETURN .F.
+ENDIF
 
-   IF IsFunction("GeraINDICES")
-      aINDICES := GeraINDICES()
-   ENDIF
+hb_FNameSplit(cARQORI,nil,@cTable,NIL)
+cTABLE := AllTrim(cTABLE)
 
-   oServer := duckconnect()
-   IF oServer == NIL
-      dbCloseArea()
-      RETURN .F.
-   ENDIF
+dbUseArea(.T.,cORIDRIVER,cARQORI,cTABLE,.T.,.T.)
+aSTRU    := dbStruct()
+nLASTREC := RecCount()
+zei_fort(nLASTREC,,,0)
 
-   // Define o prefixo caso seja um banco anexado (ATTACH) para evitar criacao na memoria RAM
-   cPrefixo := ""
-   DO CASE
-      CASE oServer:dialect == DIALETO_DUCKLAKE .OR. ;
-           oServer:dialect == DIALETO_SQLITE   .OR. ;
-           oServer:dialect == DIALETO_MYSQL    .OR. ;
-           oServer:dialect == DIALETO_POSTGRES
-           
-         cPrefixo := oServer:cAlias + "."
-   ENDCASE
-   
-   cTableCmd := cPrefixo + cTABLE
+IF IsFunction("GeraINDICES")
+   aINDICES := GeraINDICES()
+ENDIF
 
-   // Criação opcional de tabelas de metadados padrão se a função existir no seu sistema
-   IF IsFunction("GeraSQLMetadata")
-      aRETUMETA := GeraSQLMetadata()
-      cSqlFields  := aRETUMETA[1] 
-      cSqlIndexes := aRETUMETA[2]
-      
-      IF !Empty( cSqlFields )
-         oServer:Execute( cSqlFields )
-      ENDIF   
-      IF !Empty( cSqlIndexes )
-         oServer:Execute( cSqlIndexes )
-      ENDIF 
-   ENDIF
-
-   // Se a tabela já existir, remove para recriar (TableExists le os metadados, DROP apaga no DB correto)
-   IF oServer:TableExists( cTABLE )
-      IF !MDG("Excluir tabela existente " + cTABLE)
-         dbCloseArea()
-         oServer:Close()
-         RETURN .F.
-      ELSE
-         oServer:Execute( "DROP TABLE " + cTableCmd )
-      ENDIF  
-   ENDIF
-
-   // Gera a estrutura DDL adaptada para o DuckDB usando o nome composto
-   IF IsFunction("SqliteCreateTable")
-      msql := SqliteCreateTable( cTableCmd, aSTRU, "DUCKDB" )
-   ELSE
-      msql := "CREATE TABLE " + cTableCmd + " (id INTEGER);"
-   ENDIF
-   
-   HB_memowrit("create_duckdb_" + cTABLE + ".SQL", msql, .F.)
-
-   // Executa o DDL de criação
-   oServer:Execute( msql )
-
-   // Criação dos índices coletados
-   FOR i := 1 TO Len( aINDICES )
-      TRY
-         oServer:Execute( aINDICES[i,1] )
-      CATCH
-         MDT("Erro ao criar indice: " + aINDICES[i,1])   
-      END
-   NEXT i
-
-   // Importação dos dados
-   nCont := 0
-   dbSelectArea( cTABLE )
-   dbGoTop()
-
-   IF lincdados
-      WHILE !Eof()
-         zei_fort( nLASTREC,,, 1 )
-         
-         // Inclusao dos dados diretamente na tabela anexada (disco)
-         msql := "INSERT INTO " + cTableCmd + " VALUES ("
-         FOR i := 1 TO Len( aSTRU )
-            IF i > 1
-               msql += ", "
-            ENDIF
-            msql += DataToSql( & ( aSTRU[i, DBS_NAME] ) )
-         NEXT i
-         msql += ")"
-         
-         oServer:Execute( msql )
-         
-         nCont++
-         dbSkip()
-      ENDDO
-   ENDIF
-
-   oServer:Commit()
+oServer := duckconnect()
+IF oServer == NIL
    dbCloseArea()
-   oServer:Close()
+   RETURN .F.
+ENDIF
 
-   MDT( "Importacao para DuckDB concluida com sucesso!" )
+// Define o prefixo caso seja um banco anexado (ATTACH) para evitar criacao na memoria RAM
+cPrefixo := ""
+DO CASE
+CASE oServer:dialect == DIALETO_DUCKLAKE .OR. ;
+    oServer:dialect == DIALETO_SQLITE .OR. ;
+    oServer:dialect == DIALETO_MYSQL .OR. ;
+    oServer:dialect == DIALETO_POSTGRES
+
+   cPrefixo := oServer:cAlias+"."
+ENDCASE
+
+cTableCmd := cPrefixo+cTABLE
+
+// Criação opcional de tabelas de metadados padrão se a função existir no seu sistema
+IF IsFunction("GeraSQLMetadata")
+   aRETUMETA   := GeraSQLMetadata()
+   cSqlFields  := aRETUMETA[1]
+   cSqlIndexes := aRETUMETA[2]
+
+   IF !Empty(cSqlFields)
+      oServer:Execute(cSqlFields)
+   ENDIF
+   IF !Empty(cSqlIndexes)
+      oServer:Execute(cSqlIndexes)
+   ENDIF
+ENDIF
+
+// Se a tabela já existir, remove para recriar (TableExists le os metadados, DROP apaga no DB correto)
+IF oServer:TableExists(cTABLE)
+   IF !MDG("Excluir tabela existente "+cTABLE)
+      dbCloseArea()
+      oServer:Close()
+      RETURN .F.
+   ELSE
+      oServer:Execute("DROP TABLE "+cTableCmd)
+   ENDIF
+ENDIF
+
+// Gera a estrutura DDL adaptada para o DuckDB usando o nome composto
+IF IsFunction("SqliteCreateTable")
+   msql := SqliteCreateTable(cTableCmd,aSTRU,"DUCKDB")
+ELSE
+   msql := "CREATE TABLE "+cTableCmd+" (id INTEGER);"
+ENDIF
+
+HB_memowrit("create_duckdb_"+cTABLE+".SQL",msql,.F.)
+
+// Executa o DDL de criação
+oServer:Execute(msql)
+
+// Criação dos índices coletados
+FOR i := 1 TO Len(aINDICES)
+   TRY
+      oServer:Execute(aINDICES[i,1])
+   CATCH
+      MDT("Erro ao criar indice: "+aINDICES[i,1])
+   END
+NEXT i
+
+// Importação dos dados
+nCont := 0
+dbSelectArea(cTABLE)
+dbGoTop()
+
+IF lincdados
+   WHILE !Eof()
+      zei_fort(nLASTREC,,,1)
+
+      // Inclusao dos dados diretamente na tabela anexada (disco)
+      msql := "INSERT INTO "+cTableCmd+" VALUES ("
+      FOR i := 1 TO Len(aSTRU)
+         IF i > 1
+            msql += ", "
+         ENDIF
+         msql += DataToSql(&(aSTRU[i,DBS_NAME]))
+      NEXT i
+      msql += ")"
+
+      oServer:Execute(msql)
+
+      nCont ++
+      dbSkip()
+   ENDDO
+ENDIF
+
+oServer:Commit()
+dbCloseArea()
+oServer:Close()
+
+MDT("Importacao para DuckDB concluida com sucesso!")
 RETURN .T.
 
 // +--------------------------------------------------------------------
@@ -966,82 +1138,83 @@ RETURN .T.
 // +    Gerencia a conexao unificada com o DuckDB baseada em dialetos
 // +--------------------------------------------------------------------
 
-STATIC FUNCTION duckconnect( nDialect, cAlias )
-   LOCAL oServer := NIL
-   LOCAL oErr
-   LOCAL cDirBase, cDataPath, cExt, cDir, cName
-   LOCAL lDeuErro := .F.
+STATIC FUNCTION duckconnect(nDialect,cAlias)
 
-   // 1. Auto-deteccao do dialeto caso nao seja informado
-   IF Empty( nDialect )
-      hb_FNameSplit( AllTrim(cDATABASEX), @cDir, @cName, @cExt )
-      cExt := Lower( cExt )
-      
-      DO CASE
-         CASE cExt == ".duckdb" .OR. cExt == ".db"
-            nDialect := DIALETO_DUCKDB     // 1
-         CASE cExt == ".ducklake"
-            nDialect := DIALETO_DUCKLAKE   // 2
-         CASE cExt == ".sqlite" .OR. cExt == ".sqlite3"
-            nDialect := DIALETO_SQLITE     // 3
-         CASE cExt == ".csv"
-            nDialect := DIALETO_CSV        // 4
-         CASE cExt == ".json"
-            nDialect := DIALETO_JSON       // 5
-         CASE cExt == ".parquet"
-            nDialect := DIALETO_PARQUET    // 6
-         CASE cExt == ".mdb"
-            nDialect := DIALETO_ODBC_MDB   // 103
-         CASE cExt == ".accdb"
-            nDialect := DIALETO_ODBC_ACCDB // 104
-         CASE cExt == ".fdb" .OR. cExt == ".gdb"
-            nDialect := DIALETO_ODBC_FIREBIRD // 105
-         OTHERWISE
-            nDialect := DIALETO_DUCKDB     // Padrao Nativo
-      ENDCASE
+LOCAL oServer  := NIL
+LOCAL oErr
+LOCAL cDirBase,cDataPath,cExt,cDir,cName
+LOCAL lDeuErro := .F.
+
+// 1. Auto-deteccao do dialeto caso nao seja informado
+IF Empty(nDialect)
+   hb_FNameSplit(AllTrim(cDATABASEX),@cDir,@cName,@cExt)
+   cExt := Lower(cExt)
+
+   DO CASE
+   CASE cExt == ".duckdb" .OR. cExt == ".db"
+      nDialect := DIALETO_DUCKDB  // 1
+   CASE cExt == ".ducklake"
+      nDialect := DIALETO_DUCKLAKE  // 2
+   CASE cExt == ".sqlite" .OR. cExt == ".sqlite3"
+      nDialect := DIALETO_SQLITE  // 3
+   CASE cExt == ".csv"
+      nDialect := DIALETO_CSV   // 4
+   CASE cExt == ".json"
+      nDialect := DIALETO_JSON  // 5
+   CASE cExt == ".parquet"
+      nDialect := DIALETO_PARQUET   // 6
+   CASE cExt == ".mdb"
+      nDialect := DIALETO_ODBC_MDB  // 103
+   CASE cExt == ".accdb"
+      nDialect := DIALETO_ODBC_ACCDB  // 104
+   CASE cExt == ".fdb" .OR. cExt == ".gdb"
+      nDialect := DIALETO_ODBC_FIREBIRD   // 105
+   OTHERWISE
+      nDialect := DIALETO_DUCKDB  // Padrao Nativo
+   ENDCASE
+ENDIF
+
+// 2. Extração do diretório e criação da subpasta 'metadados' para o DuckLake
+IF nDialect == DIALETO_DUCKLAKE
+   cDirBase := hb_FNameDir(AllTrim(cDATABASEX))
+
+   IF Empty(cDirBase)
+      cDirBase := hb_cwd()
    ENDIF
 
-   // 2. Extração do diretório e criação da subpasta 'metadados' para o DuckLake
-   IF nDialect == DIALETO_DUCKLAKE
-      cDirBase := hb_FNameDir( AllTrim(cDATABASEX) )
-      
-      IF Empty( cDirBase )
-         cDirBase := hb_cwd()
-      ENDIF
-      
-      cDataPath := cDirBase + "metadados"
-      
-      IF !hb_DirExists( cDataPath )
-         IF hb_DirBuild( cDataPath ) != 0 
-            Alert( "Nao foi possivel criar a pasta de dados em:;" + cDataPath )
-            RETURN NIL
-         ENDIF
+   cDataPath := cDirBase+"metadados"
+
+   IF !hb_DirExists(cDataPath)
+      IF hb_DirBuild(cDataPath) != 0
+         Alert("Nao foi possivel criar a pasta de dados em:;"+cDataPath)
+         RETURN NIL
       ENDIF
    ENDIF
+ENDIF
 
-   // 3. Tratamento de Conexao Segura (Try/Catch)
-   TRY
-      // Passamos cAlias vazio para que a classe assuma a responsabilidade de formata-lo
-      oServer := DuckDBClass():New( AllTrim(cDATABASEX), "", "", nDialect, "UTF8", cAlias )
+// 3. Tratamento de Conexao Segura (Try/Catch)
+TRY
+   // Passamos cAlias vazio para que a classe assuma a responsabilidade de formata-lo
+   oServer := DuckDBClass():New(AllTrim(cDATABASEX),"","",nDialect,"UTF8",cAlias)
 
-      IF oServer:NetErr()
-         lDeuErro := .T.
-      ELSE
-         oServer:StartTransaction()
-      ENDIF
-
-   CATCH oErr
+   IF oServer:NetErr()
       lDeuErro := .T.
-   END
-
-   IF lDeuErro
-      IF oServer != NIL .AND. oServer:NetErr()
-         Alert( "Falha na conexao: " + oServer:Error() )
-      ELSE
-         Alert( "Erro fatal ao conectar ou criar o banco de dados! Verifique o diretorio e permissoes." )
-      ENDIF
-      RETURN NIL
+   ELSE
+      oServer:StartTransaction()
    ENDIF
+
+CATCH oErr
+   lDeuErro := .T.
+END
+
+IF lDeuErro
+   IF oServer != NIL .AND. oServer:NetErr()
+      Alert("Falha na conexao: "+oServer:Error())
+   ELSE
+      Alert("Erro fatal ao conectar ou criar o banco de dados! Verifique o diretorio e permissoes.")
+   ENDIF
+   RETURN NIL
+ENDIF
 
 RETURN oServer
 
@@ -1049,152 +1222,169 @@ RETURN oServer
 // +    Function duckexpdbf()
 // +    Exporta dados de uma tabela do DuckDB para DBF (Nativo ou em Memória)
 // +--------------------------------------------------------------------
-FUNCTION duckexpdbf( nTipo )
-   LOCAL oServer, oQuery, oRow
-   LOCAL aSTRU := {}
-   LOCAL aVALOR
-   LOCAL i, nFIM, cDESTINO, eVALOR, nLASTREC
-   LOCAL aStructInfo, cQuerySql, cAliasDb, cDir, cName, cExt
+FUNCTION duckexpdbf(nTipo)
 
-   // 1. Conecta utilizando o mecanismo unificado de dialetos
-   oServer := duckconnect()
-   IF oServer == NIL
-      RETURN .F.
-   ENDIF
+LOCAL oServer,oQuery,oRow
+LOCAL aSTRU       := {}
+LOCAL aVALOR
+LOCAL i,nFIM,cDESTINO,eVALOR,nLASTREC
+LOCAL aStructInfo,cQuerySql,cAliasDb,cDir,cName,cExt
 
-   // 2. Seleciona a tabela ativa
-   duckTABELAS() 
+// 1. Conecta utilizando o mecanismo unificado de dialetos
+oServer := duckconnect()
+IF oServer == NIL
+   RETURN .F.
+ENDIF
 
-   IF Empty( cTABELAX )
-      Alert( "Nenhuma tabela selecionada!" )
-      oServer:Close()
-      RETURN .f.
-   ENDIF
+// 2. Seleciona a tabela ativa
+duckTABELAS()
 
-   // 3. Extrai informações do arquivo para compor o prefixo de alias quando necessário
-   hb_FNameSplit( AllTrim(cDATABASEX), @cDir, @cName, @cExt )
+IF Empty(cTABELAX)
+   Alert("Nenhuma tabela selecionada!")
+   oServer:Close()
+   RETURN .f.
+ENDIF
+
+// 3. Extrai informações do arquivo para compor o prefixo de alias quando necessário
+hb_FNameSplit(AllTrim(cDATABASEX),@cDir,@cName,@cExt)
 
 
-   // Recupera o alias diretamente da classe de conexao
-   cAliasDb := oServer:cAlias
+// Recupera o alias diretamente da classe de conexao
+cAliasDb := oServer:cAlias
 
-   // Montagem da query utilizando o alias da classe
-   DO CASE
-      CASE oServer:dialect == DIALETO_DUCKLAKE .OR. ;
-           oServer:dialect == DIALETO_SQLITE  .OR. ;
-           oServer:dialect == DIALETO_MYSQL   .OR. ;
-           oServer:dialect == DIALETO_POSTGRES
-           
-         cQuerySql := "SELECT * FROM " + cAliasDb + "." + AllTrim(cTABELAX)
+// Montagem da query utilizando o alias da classe
+DO CASE
+CASE oServer:dialect == DIALETO_DUCKLAKE .OR. ;
+    oServer:dialect == DIALETO_SQLITE .OR. ;
+    oServer:dialect == DIALETO_MYSQL .OR. ;
+    oServer:dialect == DIALETO_POSTGRES
 
-      OTHERWISE
-         cQuerySql := "SELECT * FROM " + AllTrim(cTABELAX)
-   ENDCASE
+   cQuerySql := "SELECT * FROM "+cAliasDb+"."+AllTrim(cTABELAX)
 
-   // 5. Executa a query no servidor DuckDB
-   oQuery := oServer:Query( cQuerySql )
-   IF oServer:NetErr()
-      Alert( "Erro ao ler tabela: " + oServer:Error() )
-      oServer:Close()
-      RETURN .F.
-   ENDIF
+OTHERWISE
+   cQuerySql := "SELECT * FROM "+AllTrim(cTABELAX)
+ENDCASE
 
-   nLASTREC := oQuery:LastRec()
-   zei_fort( nLASTREC,,, 0 )
+// 5. Executa a query no servidor DuckDB
+oQuery := oServer:Query(cQuerySql)
+IF oServer:NetErr()
+   Alert("Erro ao ler tabela: "+oServer:Error())
+   oServer:Close()
+   RETURN .F.
+ENDIF
 
-   // 6. Obtém a estrutura física para exportação do DBF
-   aStructInfo := oServer:TableStruct( AllTrim(cTABELAX) )
-   
-   FOR i := 1 TO Len(aStructInfo)
-      AAdd( aSTRU, { aStructInfo[i, 1], aStructInfo[i, 2], aStructInfo[i, 3], aStructInfo[i, 4] } )
+nLASTREC := oQuery:LastRec()
+zei_fort(nLASTREC,,,0)
+
+// 6. Obtém a estrutura física para exportação do DBF
+aStructInfo := oServer:TableStruct(AllTrim(cTABELAX))
+
+FOR i := 1 TO Len(aStructInfo)
+   AAdd(aSTRU,{aStructInfo[i,1],aStructInfo[i,2],aStructInfo[i,3],aStructInfo[i,4]})
+NEXT i
+
+nFIM     := Len(aSTRU)
+cDESTINO := AllTrim(cTABELAX)+"_DUCKDB"
+
+IF nTipo == 1
+   MDT(cDESTINO)
+   dbCreate(cDESTINO,aSTRU,"DBFCDX")
+   dbUseArea(.T.,"DBFCDX",cDESTINO,"DESTINO",.T.,.F.)
+ELSE
+   dbCreate("mem:destino",aSTRU,,.T.,"DESTINO")
+ENDIF
+
+// 7. Varre os dados e alimenta o DBF de destino
+oQuery:GoTop()
+DO WHILE !oQuery:Eof()
+   aVALOR := {}
+   oRow   := oQuery:GetRow()
+
+   FOR i := 1 TO nFIM
+      AAdd(aVALOR,oRow:FieldGet(i))
    NEXT i
 
-   nFIM := Len( aSTRU )
-   cDESTINO := AllTrim(cTABELAX) + "_DUCKDB"
+   dbSelectArea("DESTINO")
+   NETRECAPP()
 
-   IF nTipo == 1
-      MDT( cDESTINO )
-      dbCreate( cDESTINO, aSTRU, "DBFCDX" )
-      dbUseArea( .T., "DBFCDX", cDESTINO, "DESTINO", .T., .F. )
-   ELSE
-      dbCreate( "mem:destino", aSTRU,, .T., "DESTINO" )
-   ENDIF
+   FOR i := 1 TO nFIM
+      eVALOR := aVALOR[i]
 
-   // 7. Varre os dados e alimenta o DBF de destino
-   oQuery:GoTop()
-   DO WHILE !oQuery:Eof()
-      aVALOR := {}
-      oRow := oQuery:GetRow()
-      
-      FOR i := 1 TO nFIM
-         AAdd( aVALOR, oRow:FieldGet( i ) )
-      NEXT i
-      
-      dbSelectArea( "DESTINO" )
-      NETRECAPP()
-      
-      FOR i := 1 TO nFIM
-         eVALOR := aVALOR[i]
-         
-         IF eVALOR == NIL
-            IF aSTRU[i, DBS_TYPE] == "C"
-               eVALOR := Space( aSTRU[i, DBS_LEN] )
-            ELSEIF aSTRU[i, DBS_TYPE] == "N"
-               eVALOR := 0
-            ELSEIF aSTRU[i, DBS_TYPE] == "D"
-               eVALOR := CToD("")
-            ELSEIF aSTRU[i, DBS_TYPE] == "L"
-               eVALOR := .F.
-            ELSEIF aSTRU[i, DBS_TYPE] == "M"
-               eVALOR := ""
-            ENDIF
+      IF eVALOR == NIL
+         IF aSTRU[i,DBS_TYPE] == "C"
+            eVALOR := Space(aSTRU[i,DBS_LEN])
+         ELSEIF aSTRU[i,DBS_TYPE] == "N"
+            eVALOR := 0
+         ELSEIF aSTRU[i,DBS_TYPE] == "D"
+            eVALOR := CToD("")
+         ELSEIF aSTRU[i,DBS_TYPE] == "L"
+            eVALOR := .F.
+         ELSEIF aSTRU[i,DBS_TYPE] == "M"
+            eVALOR := ""
          ENDIF
-         
-         IF !Empty( eVALOR )
-            FieldPut( i, eVALOR )
-         ENDIF
-      NEXT i
-      
-      zei_fort( nLASTREC,,, 1 )
-      oQuery:Skip()
-   ENDDO
+      ENDIF
 
-   // 8. Limpeza de recursos e fechamento de conexões
-   oQuery:Destroy()
-   oServer:Close()
+      IF !Empty(eVALOR)
+         FieldPut(i,eVALOR)
+      ENDIF
+   NEXT i
 
-   dbSelectArea( "DESTINO" )
-   dbCloseArea()
+   zei_fort(nLASTREC,,,1)
+   oQuery:Skip()
+ENDDO
 
-   IF nTipo == 2
-      dbDrop( "mem:destino" )
-   ENDIF
+// 8. Limpeza de recursos e fechamento de conexões
+oQuery:Destroy()
+oServer:Close()
 
-   MDT( "Exportacao concluida!" )
+dbSelectArea("DESTINO")
+dbCloseArea()
+
+IF nTipo == 2
+   dbDrop("mem:destino")
+ENDIF
+
+MDT("Exportacao concluida!")
 RETURN .T.
 
 
+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function duckdeltable()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
 FUNCTION duckdeltable()
-   LOCAL oServer, cPrefixo, cTableCmd
 
-   oServer := duckconnect()
-   IF oServer == NIL; RETURN .F.; ENDIF
+LOCAL oServer,cPrefixo,cTableCmd
 
-   duckTABELAS() 
-   IF !MDG( "Apagar Tabela " + AllTrim(cTABELAX) + "?" )
-      oServer:Close()
-      RETURN .F.
-   ENDIF
+oServer := duckconnect()
+IF oServer == NIL 
+   RETURN .F. 
+ENDIF
 
-   cPrefixo := iif( oServer:dialect == DIALETO_DUCKLAKE .OR. oServer:dialect == DIALETO_SQLITE .OR. ;
-                    oServer:dialect == DIALETO_MYSQL .OR. oServer:dialect == DIALETO_POSTGRES, oServer:cAlias + ".", "" )
-   cTableCmd := cPrefixo + AllTrim(cTABELAX)
-
-   // Na hora de dropar, usar a variável resolvida
-   oServer:Execute( "DROP TABLE " + cTableCmd )
-   MDT( "Tabela eliminada com sucesso." )
-   
+duckTABELAS()
+IF !MDG("Apagar Tabela "+AllTrim(cTABELAX)+"?")
    oServer:Close()
+   RETURN .F.
+ENDIF
+
+cPrefixo := iif(oServer:dialect == DIALETO_DUCKLAKE .OR. oServer:dialect == DIALETO_SQLITE .OR. ;
+ oServer:dialect == DIALETO_MYSQL .OR. oServer:dialect == DIALETO_POSTGRES,oServer:cAlias+".","")
+cTableCmd := cPrefixo+AllTrim(cTABELAX)
+
+// Na hora de dropar, usar a variável resolvida
+oServer:Execute("DROP TABLE "+cTableCmd)
+MDT("Tabela eliminada com sucesso.")
+
+oServer:Close()
 RETURN .T.
 
 
@@ -1202,93 +1392,109 @@ RETURN .T.
 // +    Function duckExecArqSql()
 // +--------------------------------------------------------------------
 FUNCTION duckExecArqSql()
-   LOCAL cCOMANDO := ""
-   LOCAL cARQIMP  := ""
-   LOCAL oServer
 
-   cARQIMP := win_GetOPENFileName(, "Arquivos SQL", HB_CWD(), "Arquivos SQL", "*.SQL", 1)
+LOCAL cCOMANDO := ""
+LOCAL cARQIMP  := ""
+LOCAL oServer
 
-   IF FILE(cARQIMP)
-      cCOMANDO := MEMOREAD(cARQIMP)
-      oServer  := duckconnect()
-      duckexecuteSQL( cCOMANDO )
-      oServer:Close()
-   ENDIF
+cARQIMP := win_GetOPENFileName(,"Arquivos SQL",HB_CWD(),"Arquivos SQL","*.SQL",1)
+
+IF FILE(cARQIMP)
+   cCOMANDO := MEMOREAD(cARQIMP)
+   oServer  := duckconnect()
+   duckexecuteSQL(cCOMANDO)
+   oServer:Close()
+ENDIF
 
 RETURN .T.
 
 // +--------------------------------------------------------------------
 // +    Function duckexecuteSQL()
 // +--------------------------------------------------------------------
-FUNCTION duckexecuteSQL( eCOMANDO, lTRANS )
-   LOCAL aCOMANDOS := {}
-   LOCAL nFIM, i
-   LOCAL lRet := .T.
-   LOCAL oServer
+FUNCTION duckexecuteSQL(eCOMANDO,lTRANS)
 
-   IF ValType( lTRANS ) <> "L"
-      lTRANS := .F.
-   ENDIF
-   
-   IF ValType( eCOMANDO ) = "C"
-      AAdd( aCOMANDOS, eCOMANDO )
-   ELSE
-      aCOMANDOS := eCOMANDO
-   ENDIF
-   
-   nFIM := Len( aCOMANDOS )
-   oServer := duckconnect()
-   
-   IF oServer == NIL
-      RETURN .F.
-   ENDIF
-   
-   IF lTRANS
-      oServer:StartTransaction()
-   ENDIF
-   
-   FOR i := 1 TO nFIM
-      cCOMANDO := aCOMANDOS[ i ]
-      oServer:Execute( cCOMANDO )
-   NEXT i
-   
-   IF lTRANS
-      oServer:Commit()
-   ENDIF
-   
-   oServer:Close()
+LOCAL aCOMANDOS := {}
+LOCAL nFIM,i
+LOCAL lRet      := .T.
+LOCAL oServer
+
+IF ValType(lTRANS) <> "L"
+   lTRANS := .F.
+ENDIF
+
+IF ValType(eCOMANDO) = "C"
+   AAdd(aCOMANDOS,eCOMANDO)
+ELSE
+   aCOMANDOS := eCOMANDO
+ENDIF
+
+nFIM    := Len(aCOMANDOS)
+oServer := duckconnect()
+
+IF oServer == NIL
+   RETURN .F.
+ENDIF
+
+IF lTRANS
+   oServer:StartTransaction()
+ENDIF
+
+FOR i := 1 TO nFIM
+   cCOMANDO := aCOMANDOS[i]
+   oServer:Execute(cCOMANDO)
+NEXT i
+
+IF lTRANS
+   oServer:Commit()
+ENDIF
+
+oServer:Close()
 RETURN lRet
 
 
 // +--------------------------------------------------------------------
 // +    Interface: Gravar Excel
 // +--------------------------------------------------------------------
+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function duckChamaGravarExcel()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
 FUNCTION duckChamaGravarExcel()
-   LOCAL cArqDestino
 
-   // Seleciona tabela atual
-   duckTABELAS() 
-   
-   IF Empty( cTABELAX )
-      Alert( "Operacao cancelada. Selecione uma tabela primeiro!" )
-      RETURN .F.
+LOCAL cArqDestino
+
+// Seleciona tabela atual
+duckTABELAS()
+
+IF Empty(cTABELAX)
+   Alert("Operacao cancelada. Selecione uma tabela primeiro!")
+   RETURN .F.
+ENDIF
+
+// Pede ao usuario o local e nome para salvar o XLSX
+cArqDestino := win_GetSaveFileName(,"Salvar arquivo Excel como",HB_CWD(),"Excel Files",;
+ {{'Arquivos Excel (*.xlsx)','*.xlsx'},{'Todos os Arquivos','*.*'}},1)
+
+IF !Empty(cArqDestino)
+   // Garante a extensao correta
+   IF !(Lower(Right(cArqDestino,5)) == ".xlsx")
+      cArqDestino += ".xlsx"
    ENDIF
 
-   // Pede ao usuario o local e nome para salvar o XLSX
-   cArqDestino := win_GetSaveFileName( , "Salvar arquivo Excel como", HB_CWD(), "Excel Files", ;
-      {{'Arquivos Excel (*.xlsx)','*.xlsx'},{'Todos os Arquivos','*.*'}}, 1)
-
-   IF !Empty( cArqDestino )
-      // Garante a extensao correta
-      IF !( Lower(Right(cArqDestino, 5)) == ".xlsx" )
-         cArqDestino += ".xlsx"
-      ENDIF
-
-      // Chama a funcao do motor
-      duckgravarexcel( cArqDestino, AllTrim(cTABELAX) )
-   ELSE
-      MDT( "Exportacao para Excel cancelada." )
-   ENDIF
+   // Chama a funcao do motor
+   duckgravarexcel(cArqDestino,AllTrim(cTABELAX))
+ELSE
+   MDT("Exportacao para Excel cancelada.")
+ENDIF
 
 RETURN .T.
 
@@ -1296,17 +1502,18 @@ RETURN .T.
 // +    Function duckChamaLerJSON()
 // +--------------------------------------------------------------------
 FUNCTION duckChamaLerJSON()
-   LOCAL cArqJSON
 
-   cArqJSON := win_GetOpenFileName( , "Selecione o arquivo JSON", HB_CWD(), "JSON Files", ;
-      {{'Arquivos JSON','*.json'},{'Todos os Arquivos','*.*'}}, 1)
+LOCAL cArqJSON
 
-   IF !Empty( cArqJSON )
-      // Passamos o arquivo para a engine. Como não enviamos estrutura, fará auto-detect.
-      ducklerjson( cArqJSON, NIL, NIL )
-   ELSE
-      MDT( "Importacao de JSON cancelada." )
-   ENDIF
+cArqJSON := win_GetOpenFileName(,"Selecione o arquivo JSON",HB_CWD(),"JSON Files",;
+ {{'Arquivos JSON','*.json'},{'Todos os Arquivos','*.*'}},1)
+
+IF !Empty(cArqJSON)
+   // Passamos o arquivo para a engine. Como não enviamos estrutura, fará auto-detect.
+   ducklerjson(cArqJSON,NIL,NIL)
+ELSE
+   MDT("Importacao de JSON cancelada.")
+ENDIF
 
 RETURN .T.
 
@@ -1314,74 +1521,127 @@ RETURN .T.
 // +--------------------------------------------------------------------
 // +    Motor: Gravar Excel (Usando DuckDB excel extension)
 // +--------------------------------------------------------------------
-FUNCTION duckgravarexcel( cArquivo, cTabela )
-   LOCAL oServer, cSql
-   LOCAL cPrefixo, cTableCmd
-   
-   IF Empty( cTabela ) .OR. Empty( cArquivo ); RETURN .F.; ENDIF
 
-   oServer := duckconnect()
-   IF oServer == NIL; RETURN .F.; ENDIF
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function duckgravarexcel()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+FUNCTION duckgravarexcel(cArquivo,cTabela)
 
-   cPrefixo := ""
-   IF oServer:dialect == DIALETO_DUCKLAKE .OR. oServer:dialect == DIALETO_SQLITE .OR. ;
-      oServer:dialect == DIALETO_MYSQL    .OR. oServer:dialect == DIALETO_POSTGRES
-      cPrefixo := oServer:cAlias + "."
-   ENDIF
-   cTableCmd := cPrefixo + cTabela
+LOCAL oServer,cSql
+LOCAL cPrefixo,cTableCmd
 
-   oServer:Execute("INSTALL excel;")
-   oServer:Execute("LOAD excel;")
+IF Empty(cTabela) .OR. Empty(cArquivo) 
+   RETURN .F. 
+ENDIF
 
-   cSql := "COPY " + cTableCmd + " TO '" + cArquivo + "' WITH (FORMAT xlsx, HEADER true);"
-   
-   IF oServer:Execute( cSql )
-      MDT( "Tabela " + cTabela + " exportada para Excel com sucesso!" )
-   ELSE
-      Alert( "Erro ao exportar arquivo Excel: " + oServer:Error() )
-   ENDIF
+oServer := duckconnect()
+IF oServer == NIL 
+   RETURN .F. 
+ENDIF
 
-   oServer:Close()
+cPrefixo := ""
+IF oServer:dialect == DIALETO_DUCKLAKE .OR. oServer:dialect == DIALETO_SQLITE .OR. ;
+           oServer:dialect == DIALETO_MYSQL .OR. oServer:dialect == DIALETO_POSTGRES
+   cPrefixo := oServer:cAlias+"."
+ENDIF
+cTableCmd := cPrefixo+cTabela
+
+oServer:Execute("INSTALL excel;")
+oServer:Execute("LOAD excel;")
+
+cSql := "COPY "+cTableCmd+" TO '"+cArquivo+"' WITH (FORMAT xlsx, HEADER true);"
+
+IF oServer:Execute(cSql)
+   MDT("Tabela "+cTabela+" exportada para Excel com sucesso!")
+ELSE
+   Alert("Erro ao exportar arquivo Excel: "+oServer:Error())
+ENDIF
+
+oServer:Close()
 RETURN .T.
 
 
-STATIC FUNCTION DataToSql( xField )
-   SWITCH ValType( xField )
-   CASE "C"; CASE "M"
-      RETURN "'" + StrTran( xField, "'", "''" ) + "'"
-   CASE "D"
-      IF Empty( xField ); RETURN "NULL"; ENDIF
-      RETURN "'" + StrZero( Year( xField ), 4 ) + "-" + StrZero( Month( xField ), 2 ) + "-" + StrZero( Day( xField ), 2 ) + "'"
-   CASE "N"
-      RETURN Str( xField )
-   CASE "L"
-      RETURN iif( xField, "TRUE", "FALSE" )
-   CASE "A"; CASE "H"
-      // Serializa Array e Hash do Harbour para JSON. 
-      // O DuckDB faz o casting automático para LIST, STRUCT ou MAP internamente.
-      RETURN "'" + hb_jsonEncode( xField, .F. ) + "'"
-   ENDSWITCH
+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Static Function DataToSql()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+STATIC FUNCTION DataToSql(xField)
+
+SWITCH ValType(xField)
+CASE "C" 
+CASE "M"
+   RETURN "'"+StrTran(xField,"'","''")+"'"
+CASE "D"
+   IF Empty(xField) 
+      RETURN "NULL" 
+   ENDIF
+   RETURN "'"+StrZero(Year(xField),4)+"-"+StrZero(Month(xField),2)+"-"+StrZero(Day(xField),2)+"'"
+CASE "N"
+   RETURN Str(xField)
+CASE "L"
+   RETURN iif(xField,"TRUE","FALSE")
+CASE "A" 
+CASE "H"
+   // Serializa Array e Hash do Harbour para JSON.
+   // O DuckDB faz o casting automático para LIST, STRUCT ou MAP internamente.
+   RETURN "'"+hb_jsonEncode(xField,.F.)+"'"
+ENDSWITCH
 RETURN "NULL"
 
 
-FUNCTION DuckOptimize( oDb, nDialect )
-    LOCAL cSql := "CHECKPOINT;"
-    
-    // Supondo que a constante para DuckLake seja 2 (ajuste conforme seu duckdb.ch)
-    IF nDialect == 2
-        IF Alert( "Deseja realizar a manutencao profunda do DuckLake?;Isso ira compactar dados e limpar arquivos orfaos.", { "Sim", "Nao" } ) == 1
-            
-            TRY
-                oDb:Execute( cSql )
-                Alert( "Manutencao (CHECKPOINT) concluida com sucesso!" )
-            CATCH
-                Alert( "Ocorreu um erro durante a otimizacao." )
-            END
-            
-        ENDIF
-    ELSE
-        // Para SQLite ou DuckDB nativo, os comandos de otimização são diferentes (ex: VACUUM)
-        // Você pode expandir aqui no futuro.
-        Alert( "Otimizacao automatica configurada apenas para o dialeto DuckLake no momento." )
-    ENDIF
+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function DuckOptimize()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+FUNCTION DuckOptimize(oDb,nDialect)
+
+LOCAL cSql := "CHECKPOINT;"
+
+// Supondo que a constante para DuckLake seja 2 (ajuste conforme seu duckdb.ch)
+IF nDialect == 2
+   IF Alert("Deseja realizar a manutencao profunda do DuckLake?;Isso ira compactar dados e limpar arquivos orfaos.",{"Sim","Nao"}) == 1
+
+      TRY
+         oDb:Execute(cSql)
+         Alert("Manutencao (CHECKPOINT) concluida com sucesso!")
+      CATCH
+         Alert("Ocorreu um erro durante a otimizacao.")
+      END
+
+   ENDIF
+ELSE
+   // Para SQLite ou DuckDB nativo, os comandos de otimização são diferentes (ex: VACUUM)
+   // Você pode expandir aqui no futuro.
+   Alert("Otimizacao automatica configurada apenas para o dialeto DuckLake no momento.")
+ENDIF
 RETURN .T.
+
+*+ EOF: dbuduck.prg
+*+

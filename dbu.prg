@@ -1,6 +1,10 @@
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 *+    Programa  : dbu.prg
+*+
+*+
 *+
 *+     Sistema:
 *+
@@ -10,7 +14,12 @@
 *+
 *+     Copyright (c) 2024,  jcassiano
 *+
-*+    Documentado em 28-Dez-2024 as 10:06 am
+*+     
+*+
+*+
+*+
+*+    Documentado em 15-Out-2026 as  2:11 pm
+*+
 *+
 *+
 *+--------------------------------------------------------------------
@@ -52,11 +61,11 @@ REQUEST BMDBFNTX  //-18 BMDBFNTX DBFNTX
 REQUEST DBFCDXEX  //-19 CRYPTO   DBFCDXEX
 REQUEST FCSVRDD   //-20 FCSVRDD CSV RDD
 REQUEST JSONRDD   //-21 JSONRDD json RDD
-//REQUEST RMDBFCDX   //-22 RMDBFCDX  RushMore nos .prg de teste esta comentado se descomenta gera erro 
+//REQUEST RMDBFCDX   //-22 RMDBFCDX  RushMore nos .prg de teste esta comentado se descomenta gera erro
 //ele trabalha com as funcoes hs_ em harbour.hbx
 
 #ifdef USE_PXRDD
-    REQUEST PXRDD   //-30 Carrega a RDD do Paradox criada acima
+REQUEST PXRDD   //-30 Carrega a RDD do Paradox criada acima
 #endif
 
 
@@ -70,7 +79,15 @@ REQUEST JSONRDD   //-21 JSONRDD json RDD
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function MAIN()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -78,7 +95,12 @@ REQUEST JSONRDD   //-21 JSONRDD json RDD
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 FUNCTION MAIN()
+
 
 
 
@@ -156,16 +178,16 @@ public zANOSEP    := "/"
 public zCNVCHAR   := "N"
 public zusovia    := "DBFCDX"
 public zREGSEP    := " "
-public ABERTURA := .T.
-public TIPODBF  := 2        //dbfcdx
-public TABLEEXT := "DBF"   //hb_rddInfo(RDDI_TABLEEXT)
-public MEMOEXT  := "FPT"    //hb_rddInfo(RDDI_MEMOEXT)
-public INDIEXT  := "CDX"   //hb_rddInfo(RDDI_ORDBAGEXT)
-public cTIPOSQL := ""
-PUBLIC cTIPOMIX := ""
-PUBLIC cTIPODBC := ""
-PUBLIC cRDDSQL  :=""  //Separado de zusovia aqui somente as que precisam rddsetdefault SQLMIX SQLRDD SQLEX LETO
-PUBLIC zSENHACDX := ""
+public ABERTURA   := .T.
+public TIPODBF    := 2  //dbfcdx
+public TABLEEXT   := "DBF"  //hb_rddInfo(RDDI_TABLEEXT)
+public MEMOEXT    := "FPT"  //hb_rddInfo(RDDI_MEMOEXT)
+public INDIEXT    := "CDX"  //hb_rddInfo(RDDI_ORDBAGEXT)
+public cTIPOSQL   := ""
+PUBLIC cTIPOMIX   := ""
+PUBLIC cTIPODBC   := ""
+PUBLIC cRDDSQL    := ""   //Separado de zusovia aqui somente as que precisam rddsetdefault SQLMIX SQLRDD SQLEX LETO
+PUBLIC zSENHACDX  := ""
 
 clear
 
@@ -204,19 +226,19 @@ aPARAM := HB_aParams()
 FOR iLOOP := 1 TO LEN(aPARAM)
    aPARAM[ iLOOP ] := UPPER(aPARAM[iLOOP])
    DO CASE
-   case AT("/FOXPRO",aPARAM[iLOOP]) > 0 .or. AT("/DBFCDX",aPARAM[iLOOP]) > 0
+   case AT ("/FOXPRO",aPARAM[iLOOP]) > 0 .or. AT ("/DBFCDX",aPARAM[iLOOP]) > 0
       TIPODBF         := 2
       aPARAM[ iLOOP ] := ""
-   case AT("/DBFNTX",aPARAM[iLOOP]) > 0
+   case AT ("/DBFNTX",aPARAM[iLOOP]) > 0
       TIPODBF         := 1
       aPARAM[ iLOOP ] := ""
-   case AT("/DBFNDX",aPARAM[iLOOP]) > 0
+   case AT ("/DBFNDX",aPARAM[iLOOP]) > 0
       TIPODBF         := 3
       aPARAM[ iLOOP ] := ""
-   case AT("/DBFMDX",aPARAM[iLOOP]) > 0
+   case AT ("/DBFMDX",aPARAM[iLOOP]) > 0
       TIPODBF         := 4
       aPARAM[ iLOOP ] := ""
-   case AT("/ADSCDX",aPARAM[iLOOP]) > 0
+   case AT ("/ADSCDX",aPARAM[iLOOP]) > 0
       TIPODBF         := 5
       aPARAM[ iLOOP ] := ""
    OTHERWISE
@@ -245,7 +267,7 @@ param2 := ""
 param3 := ""
 
 FOR iLOOP := 1 TO LEN(aPARAM)
-   IF AT("/MONO",aPARAM[iLOOP]) > 0   //monocromatico
+   IF AT ("/MONO",aPARAM[iLOOP]) > 0  //monocromatico
       color1          := "W/N,N/W"
       color2          := "N/W"
       color3          := "W+/N"
@@ -310,46 +332,46 @@ endif
 
 FOR iLOOP := 1 TO LEN(aPARAM)
    do case
-   case AT("/XMLA",aPARAM[iLOOP]) > 0
+   case AT ("/XMLA",aPARAM[iLOOP]) > 0
       multidocs(1,"*."+TABLEEXT)
       //           FAZERDBF( {|| dbf2xml() }, .F. ,,,param1)
 
-   case AT("/TEC",aPARAM[iLOOP]) > 0
+   case AT ("/TEC",aPARAM[iLOOP]) > 0
       IF MDG("Gerar Observacoes")
          multidocs(2,param1)  //.tam
       ELSE
          multidocs(3,param1)  //.tec
       ENDIF
-   case AT("/TAM",aPARAM[iLOOP]) > 0
+   case AT ("/TAM",aPARAM[iLOOP]) > 0
       multidocs(2,param1)
-   case AT("/DBE",aPARAM[iLOOP]) > 0
+   case AT ("/DBE",aPARAM[iLOOP]) > 0
       multidocs(4,param1)
-   case AT("/DLM",aPARAM[iLOOP]) > 0
+   case AT ("/DLM",aPARAM[iLOOP]) > 0
       pegparexp()
       multidocs(5,param1)
-   case AT("/SDF",aPARAM[iLOOP]) > 0
+   case AT ("/SDF",aPARAM[iLOOP]) > 0
       multidocs(6,param1)
-   case AT("/XML",aPARAM[iLOOP]) > 0
+   case AT ("/XML",aPARAM[iLOOP]) > 0
       multidocs(7,param1)
-   case AT("/JSON",aPARAM[iLOOP]) > 0
+   case AT ("/JSON",aPARAM[iLOOP]) > 0
       multidocs(8,param1)
-    case AT("/MD",aPARAM[iLOOP]) > 0
-      multidocs(14,param1)  
-   case AT("/FIX",aPARAM[iLOOP]) > 0
+   case AT ("/MD",aPARAM[iLOOP]) > 0
+      multidocs(14,param1)
+   case AT ("/FIX",aPARAM[iLOOP]) > 0
       if mdg("Fixar? "+zdire) = "S"
          FAZERDBF({|| dbupack()},.t.,{|| copybkdbf(ARQUIVO)},{|| memopack(arquivo,.t.,.t.,RDDNOME(TIPODBF))},param1)
       endif
-   case AT("/ZER",aPARAM[iLOOP]) > 0
+   case AT ("/ZER",aPARAM[iLOOP]) > 0
       if mdg("Zerar? "+zdire)
          if md("Realmente Zerar?"+zdire)
             FAZERDBF({|| dbuzap()},.t.,{|| copybkdbf(ARQUIVO)},{|| memopack(arquivo,.t.,.t.,RDDNOME(TIPODBF))},param1)
          endif
       endif
-   case AT("/AJU",aPARAM[iLOOP]) > 0
+   case AT ("/AJU",aPARAM[iLOOP]) > 0
       if mdg("Ajustar? "+zdire)
          dbetodbf(param1,.F.)
       endif
-   case AT("/COR",aPARAM[iLOOP]) > 0
+   case AT ("/COR",aPARAM[iLOOP]) > 0
       if mdg("Corrigir? "+zdire)
          DBETODBF(param1,,.T.)
       endif
@@ -616,9 +638,9 @@ do while .T.
       case M->func_sel = 12
          letomenu()
       case M->func_sel = 13
-         MENUSQL("FIREBIRD")  
-       case M->func_sel = 14
-         MENUSQL("PARADOX")  
+         MENUSQL("FIREBIRD")
+      case M->func_sel = 14
+         MENUSQL("PARADOX")
       case M->func_sel = 15
          MENUSQL("DUCKDB")
       case M->func_sel = 16
@@ -684,21 +706,21 @@ do while .T.
       case M->func_sel = 11
          copiardbfpara(2)   //append formatos para dbf
       case M->func_sel = 12
-          cPASTA:=SelectFolder()
-          mdltodos(cPASTA)
-          Sqltodos("SQLITE",cPASTA)
-          Sqltodos("MSSQL",cPASTA)
-          Sqltodos("MYSQL",cPASTA)
-          Sqltodos("POSTGRESQL",cPASTA)
-          Sqltodos("ACCESS",cPASTA)
-          Sqltodos("ORACLE",cPASTA)
-          sqltodos("FIREBIRD",cPASTA)
-          sqltodos("DUCKDB",cPASTA)
-          //sqltodos("PARADOX") //nao implemntado odbc nao gerando
-          //alert("multi")
-          multidocs(4, cPASTA+"\*."+TABLEEXT)  //4- dbe
-      
-      
+         cPASTA := SelectFolder()
+         mdltodos(cPASTA)
+         Sqltodos("SQLITE",cPASTA)
+         Sqltodos("MSSQL",cPASTA)
+         Sqltodos("MYSQL",cPASTA)
+         Sqltodos("POSTGRESQL",cPASTA)
+         Sqltodos("ACCESS",cPASTA)
+         Sqltodos("ORACLE",cPASTA)
+         sqltodos("FIREBIRD",cPASTA)
+         sqltodos("DUCKDB",cPASTA)
+         //sqltodos("PARADOX") //nao implemntado odbc nao gerando
+         //alert("multi")
+         multidocs(4,cPASTA+"\*."+TABLEEXT)   //4- dbe
+
+
       case M->func_sel = 13
       case M->func_sel = 14
       case M->func_sel = 15
@@ -888,7 +910,15 @@ RETU
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function HELP()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -896,7 +926,12 @@ RETU
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 Function HELP()
+
 
 return .t.
 
@@ -906,7 +941,15 @@ return .t.
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function HELP()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -914,7 +957,15 @@ return .t.
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -1014,7 +1065,15 @@ retu .T.
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function DBUDIR()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -1022,7 +1081,12 @@ retu .T.
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 function DBUDIR
+
 
 
 local cDIR := space(80)
@@ -1040,7 +1104,15 @@ endif
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function DBUDELFOR()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -1048,7 +1120,12 @@ endif
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 function DBUDELFOR
+
 
 local cDIR     := space(80)
 local nLASTREC
@@ -1073,7 +1150,15 @@ endif
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function DBUREDE()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -1081,7 +1166,12 @@ endif
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 function DBUREDE(cARQ,cIND,lMODO)
+
 
 
 local cEXT := XEXT()
@@ -1099,11 +1189,11 @@ endif
 USOVIA := RDDNOME(TIPODBF)
 while .T.
    //dbusearea( .T., USOVIA, cARQ,, !lMODO )
-  // DBUseArea( <lNewArea> , <cDriver> , <cName>, <xcAlias> , <lShared> , <lReadOnly>,<cCodePage>,<nConnection> ) -> lSuccess
+   // DBUseArea( <lNewArea> , <cDriver> , <cName>, <xcAlias> , <lShared> , <lReadOnly>,<cCodePage>,<nConnection> ) -> lSuccess
    IF lMODO
-      dbUseArea( .T., USOVIA, (cARQ),, .F. , .F. )
+      dbUseArea(.T.,USOVIA,(cARQ),,.F.,.F.)
    ELSE
-      dbUseArea( .T., USOVIA, (cARQ),, .T. , .F. )
+      dbUseArea(.T.,USOVIA,(cARQ),,.T.,.F.)
    ENDIF
    if !neterr()
       exit
@@ -1132,7 +1222,15 @@ return .T.
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function READDBU()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -1140,7 +1238,12 @@ return .T.
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 function READDBU
+
 
 
 setcursor(if(readinsert(),1,2))
@@ -1157,7 +1260,15 @@ return .T.
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function LNKFUN()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -1165,7 +1276,12 @@ return .T.
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 FUNCTION LNKFUN()
+
 
 DECODE()
 ENCODE()
@@ -1191,20 +1307,37 @@ RETURN .T.
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function errindex()
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+--------------------------------------------------------------------
+*+
+*+
+*+
+*+
 *+
 *+
 *+
 function errindex()
 
+
 return .t.
 
 
 *+--------------------------------------------------------------------
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -1212,13 +1345,23 @@ return .t.
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+--------------------------------------------------------------------
+*+
+*+
+*+
+*+
 *+
 *+
 *+
 function errprinter()
 
+
 return .t.
+
 
 
 *+ EOF: dbu.prg

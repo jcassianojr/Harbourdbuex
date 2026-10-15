@@ -1,37 +1,29 @@
-// +--------------------------------------------------------------------
-// +   git\core\contrib\hbmysql\
-// +   git\xharbour\contrib\mysql\mysqlrdd.prg
-// +
-// +
-// +--------------------------------------------------------------------
-// +
-
-// +--------------------------------------------------------------------
-// +
-// +
-// +
-// +    Programa  : dbumyexp.prg
-// +
-// +
-// +
-// +     Sistema:
-// +
-// +     Linguagem: Harbour
-// +
-// +     Autor: jcassiano
-// +
-// +     Copyright (c) 2024,  jcassiano
-// +
-// +
-// +
-// +
-// +
-// +    Documentado em 28-Dez-2024 as 10:07 am
-// +
-// +
-// +
-// +--------------------------------------------------------------------
-// +
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Programa  : dbumyexp.prg
+*+
+*+
+*+
+*+     Sistema:
+*+
+*+     Linguagem: Harbour
+*+
+*+     Autor: jcassiano
+*+
+*+     Copyright (c) 2024,  jcassiano
+*+
+*+     
+*+
+*+
+*+
+*+    Documentado em 15-Out-2026 as  2:12 pm
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
 
 REQUEST MYSQLRDD
 
@@ -50,38 +42,40 @@ REQUEST MYSQLRDD
 // +
 FUNCTION myexpformat()
 
-   MYSELECTTABLE()
-   LCOPIANAT := .F.  // MDG("Copia Nativa(SIM) Interna(NAO)") //copy to nao implemntado mysqlrddd
-   tDOC      := pegtipodoc()   // .t. Inclui dbf se for nativa
-   pegparexp()
-   lDOCCAB   := .F.
-   lDOCDAD   := .F.
-   lDOCRECNO := .F.
-   cSUBTIPO  := " "
 
-   PegcsUB( tDOC )   // pegar o subtipo conforme tipo
+MYSELECTTABLE()
+LCOPIANAT := .F.  // MDG("Copia Nativa(SIM) Interna(NAO)") //copy to nao implemntado mysqlrddd
+tDOC      := pegtipodoc()   // .t. Inclui dbf se for nativa
+pegparexp()
+lDOCCAB   := .F.
+lDOCDAD   := .F.
+lDOCRECNO := .F.
+cSUBTIPO  := " "
 
-   cDESTINO := cTABELAX + "_mysql." + zEXPOREXT
-   MDT( cDESTINO )
+PegcsUB(tDOC)   // pegar o subtipo conforme tipo
 
-   MDT( "abrindo arquivo de origem: " + cTABELAX )
+cDESTINO := cTABELAX+"_mysql."+zEXPOREXT
+MDT(cDESTINO)
 
-   nConn := dbmysqlconnection( cSERVERX + ";" + CdatabaseX + ";" + CuserX + ";" + CpassX + ";3306" )
-   dbUseArea( .T., "MYSQLRDD", "SELECT * FROM " + cTABELAX, cTABELAX )
+MDT("abrindo arquivo de origem: "+cTABELAX)
 
-   nLASTREC := LastRec()
-   zei_fort( nLASTREC,,, 0 )
+nConn := dbmysqlconnection(cSERVERX+";"+CdatabaseX+";"+CuserX+";"+CpassX+";3306")
+dbUseArea(.T.,"MYSQLRDD","SELECT * FROM "+cTABELAX,cTABELAX)
 
-   aSTRU := mystrudbf()
+nLASTREC := LastRec()
+zei_fort(nLASTREC,,,0)
 
-   multidocg( lDOCCAB, lDOCDAD, lDOCRECNO, cSUBTIPO, TIRAEXT( cDESTINO ), aSTRU )
+aSTRU := mystrudbf()
 
-   dbCloseAll()
-   dbmysqlclearconnection( nConn )
+multidocg(lDOCCAB,lDOCDAD,lDOCRECNO,cSUBTIPO,TIRAEXT(cDESTINO),aSTRU)
 
-   RETURN NIL
+dbCloseAll()
+dbmysqlclearconnection(nConn)
+
+RETURN NIL
 
 
 
-// + EOF: dbumyexp.prg
-// +
+
+*+ EOF: dbumyexp.prg
+*+

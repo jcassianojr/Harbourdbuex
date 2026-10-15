@@ -1,25 +1,26 @@
-// +--------------------------------------------------------------------
-// +
-// +   git\core\extras\rddado\
-// +
-// +
-// +--------------------------------------------------------------------
-// +
-
-
 *+--------------------------------------------------------------------
 *+
-*+    Programa  : mdb2dbf.prgF
+*+
+*+
+*+    Programa  : dburddadofuncoes.prg
+*+
+*+
 *+
 *+     Sistema:
 *+
-*+     Linguagem: HarbourF
+*+     Linguagem: Harbour
 *+
 *+     Autor: jcassiano
 *+
 *+     Copyright (c) 2024,  jcassiano
 *+
-*+    Documentado em 28-Dez-2024 as 10:07 am
+*+     
+*+
+*+
+*+
+*+    Documentado em 15-Out-2026 as  2:12 pm
+*+
+*+
 *+
 *+--------------------------------------------------------------------
 *+
@@ -35,7 +36,15 @@
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function pegcfgbanco()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -43,7 +52,12 @@
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 function pegcfgbanco()
+
 
 lMDB := .F.
 IF cTIPOSQL = "MDB" .OR. cTIPOSQL = "ACCESS" .OR. cTIPOSQL = "MDB64" .OR. cTIPOSQL = "ACCESS64"
@@ -53,11 +67,11 @@ lACCDB := .F.
 IF cTIPOSQL = "ACCDB" .OR. cTIPOSQL = "ACCDB64"
    lACCDB := .T.
 ENDIF
-lFDB   := .F.
-IF cTIPOSQL = "FIREBIRD"   .OR. cTIPOSQL = "FDB" .OR.  cTIPOSQL ="GDB" .OR.  cTIPOSQL ="IB"
-   lFDB   := .T.
+lFDB := .F.
+IF cTIPOSQL = "FIREBIRD" .OR. cTIPOSQL = "FDB" .OR. cTIPOSQL = "GDB" .OR. cTIPOSQL = "IB"
+   lFDB := .T.
 ENDIF
-buscapadrao() //valores padrao das portas e usuarios
+buscapadrao()   //valores padrao das portas e usuarios
 
 //
 // ajustes nomes de drivers para 32 e 64 bits
@@ -87,7 +101,7 @@ IF cTIPOSQL = "ACCDB" .OR. cTIPOSQL = "ACCDB64"
 ENDIF
 
 IF cTIPOSQL = "MYSQL" .or. cTIPOSQL = "MYSQL64" .OR. cTIPOSQL = "MARIADB" .OR. cTIPOSQL = "PGSQL" .OR. cTIPOSQL = "PGSQL64" .OR. cTIPOSQL = "POSTGRESQL" ;
-           .OR. cTIPOSQL = "MSSQL" .OR. cTIPOSQL = "SQLSERVER" 
+           .OR. cTIPOSQL = "MSSQL" .OR. cTIPOSQL = "SQLSERVER"
    OPENTIPOARQ()
    mdbdatabases()
 ENDIF
@@ -98,7 +112,7 @@ ENDIF
 IF cTIPOSQL = "PARADOX"
    OPENTIPOARQ()
 ENDIF
-IF lFDB  
+IF lFDB
    OPENTIPOARQ()
 ENDIF
 
@@ -110,11 +124,18 @@ return .t.
 
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 *+    Function ExecArqSql()
+*+
+*+
 *+
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 function ExecArqSql
+
 
 LOCAL cCOMANDO := ""
 LOCAL cARQIMP  := ""
@@ -124,7 +145,7 @@ cARQIMP := win_GetOPENFileName(,"Arquivos SQL",HB_CWD(),"Arquivos SQL","*.SQL",1
 
 IF FILE(cARQIMP)
    //nao pode ser linha a linha pois um comando pode estar em mais de uma linha
-   cCOMANDO:=MEMOREAD(cARQIMP)
+   cCOMANDO := MEMOREAD(cARQIMP)
    executacmd(cARQORI,aCOMANDO)
 endif
 return .t.
@@ -132,11 +153,18 @@ return .t.
 
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 *+    Function mdbdatabases()
+*+
+*+
 *+
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 function mdbdatabases()
+
 
 local nChoices
 nChoices := 0
@@ -152,25 +180,32 @@ RETURN aResult
 
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 *+    Function mdbtabela()
+*+
+*+
 *+
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 function mdbtabela(cMDBARQ)
+
 
 local nChoices
 local aResult
 nChoices := 0
-aResult:={}
-IF cTIPOSQL="PARADOX"
+aResult  := {}
+IF cTIPOSQL = "PARADOX"
    RETURN
-ENDIF   
+ENDIF
 IF VALTYPE(cMDBARQ) = "A"
    aResult := cMDBARQ
 ELSE
    aResult := MDBTABLES(cMDBARQ)
 ENDIF
-IF LEN(aResult) > 0 
+IF LEN(aResult) > 0
    HB_dispbox(3,22,22,55,B_DOUBLE+" ")
    nChoices := ACHOICE(4,23,21,54,aResult)
 ENDIF
@@ -180,11 +215,18 @@ RETURN aResult
 
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 *+    Function MDBEXP()
+*+
+*+
 *+
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 function MDBEXP(nTIPO)
+
 
 LOCAL cCAMMDB      := SPACE(100)
 LOCAL lCOPIANAT
@@ -198,9 +240,9 @@ cMDBARQ := OPENTIPOARQ()
 
 mdbtabela(cMDBARQ)
 
-IF cTIPOSQL="PARADOX"
+IF cTIPOSQL = "PARADOX"
    RETURN
-ENDIF   
+ENDIF
 cTABELA := cTABELAX
 
 IF EMPTY(cTABELA)
@@ -288,7 +330,7 @@ IF tDOC = 90 .OR. zEXPOREXT = "DBF"
    while !eof()
       aVALOR := {}
       FOR I := 1 TO nFIM
-         AADD(aVALOR,{hb_FIELDGET(I),FIELDNAME(I)})  //guarda o nome do campo caso a ordem venha invertida
+         AADD(aVALOR,{hb_FIELDGET(I),FIELDNAME(I)})   //guarda o nome do campo caso a ordem venha invertida
       NEXT I
       dbselectar(cALIASDBF)
       NETRECAPP()
@@ -302,7 +344,7 @@ IF tDOC = 90 .OR. zEXPOREXT = "DBF"
             //eVALOR := RANGEREPL(chr(0),chr(31),eVALOR," ")  //Remove caracteres de controle
             //eVALOR := TIRACE(eVALOR)
             //eVALOR := ALLTRIM(eVALOR)
-               eVALOR := FixSRTExtendido( eVALOR , .T. , .T. , .T. , .T. , .T. )
+            eVALOR := FixSRTExtendido(eVALOR,.T.,.T.,.T.,.T.,.T.)
             //FixSRTExtendido( cVALOR,lLOW,lUP,lACE,lUTF, lESP )
          ENDIF
          IF !EMPTY(eVALOR)
@@ -325,11 +367,18 @@ return nil
 
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 *+    Function sqltodbfstru()
+*+
+*+
 *+
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 function sqltodbfstru(aStruct)
+
 
 local nFIM
 local i
@@ -393,47 +442,54 @@ return aStruct
 
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 *+    Function mdbcria()
+*+
+*+
 *+
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 function mdbcria()
+
 LOCAL cCONN
-cCONN:=""
-if  lFDB //usando nativa erro com catalgo nao suportado
-    #ifdef USE_MENU_FIREBIRD   
-        firecreate()
-    #endif  
-    #ifdef USE_MENU_FIREBIRD5   
-        firecreate5()
-    #endif  
-    return
+cCONN := ""
+if lFDB   //usando nativa erro com catalgo nao suportado
+#ifdef USE_MENU_FIREBIRD   
+   firecreate()
+#endif  
+#ifdef USE_MENU_FIREBIRD5   
+   firecreate5()
+#endif  
+   return
 endif
 DO CASE
-    CASE lMDB
-       cARQORI := win_GetSAVEFileName(,"Arquivos de Origem",HB_CWD(),"Arquivos mdb","*.MDB",1)
-    CASE lACCDB
-       cARQORI := win_GetSAVEFileName(,"Arquivos de Origem",HB_CWD(),"Arquivos accdb","*.accdb",1)
-    CASE cTIPOSQL = "SQLITE"
-       cARQORI := win_GetsaveFileName(,"SQLite Files",HB_CWD(),"SQLite",;
-        {{'SQLite','*.sqlite'},{'SQLite db','*.DB'},;
-        {'SQLite3','*.sqlite3'},{'SQLite db3','*.DB3'},;
-        {'SQLite Fossil','*.fossil'},{'All Files','*.*'}},1)
-    CASE lFDB 
-       cARQORI := win_GetsaveFileName(,"Firebase Files",HB_CWD(),"Firebase",;
-        {{'Firebird fdb','*.fdb'},{'Firebird gdb','*.gdb'},{'Firebird ib','*.ib'},;
-         {'All Files','*.*'}},1)  
-    CASE cTIPOSQL == "PARADOX"
-       cARQORI := win_GetSAVEFileName(,"Arquivos Paradox",HB_CWD(),"Paradox","*.db",1)     
+CASE lMDB
+   cARQORI := win_GetSAVEFileName(,"Arquivos de Origem",HB_CWD(),"Arquivos mdb","*.MDB",1)
+CASE lACCDB
+   cARQORI := win_GetSAVEFileName(,"Arquivos de Origem",HB_CWD(),"Arquivos accdb","*.accdb",1)
+CASE cTIPOSQL = "SQLITE"
+   cARQORI := win_GetsaveFileName(,"SQLite Files",HB_CWD(),"SQLite",;
+    {{'SQLite','*.sqlite'},{'SQLite db','*.DB'},;
+    {'SQLite3','*.sqlite3'},{'SQLite db3','*.DB3'},;
+    {'SQLite Fossil','*.fossil'},{'All Files','*.*'}},1)
+CASE lFDB
+   cARQORI := win_GetsaveFileName(,"Firebase Files",HB_CWD(),"Firebase",;
+    {{'Firebird fdb','*.fdb'},{'Firebird gdb','*.gdb'},{'Firebird ib','*.ib'},;
+    {'All Files','*.*'}},1)
+CASE cTIPOSQL == "PARADOX"
+   cARQORI := win_GetSAVEFileName(,"Arquivos Paradox",HB_CWD(),"Paradox","*.db",1)
 ENDCASE
 
 
-IF lFDB 
-    cDATABASEX := ""
-    executacmd("", "CREATE DATABASE '"+cARQORI+"' USER 'SYSDBA' PASSWORD 'masterkey' PAGE_SIZE = 8192 DEFAULT CHARACTER SET ISO8859_1;")
-     //Abre com "" para o geraconn nao atribui o fdb,gdb,ib na conecao pois ainda nao foi criado
-    CDATABASEX := cARQORI
-    RETURN
+IF lFDB
+   cDATABASEX := ""
+   executacmd("","CREATE DATABASE '"+cARQORI+"' USER 'SYSDBA' PASSWORD 'masterkey' PAGE_SIZE = 8192 DEFAULT CHARACTER SET ISO8859_1;")
+   //Abre com "" para o geraconn nao atribui o fdb,gdb,ib na conecao pois ainda nao foi criado
+   CDATABASEX := cARQORI
+   RETURN
 ENDIF
 
 
@@ -463,72 +519,93 @@ IF lMDB .OR. lACCDB
    //EXECUTACMD(cARQORI,"GRANT SELECT ON VIEW showtableS TO ADMIN,PUBLIC")
 ENDIF
 
-IF lFDB 
+IF lFDB
    CreateAccessDatabase(cARQORI)
 ENDIF
 
 
 //basta criar o arquivo ja e entendido pelo sqlite
 IF cTIPOSQL = "SQLITE"
-    IF ! hb_FileExists(cARQORI)
-       HB_MEMOWRIT(cARQORI,"")
-    ENDIF   
+   IF !hb_FileExists(cARQORI)
+      HB_MEMOWRIT(cARQORI,"")
+   ENDIF
 ENDIF
 
 IF cTIPOSQL == "PARADOX"
-   ParadoxCreateTable( cARQORI, aStruct )
+   ParadoxCreateTable(cARQORI,aStruct)
 ENDIF
 
 RETURN NIL
 
+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function GeraSQLMetadata()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
 FUNCTION GeraSQLMetadata()
-LOCAL cSqlFields, cSqlIndexes
-cSqlFields := ""
+
+LOCAL cSqlFields,cSqlIndexes
+cSqlFields  := ""
 cSqlIndexes := ""
 DO CASE
-   CASE cTIPOSQL == "SQLITE"
-      cSqlFields  := "CREATE TABLE IF NOT EXISTS table_metadata (nome_tabela TEXT, column_name TEXT, original_type TEXT, tamanho INTEGER, precisao INTEGER, is_nullable INTEGER, field_visual_picture TEXT)"
-      cSqlIndexes := "CREATE TABLE IF NOT EXISTS index_metadata (nome_tabela TEXT, index_name TEXT, expression TEXT, sql_expression TEXT, filter_expression TEXT, is_unique INTEGER, is_bag INTEGER)"
+CASE cTIPOSQL == "SQLITE"
+   cSqlFields  := "CREATE TABLE IF NOT EXISTS table_metadata (nome_tabela TEXT, column_name TEXT, original_type TEXT, tamanho INTEGER, precisao INTEGER, is_nullable INTEGER, field_visual_picture TEXT)"
+   cSqlIndexes := "CREATE TABLE IF NOT EXISTS index_metadata (nome_tabela TEXT, index_name TEXT, expression TEXT, sql_expression TEXT, filter_expression TEXT, is_unique INTEGER, is_bag INTEGER)"
 
-   CASE cTIPOSQL == "MYSQL" .OR. cTIPOSQL == "MYSQL64" .OR. cTIPOSQL == "MARIADB"
-      cSqlFields  := "CREATE TABLE IF NOT EXISTS table_metadata (nome_tabela VARCHAR(50), column_name VARCHAR(50), original_type VARCHAR(1), tamanho INTEGER, precisao INTEGER, is_nullable INTEGER, field_visual_picture VARCHAR(250))"
-      cSqlIndexes := "CREATE TABLE IF NOT EXISTS index_metadata (nome_tabela VARCHAR(50), index_name VARCHAR(50), expression TEXT, sql_expression TEXT, filter_expression TEXT, is_unique INTEGER, is_bag INTEGER)"
-  CASE cTIPOSQL == "DUCKDB"
-     cSqlFields  := "CREATE TABLE IF NOT EXISTS table_metadata (nome_tabela VARCHAR, column_name VARCHAR, original_type VARCHAR, tamanho BIGINT, precisao BIGINT, is_nullable BIGINT, field_visual_picture VARCHAR)"
-     cSqlIndexes := "CREATE TABLE IF NOT EXISTS index_metadata (nome_tabela VARCHAR, index_name VARCHAR, expression VARCHAR, sql_expression VARCHAR, filter_expression VARCHAR, is_unique BIGINT, is_bag BIGINT)"
+CASE cTIPOSQL == "MYSQL" .OR. cTIPOSQL == "MYSQL64" .OR. cTIPOSQL == "MARIADB"
+   cSqlFields  := "CREATE TABLE IF NOT EXISTS table_metadata (nome_tabela VARCHAR(50), column_name VARCHAR(50), original_type VARCHAR(1), tamanho INTEGER, precisao INTEGER, is_nullable INTEGER, field_visual_picture VARCHAR(250))"
+   cSqlIndexes := "CREATE TABLE IF NOT EXISTS index_metadata (nome_tabela VARCHAR(50), index_name VARCHAR(50), expression TEXT, sql_expression TEXT, filter_expression TEXT, is_unique INTEGER, is_bag INTEGER)"
+CASE cTIPOSQL == "DUCKDB"
+   cSqlFields  := "CREATE TABLE IF NOT EXISTS table_metadata (nome_tabela VARCHAR, column_name VARCHAR, original_type VARCHAR, tamanho BIGINT, precisao BIGINT, is_nullable BIGINT, field_visual_picture VARCHAR)"
+   cSqlIndexes := "CREATE TABLE IF NOT EXISTS index_metadata (nome_tabela VARCHAR, index_name VARCHAR, expression VARCHAR, sql_expression VARCHAR, filter_expression VARCHAR, is_unique BIGINT, is_bag BIGINT)"
 
-   CASE cTIPOSQL == "PGSQL" .OR. cTIPOSQL == "PGSQL64" .OR. cTIPOSQL == "POSTGRESQL"
-      cSqlFields  := "CREATE TABLE IF NOT EXISTS table_metadata (nome_tabela VARCHAR(50), column_name VARCHAR(50), original_type VARCHAR(1), tamanho INTEGER, precisao INTEGER, is_nullable INTEGER, field_visual_picture VARCHAR(250))"
-      cSqlIndexes := "CREATE TABLE IF NOT EXISTS index_metadata (nome_tabela VARCHAR(50), index_name VARCHAR(50), expression TEXT, sql_expression TEXT, filter_expression TEXT, is_unique INTEGER, is_bag INTEGER)"
+CASE cTIPOSQL == "PGSQL" .OR. cTIPOSQL == "PGSQL64" .OR. cTIPOSQL == "POSTGRESQL"
+   cSqlFields  := "CREATE TABLE IF NOT EXISTS table_metadata (nome_tabela VARCHAR(50), column_name VARCHAR(50), original_type VARCHAR(1), tamanho INTEGER, precisao INTEGER, is_nullable INTEGER, field_visual_picture VARCHAR(250))"
+   cSqlIndexes := "CREATE TABLE IF NOT EXISTS index_metadata (nome_tabela VARCHAR(50), index_name VARCHAR(50), expression TEXT, sql_expression TEXT, filter_expression TEXT, is_unique INTEGER, is_bag INTEGER)"
 
-   CASE lMDB .OR. lACCDB 
-      // Access não aceita IF NOT EXISTS e exige colchetes em palavras reservadas. Usa TEXT(tamanho) e MEMO para textos longos.
-      cSqlFields  := "CREATE TABLE table_metadata (nome_tabela TEXT(50), column_name TEXT(50), original_type TEXT(1), [tamanho] INTEGER, [precisao] INTEGER, is_nullable INTEGER, field_visual_picture TEXT(250))"
-      cSqlIndexes := "CREATE TABLE index_metadata (nome_tabela TEXT(50), index_name TEXT(50), expression MEMO, sql_expression MEMO, filter_expression MEMO, is_unique INTEGER, is_bag INTEGER)"
+CASE lMDB .OR. lACCDB
+   // Access não aceita IF NOT EXISTS e exige colchetes em palavras reservadas. Usa TEXT(tamanho) e MEMO para textos longos.
+   cSqlFields  := "CREATE TABLE table_metadata (nome_tabela TEXT(50), column_name TEXT(50), original_type TEXT(1), [tamanho] INTEGER, [precisao] INTEGER, is_nullable INTEGER, field_visual_picture TEXT(250))"
+   cSqlIndexes := "CREATE TABLE index_metadata (nome_tabela TEXT(50), index_name TEXT(50), expression MEMO, sql_expression MEMO, filter_expression MEMO, is_unique INTEGER, is_bag INTEGER)"
 
-   CASE cTIPOSQL == "MSSQL" .OR. cTIPOSQL == "SQLSERVER"
-      // SQL Server exige verificação via OBJECT_ID e usa VARCHAR(MAX) para blocos grandes de texto, além de INT ao invés de INTEGER.
-      cSqlFields  := "IF OBJECT_ID('table_metadata', 'U') IS NULL " + ;
-                     "CREATE TABLE table_metadata (nome_tabela VARCHAR(50), column_name VARCHAR(50), original_type VARCHAR(1), tamanho INT, precisao INT, is_nullable INT, field_visual_picture VARCHAR(250))"
-      cSqlIndexes := "IF OBJECT_ID('index_metadata', 'U') IS NULL " + ;
-                     "CREATE TABLE index_metadata (nome_tabela VARCHAR(50), index_name VARCHAR(50), expression VARCHAR(MAX), sql_expression VARCHAR(MAX), filter_expression VARCHAR(MAX), is_unique INT, is_bag INT)"
+CASE cTIPOSQL == "MSSQL" .OR. cTIPOSQL == "SQLSERVER"
+   // SQL Server exige verificação via OBJECT_ID e usa VARCHAR(MAX) para blocos grandes de texto, além de INT ao invés de INTEGER.
+   cSqlFields := "IF OBJECT_ID('table_metadata', 'U') IS NULL "+;
+    "CREATE TABLE table_metadata (nome_tabela VARCHAR(50), column_name VARCHAR(50), original_type VARCHAR(1), tamanho INT, precisao INT, is_nullable INT, field_visual_picture VARCHAR(250))"
+   cSqlIndexes := "IF OBJECT_ID('index_metadata', 'U') IS NULL "+;
+    "CREATE TABLE index_metadata (nome_tabela VARCHAR(50), index_name VARCHAR(50), expression VARCHAR(MAX), sql_expression VARCHAR(MAX), filter_expression VARCHAR(MAX), is_unique INT, is_bag INT)"
 
-   CASE cTIPOSQL == "FIREBIRD"
-      // Firebird não possui IF NOT EXISTS por padrão em DDL simples e exige BLOB SUB_TYPE TEXT para textos longos/expressões.
-      cSqlFields  := "CREATE TABLE table_metadata (nome_tabela VARCHAR(50), column_name VARCHAR(50), original_type VARCHAR(1), tamanho INTEGER, precisao INTEGER, is_nullable INTEGER, field_visual_picture VARCHAR(250))"
-      cSqlIndexes := "CREATE TABLE index_metadata (nome_tabela VARCHAR(50), index_name VARCHAR(50), expression BLOB SUB_TYPE TEXT, sql_expression BLOB SUB_TYPE TEXT, filter_expression BLOB SUB_TYPE TEXT, is_unique INTEGER, is_bag INTEGER)"
-   ENDCASE
+CASE cTIPOSQL == "FIREBIRD"
+   // Firebird não possui IF NOT EXISTS por padrão em DDL simples e exige BLOB SUB_TYPE TEXT para textos longos/expressões.
+   cSqlFields  := "CREATE TABLE table_metadata (nome_tabela VARCHAR(50), column_name VARCHAR(50), original_type VARCHAR(1), tamanho INTEGER, precisao INTEGER, is_nullable INTEGER, field_visual_picture VARCHAR(250))"
+   cSqlIndexes := "CREATE TABLE index_metadata (nome_tabela VARCHAR(50), index_name VARCHAR(50), expression BLOB SUB_TYPE TEXT, sql_expression BLOB SUB_TYPE TEXT, filter_expression BLOB SUB_TYPE TEXT, is_unique INTEGER, is_bag INTEGER)"
+ENDCASE
 RETURN {cSqlFields,cSqlIndexes}
 
 
 
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 *+    Function DBF2MDB()
+*+
+*+
 *+
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 FUNCTION DBF2MDB(cMDBARQ,cDBFARQ,lincdados)
+
 
 local aINDICES
 LOCAL nINDICES
@@ -536,47 +613,47 @@ LOCAL cINDEXNAME
 LOCAL J
 local msql
 local lgravasql
-LOCAL cSqlFields, cSqlIndexes
+LOCAL cSqlFields,cSqlIndexes
 LOCAL aRETUMETA
 
-aRETUMETA:=GeraSQLMetadata()
-cSqlFields  :=aRETUMETA[1] 
+aRETUMETA   := GeraSQLMetadata()
+cSqlFields  := aRETUMETA[1]
 cSqlIndexes := aRETUMETA[2]
 
 
 
 // Execução dos comandos de criação das tabelas de metadados
-IF !Empty( cSqlFields )
-   
-   IF lMDB .OR. lACCDB  .OR. lFDB 
-      
+IF !Empty(cSqlFields)
+
+   IF lMDB .OR. lACCDB .OR. lFDB
+
       // Tenta criar a tabela de metadados de campos de forma isolada
       TRY
-         executacmd(cMDBARQ, cSqlFields)
+         executacmd(cMDBARQ,cSqlFields)
       CATCH
          // Tabela 'table_metadata' já existe ou erro ignorado com segurança
       END
-      
+
       // Tenta criar a tabela de metadados de índices de forma isolada
       TRY
-         executacmd(cMDBARQ, cSqlIndexes)
+         executacmd(cMDBARQ,cSqlIndexes)
       CATCH
          // Tabela 'index_metadata' já existe ou erro ignorado com segurança
       END
-      
+
    ELSE
       // Bancos que suportam "IF NOT EXISTS" ou validação nativa (SQLite, MySQL, PostgreSQL, SQL Server)
-      executacmd(cMDBARQ, cSqlFields)
-      executacmd(cMDBARQ, cSqlIndexes)
+      executacmd(cMDBARQ,cSqlFields)
+      executacmd(cMDBARQ,cSqlIndexes)
    ENDIF
-   
+
 ENDIF
 
 lgravasql := mdg("gravar sql")
 aINDICES  := {}
-IF ! dbUseArea( .F.,, cDBFARQ,, .T., .F. )
-      MDT("Não foi possível abrir o arquivo DBF: " + cDBFARQ)
-      RETURN .F.
+IF !dbUseArea(.F.,,cDBFARQ,,.T.,.F.)
+   MDT("Não foi possível abrir o arquivo DBF: "+cDBFARQ)
+   RETURN .F.
 ENDIF
 
 
@@ -589,24 +666,24 @@ ctablename  := cNOMETABELA
 
 // 1. LIMPEZA DOS METADADOS (Geral para todos os bancos)
 // Limpa o que existia anteriormente para evitar duplicidade na re-importacao
-executacmd( cMDBARQ, "DELETE FROM table_metadata WHERE nome_tabela = " + c2sql(cNOMETABELA) )
-executacmd( cMDBARQ, "DELETE FROM index_metadata WHERE nome_tabela = " + c2sql(cNOMETABELA) )
+executacmd(cMDBARQ,"DELETE FROM table_metadata WHERE nome_tabela = "+c2sql(cNOMETABELA))
+executacmd(cMDBARQ,"DELETE FROM index_metadata WHERE nome_tabela = "+c2sql(cNOMETABELA))
 
 
 //Grava metadata do dbf
-aMETADBF:=GeradbfSchema( cNOMETABELA, aStru )
+aMETADBF := GeradbfSchema(cNOMETABELA,aStru)
 FOR j := 1 TO LEN(aMETADBF)
-    mSQL:=aMETADBF[J]
-    executacmd( cMDBARQ, msql )
+   mSQL := aMETADBF[J]
+   executacmd(cMDBARQ,msql)
 NEXT J
 
-aINDICES:=GeraINDICES()
+aINDICES := GeraINDICES()
 nIndexes := LEN(aINDICES)
 FOR j := 1 TO nIndexes
-//    msql := aINDICES[J,1]  //Create index abaixo apos criacao da tabela
- //   executacmd( cMDBARQ, msql )
-    msql := aINDICES[J,2]   //insert into metadata
-    executacmd( cMDBARQ, msql )
+   //    msql := aINDICES[J,1]  //Create index abaixo apos criacao da tabela
+   //   executacmd( cMDBARQ, msql )
+   msql := aINDICES[J,2]  //insert into metadata
+   executacmd(cMDBARQ,msql)
 NEXT j
 
 dbclosearea()
@@ -629,18 +706,18 @@ CASE cTIPOSQL = "MYSQL" .OR. cTIPOSQL = "MYSQL64" .OR. cTIPOSQL = "MARIADB"
 CASE cTIPOSQL = "PGSQL" .OR. cTIPOSQL = "PGSQL64" .OR. cTIPOSQL = "POSTGRESQL"
    msql := SqliteCreateTable(cNOMETABELA,aSTRU,"PGSQL")
    executacmd(cMDBARQ,msql)
-CASE lMDB   
+CASE lMDB
    msql := SqliteCreateTable(cNOMETABELA,aSTRU,"MDB")
    executacmd(cMDBARQ,msql)
-CASE lACCDB   
+CASE lACCDB
    msql := SqliteCreateTable(cNOMETABELA,aSTRU,"ACCDB")
    executacmd(cMDBARQ,msql)
 CASE cTIPOSQL = "MSSQL" .OR. cTIPOSQL = "SQLSERVER"
    msql := SqliteCreateTable(cNOMETABELA,aSTRU,"MSSQL")
    executacmd(cMDBARQ,msql)
-CASE lFDB 
-   msql := SqliteCreateTable(cNOMETABELA, aSTRU, "FIREBIRD") // Certifique-se que sua SqliteCreateTable suporte este parâmetro
-   executacmd(cMDBARQ, msql)   
+CASE lFDB
+   msql := SqliteCreateTable(cNOMETABELA,aSTRU,"FIREBIRD")  // Certifique-se que sua SqliteCreateTable suporte este parâmetro
+   executacmd(cMDBARQ,msql)
 OTHERWISE
 ENDCASE
 
@@ -649,14 +726,14 @@ IF lGRAVASQL .AND. .NOT. EMPTY(msql)
 ENDIF
 
 if len(aindices) > 0
-    msql := ""
-    for ii := 1 to len(aINDICES)
-        executacmd(cMDBARQ, aINDICEs[II,1])
-        mSQL += aINDICEs[II,1]+HB_OSNEWLINE()
-    next ii
-    IF lGRAVASQL
-       HB_MEMOWRIT(cNOMETABELA+"_createindex_"+cTIPOSQL+".sql",mSQL,.f.)
-    endif  
+   msql := ""
+   for ii := 1 to len(aINDICES)
+      executacmd(cMDBARQ,aINDICEs[II,1])
+      mSQL += aINDICEs[II,1]+HB_OSNEWLINE()
+   next ii
+   IF lGRAVASQL
+      HB_MEMOWRIT(cNOMETABELA+"_createindex_"+cTIPOSQL+".sql",mSQL,.f.)
+   endif
 endif
 
 cTABELA := cNOMETABELA  //publica usada o opencmdarq
@@ -664,21 +741,21 @@ IF cTIPOSQL = "PGSQL" .OR. cTIPOSQL = "POSTGRESQL" .OR. cTIPOSQL = "PGSQL64"  //
    IF EMPTY(COWNERX)
       cTABELA := CHR(34)+UPPER(cTABELA)+CHR(34)
    ELSE
-      cTABELA := CHR(34)+AllTrim(cOWNERX) + "." + cTABELA+CHR(34)
-   ENDIF   
+      cTABELA := CHR(34)+AllTrim(cOWNERX)+"."+cTABELA+CHR(34)
+   ENDIF
 ENDIF
 
 IF nLASTREC > 0 .AND. lincdados
-      IF ! opencmdbarq()
-         MDT("Erro ao abrir nova tabela para importação via RDDADOX")
-      ELSE
-         TRY
-            APPEND FROM ( cDBFARQ ) WHILE zei_fort(nLASTREC,,,1)
-         CATCH oErR
-            MDT("Erro anexando dados no APPEND FROM")
-         END
-      ENDIF
-      dbcloseall()
+   IF !opencmdbarq()
+      MDT("Erro ao abrir nova tabela para importação via RDDADOX")
+   ELSE
+      TRY
+         APPEND FROM (cDBFARQ) WHILE zei_fort(nLASTREC,,,1)
+      CATCH oErR
+         MDT("Erro anexando dados no APPEND FROM")
+      END
+   ENDIF
+   dbcloseall()
 ENDIF
 
 Set(_SET_DATEFORMAT,"dd/mm/yyyy")
@@ -689,178 +766,203 @@ RETURN .T.
 
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 *+    Function OPENTIPOARQ()
+*+
+*+
 *+
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 FUNCTION OPENTIPOARQ
+
 
 LOCAL cMDBARQ
 cMDBARQ := ""
 
 DO CASE
-CASE lMDB   
+CASE lMDB
    cMDBARQ    := win_GetOPENFileName(,"Arquivos de Destino",HB_CWD(),"Arquivos mdb","*.MDB",1)
    cDATABASEX := cMDBARQ
-    hb_FNameSplit(cMDBARQ,NIL,@cBANCOX,NIL)
-CASE lACCDB   
+   hb_FNameSplit(cMDBARQ,NIL,@cBANCOX,NIL)
+CASE lACCDB
    cMDBARQ    := win_GetOPENFileName(,"Arquivos de Destino",HB_CWD(),"Arquivos accdb","*.accdb",1)
    cDATABASEX := cMDBARQ
-    hb_FNameSplit(cMDBARQ,NIL,@cBANCOX,NIL)
+   hb_FNameSplit(cMDBARQ,NIL,@cBANCOX,NIL)
 CASE cTIPOSQL = "SQLITE"
    cMDBARQ := win_GetOpenFileName(,"SQLite Files",HB_CWD(),"SQLite",;
     {{'SQLite','*.sqlite'},{'SQLite db','*.DB'},;
     {'SQLite3','*.sqlite3'},{'SQLite db3','*.DB3'},;
     {'SQLite Fossil','*.fossil'},{'All Files','*.*'}},1)
    cDATABASEX := cMDBARQ
-    hb_FNameSplit(cMDBARQ,NIL,@cBANCOX,NIL)
-CASE lFDB 
+   hb_FNameSplit(cMDBARQ,NIL,@cBANCOX,NIL)
+CASE lFDB
    cMDBARQ := win_GetopenFileName(,"Firebase Files",HB_CWD(),"Firebase",;
     {{'Firebird fdb','*.fdb'},{'Firebird gdb','*.gdb'},{'Firebird ib','*.ib'},;
-     {'All Files','*.*'}},1)      
-    cDATABASEX := cMDBARQ
-    hb_FNameSplit(cMDBARQ,NIL,@cBANCOX,NIL)
+    {'All Files','*.*'}},1)
+   cDATABASEX := cMDBARQ
+   hb_FNameSplit(cMDBARQ,NIL,@cBANCOX,NIL)
 CASE cTIPOSQL == "PARADOX"
-    cMDBARQ := win_GetOPENFileName(,"Selecione o arquivo Paradox",,"Arquivo DB|*.db",,"*.db")
-    cDATABASEX := cMDBARQ
-    HB_FNameSplit( cMDBARQ, NIL , @cTABELAX , NIL ) 
+   cMDBARQ    := win_GetOPENFileName(,"Selecione o arquivo Paradox",,"Arquivo DB|*.db",,"*.db")
+   cDATABASEX := cMDBARQ
+   HB_FNameSplit(cMDBARQ,NIL,@cTABELAX,NIL)
 ENDCASE
 
 IF cTIPOSQL = "MYSQL" .OR. cTIPOSQL = "MYSQL64" .OR. cTIPOSQL = "MARIADB" .OR. cTIPOSQL = "PGSQL" .OR. cTIPOSQL = "PGSQL64" .OR. cTIPOSQL = "POSTGRESQL" ;
-    .OR. cTIPOSQL = "MSSQL" .OR. cTIPOSQL = "SQLSERVER" .OR. cTIPOSQL = "LETO" .OR. lFDB 
-    cBANCOX := PADR(cBANCOX,30," ")
+           .OR. cTIPOSQL = "MSSQL" .OR. cTIPOSQL = "SQLSERVER" .OR. cTIPOSQL = "LETO" .OR. lFDB
+   cBANCOX  := PADR(cBANCOX,30," ")
    cSERVERX := PADR(cSERVERX,30," ")
-   cUSERX := PADR(cUSERX,30," ")
-   cPASSX := PADR(cPASSX,30," ")
-   cownerX := PADR(cownerX,30," ")
-   cPASSX := PADR(cPASSX,30," ")
+   cUSERX   := PADR(cUSERX,30," ")
+   cPASSX   := PADR(cPASSX,30," ")
+   cownerX  := PADR(cownerX,30," ")
+   cPASSX   := PADR(cPASSX,30," ")
    HB_dispbox(3,22,22,55,B_DOUBLE+" ")
-   @ 05,23 SAY "Banco"
-   @ 07,23 SAY "Server"         
-   @ 09,23 SAY "user"           
-   @ 11,23 say "pass"    
-   @ 13,23 say "owner"
-   @ 15,23 say "port"
-   @ 06,23 GET cBANCOX   VALID buscachaves( cBANCOX )  
-   @ 08,23 get cSERVERX  
-   @ 10,23 get cuserx         
-   @ 12,23 get cpassx
-   @ 14,23 get cownerx
-   @ 16,23 get cportax         
+   @ 05,23 SAY "Banco"                                    
+   @ 07,23 SAY "Server"                                   
+   @ 09,23 SAY "user"                                     
+   @ 11,23 say "pass"                                     
+   @ 13,23 say "owner"                                    
+   @ 15,23 say "port"                                     
+   @ 06,23 GET cBANCOX  VALID buscachaves(cBANCOX)        
+   @ 08,23 get cSERVERX                                   
+   @ 10,23 get cuserx                                     
+   @ 12,23 get cpassx                                     
+   @ 14,23 get cownerx                                    
+   @ 16,23 get cportax                                    
    READ
-   cSERVERX  := ALLTRIM(cSERVERX)
-   cuserx    := alltrim(cuserx)
-   cpassx    := alltrim(cpassx)
-   cowenrx   := alltrim(cownerx)
-   cportax   := alltrim(cportax)
-   cBANCOX   := alltrim(cBANCOx)
-   cDATABASEX:= alltrim(cdatabasex)
-   IF lFDB //firebird requer arquivo fisico .fdb .gdb .ib e configuracao do server
+   cSERVERX   := ALLTRIM(cSERVERX)
+   cuserx     := alltrim(cuserx)
+   cpassx     := alltrim(cpassx)
+   cowenrx    := alltrim(cownerx)
+   cportax    := alltrim(cportax)
+   cBANCOX    := alltrim(cBANCOx)
+   cDATABASEX := alltrim(cdatabasex)
+   IF lFDB  //firebird requer arquivo fisico .fdb .gdb .ib e configuracao do server
    ELSE
-     cMDBARQ := cDATABASEX
-   ENDIF  
+      cMDBARQ := cDATABASEX
+   ENDIF
 ENDIF
 
 RETURN cMDBARQ
 
 
 *+--------------------------------------------------------------------\
+*+
 *+    Function buscachaves()
+*+
 *+--------------------------------------------------------------------\
-FUNCTION buscachaves( cNomeBanco )
-   LOCAL cSecaoCofre
+*+
+FUNCTION buscachaves(cNomeBanco)
 
-   // Se o usuário digitou algo manualmente no servidor, aceita e não busca no cofre
-   IF ! Empty( cNomeBanco)
+LOCAL cSecaoCofre
 
-       // Garante que a seção do cofre será o nome do banco limpo em maiúsculas
-       cSecaoCofre := Upper( AllTrim( cNomeBanco ) )
+// Se o usuário digitou algo manualmente no servidor, aceita e não busca no cofre
+IF !Empty(cNomeBanco)
 
-       // Busca as credenciais de forma segura no config.dat mascarado
-       cSERVERX := padr(LerDoCofre( cSecaoCofre, "Server",cSERVERX ),30," ")
-       cUSERX   := padr(LerDoCofre( cSecaoCofre, "User",cUSERX ),30," ")
-       cPASSX   := padr(LerDoCofre( cSecaoCofre, "Password",cPASSX ),30," ")
-       cOwnerX   := padr(LerDoCofre( cSecaoCofre, "Owner",cOwnerX ),30," ")
-       cportaX   := padr(LerDoCofre( cSecaoCofre, "portax",cportaX),30," ")
-    ENDIF   
-    buscapadrao()
-    IF lFDB .AND. EMPTY(cPASSX)
-       cPASSX   := padr("masterkey",30," ")
-    ENDIF
+   // Garante que a seção do cofre será o nome do banco limpo em maiúsculas
+   cSecaoCofre := Upper(AllTrim(cNomeBanco))
 
-   RETURN .T.
+   // Busca as credenciais de forma segura no config.dat mascarado
+   cSERVERX := padr(LerDoCofre(cSecaoCofre,"Server",cSERVERX),30," ")
+   cUSERX   := padr(LerDoCofre(cSecaoCofre,"User",cUSERX),30," ")
+   cPASSX   := padr(LerDoCofre(cSecaoCofre,"Password",cPASSX),30," ")
+   cOwnerX  := padr(LerDoCofre(cSecaoCofre,"Owner",cOwnerX),30," ")
+   cportaX  := padr(LerDoCofre(cSecaoCofre,"portax",cportaX),30," ")
+ENDIF
+buscapadrao()
+IF lFDB .AND. EMPTY(cPASSX)
+   cPASSX := padr("masterkey",30," ")
+ENDIF
 
+RETURN .T.
+
+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function buscapadrao()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
 function buscapadrao()
-IF cTIPOSQL="LETO"
+
+IF cTIPOSQL = "LETO"
    IF EMPTY(cSERVERX)
-      cSERVERX   := PADR("//127.0.0.1:2812/",30," ")  
-   ENDIF   
+      cSERVERX := PADR("//127.0.0.1:2812/",30," ")
+   ENDIF
    IF EMPTY(cPORTAX)
-      cPORTAX:= PADR("2812",30," ")
-   ENDIF   
-ENDIF   
+      cPORTAX := PADR("2812",30," ")
+   ENDIF
+ENDIF
 
 IF cTIPOSQL = "MYSQL" .OR. cTIPOSQL = "MYSQL64" .OR. cTIPOSQL = "MARIADB"
    IF EMPTY(cUSERX)
-       cUSERX := PADR("root",30," ")   
+      cUSERX := PADR("root",30," ")
    ENDIF
    IF EMPTY(cPORTAX)
-       cPORTAX:= PADR("3306",30," ")
+      cPORTAX := PADR("3306",30," ")
    ENDIF
 ENDIF
 
 IF cTIPOSQL = "PGSQL" .OR. cTIPOSQL = "PGSQL64" .OR. cTIPOSQL = "POSTGRESQL"
    IF EMPTY(cUSERX)
-       cUSERX := PADR("postgres",30," ") 
-   ENDIF   
+      cUSERX := PADR("postgres",30," ")
+   ENDIF
    IF EMPTY(cPORTAX)
-       cPORTAX:= PADR("5432",30," ")
+      cPORTAX := PADR("5432",30," ")
    ENDIF
 ENDIF
-IF lFDB 
+IF lFDB
    IF EMPTY(cSERVERX)
-       cSERVERX := PADR("localhost", 30, " ")   //net://
+      cSERVERX := PADR("localhost",30," ")  //net://
    ENDIF
    IF EMPTY(cUSERX)
-      cUSERX := PADR("SYSDBA",30," ")  
+      cUSERX := PADR("SYSDBA",30," ")
    ENDIF
    IF EMPTY(cPORTAX)
-      cPORTAX:= PADR("3050",30," ")
+      cPORTAX := PADR("3050",30," ")
    ENDIF
 ENDIF
 IF cTIPOSQL = "ORACLE" .OR. cTIPOSQL = "OCI"
    IF EMPTY(cPORTAX)
-        cPORTAX:= PADR("1521",30," ")
+      cPORTAX := PADR("1521",30," ")
    ENDIF
 ENDIF
 IF cTIPOSQL = "MSSQL"
    IF EMPTY(cPORTAX)
-        cPORTAX:= PADR("1433",30," ")
+      cPORTAX := PADR("1433",30," ")
    ENDIF
 ENDIF
 IF cTIPOSQL == "PARADOX"
-    cSERVERX := SPACE(30)
+   cSERVERX := SPACE(30)
 ENDIF
 IF cTIPOSQL == "CUBRID"
-    IF EMPTY(cSERVERX)
-        cSERVERX := PADR("localhost", 30, " ") 
+   IF EMPTY(cSERVERX)
+      cSERVERX := PADR("localhost",30," ")
    ENDIF
    IF EMPTY(cPORTAX)
-        cPORTAX:= PADR("33000",30," ")
-   ENDIF
-      IF EMPTY(cUSERX)
-      cUSERX := PADR("dba",30," ")  
-   ENDIF
-ENDIF
-IF lFDB 
-   IF EMPTY(cSERVERX)
-       cSERVERX := PADR("localhost", 30, " ")
+      cPORTAX := PADR("33000",30," ")
    ENDIF
    IF EMPTY(cUSERX)
-      cUSERX := PADR("SYSDBA",30," ")  
+      cUSERX := PADR("dba",30," ")
+   ENDIF
+ENDIF
+IF lFDB
+   IF EMPTY(cSERVERX)
+      cSERVERX := PADR("localhost",30," ")
+   ENDIF
+   IF EMPTY(cUSERX)
+      cUSERX := PADR("SYSDBA",30," ")
    ENDIF
    IF EMPTY(cPORTAX)
-      cPORTAX:= PADR("3050",30," ")
+      cPORTAX := PADR("3050",30," ")
    ENDIF
 ENDIF
 RETURN
@@ -870,64 +972,78 @@ RETURN
 
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 *+    Function MDBIMPDBF()
+*+
+*+
 *+
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 FUNCTION MDBIMPDBF()
+
 
 
 MDBARQ := OPENTIPOARQ()
 
 
- nOLDTIPO := TIPODBF
-            alertX( "escolha origem" )
-            tipodbfesc()
-            nORITIPO   := TIPODBF
-            cORIDRIVER := RDDNOME( TIPODBF )
-            lincdados:=mdg("Incluir Dados")
-            IF MDG("Arquivo individual")
-               cARQORI    := win_GetOpenFileName(, "Arquivos de Origem", hb_cwd(), "Arquivos de Origem", "*."+TABLEEXT, 1 )
-                IF File( cARQORI )
-                   IF cTIPOSQL="PARADOX"
-                     Dbf_Para_Paradox( cARQORI,cORIDRIVER)
-                   ELSE
-                     DBF2MDB(cMDBARQ,cARQORI,lincdados)
-                  ENDIF
-              ENDIF
-            ELSE
-               cPASTA:=SelectFolder()
-               cPASTA+="\*."+TABLEEXT 
-               //FAZERDBF(bUSO                                       , lSHARE[.F.] , bPRE, bPOS, cMASK ,LOPEN )
-               IF cTIPOSQL="PARADOX"
-                  FAZERDBF( {|| Dbf_Para_Paradox( cCAMINHOCOMPLETO,cORIDRIVER,lincdados) }, .F. ,     ,     ,cPASTA,.F.)
-               ELSE
-                  FAZERDBF( {|| DBF2MDB(cMDBARQ,cCAMINHOCOMPLETO,lincdados) }, .F. ,     ,     ,cPASTA,.F.)
-               ENDIF   
-            ENDIF   
-            RDDNOME( nOLDTIPO )   // retorna tipo anterior
+nOLDTIPO := TIPODBF
+alertX("escolha origem")
+tipodbfesc()
+nORITIPO   := TIPODBF
+cORIDRIVER := RDDNOME(TIPODBF)
+lincdados  := mdg("Incluir Dados")
+IF MDG("Arquivo individual")
+   cARQORI := win_GetOpenFileName(,"Arquivos de Origem",hb_cwd(),"Arquivos de Origem","*."+TABLEEXT,1)
+   IF File(cARQORI)
+      IF cTIPOSQL = "PARADOX"
+         Dbf_Para_Paradox(cARQORI,cORIDRIVER)
+      ELSE
+         DBF2MDB(cMDBARQ,cARQORI,lincdados)
+      ENDIF
+   ENDIF
+ELSE
+   cPASTA := SelectFolder()
+   cPASTA += "\*."+TABLEEXT
+   //FAZERDBF(bUSO                                       , lSHARE[.F.] , bPRE, bPOS, cMASK ,LOPEN )
+   IF cTIPOSQL = "PARADOX"
+      FAZERDBF({|| Dbf_Para_Paradox(cCAMINHOCOMPLETO,cORIDRIVER,lincdados)},.F.,,,cPASTA,.F.)
+   ELSE
+      FAZERDBF({|| DBF2MDB(cMDBARQ,cCAMINHOCOMPLETO,lincdados)},.F.,,,cPASTA,.F.)
+   ENDIF
+ENDIF
+RDDNOME(nOLDTIPO)   // retorna tipo anterior
 return
 
 
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 *+    Function MDBGERAINFO()
+*+
+*+
 *+
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 FUNCTION MDBGERAINFO()
+
 LOCAL cCONNSTRING
 MDBARQ := OPENTIPOARQ()
-DO CASE 
-   CASE lMDB
-        GeraMDdbml(MDBARQ)
-   CASE lACCDB
-        GeraMDdbml(MDBARQ)
-   CASE cTIPOSQL == "SQLITE"
-       GeraMDdbml(MDBARQ)
-   OTHERWISE
-       cCONNSTRING:=GERACONN( cDATABASEX )
-       GeraMDdbml(,cCONNSTRING)
+DO CASE
+CASE lMDB
+   GeraMDdbml(MDBARQ)
+CASE lACCDB
+   GeraMDdbml(MDBARQ)
+CASE cTIPOSQL == "SQLITE"
+   GeraMDdbml(MDBARQ)
+OTHERWISE
+   cCONNSTRING := GERACONN(cDATABASEX)
+   GeraMDdbml(,cCONNSTRING)
 ENDCASE
 
 
@@ -936,7 +1052,15 @@ ENDCASE
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function MDBTABLES()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -944,7 +1068,12 @@ ENDCASE
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 FUNCTION MDBTABLES(cDataBase,cTABELA,cCAMPOSQL)
+
 
 LOCAL aRETU
 local cCONN
@@ -960,11 +1089,11 @@ LOCAL cSchemaSQL
 LOCAL cUserOracle
 LOCAL cSchemaMY
 LOCAL cSchemaPG
-LOCAL cCHAVENAME  := ""
-LOCAL cCHAVECAMPO := ""
+LOCAL cCHAVENAME   := ""
+LOCAL cCHAVECAMPO  := ""
 
 IF cTIPOSQL == "PARADOX"
-   RETURN //Nao implantado
+   RETURN   //Nao implantado
 ENDIF
 
 Lopen        := .F.
@@ -998,14 +1127,14 @@ aRETU := {}
 cCONN := GERACONN(cDATABASE)
 
 try
-oConn := WIN_OLECreateObject("ADODB.Connection")
-with object oConn
-:ConnectionString := cConn
-:Open()
-END
+   oConn := WIN_OLECreateObject("ADODB.Connection")
+   with object oConn
+      :ConnectionString := cConn
+      :Open()
+   END
 catch oErr
-ShowADOError(oERR,oConn,cConn)
-return aRETU
+   ShowADOError(oERR,oConn,cConn)
+   return aRETU
 end
 
 
@@ -1016,132 +1145,132 @@ oRS:CursorLocation := 3
 
 cCOMANDO := ""
 IF cTIPOINFO = "DATABASE"
-   cCOMANDO :=Dialeto_ShowDatabases()
+   cCOMANDO := Dialeto_ShowDatabases()
 ENDIF
 
 IF cTIPOINFO = "TABELA"
-    DO CASE
-       CASE lMDB .OR. lACCDB 
-          cCOMANDO := "SELECT MSysObjects.name AS TABLE_NAME FROM MSysObjects WHERE MSysObjects.type IN (1,4,6) " + ;
-                      "AND MSysObjects.name NOT LIKE '~*' AND MSysObjects.name NOT LIKE 'MSys%' " + ;
-                      "ORDER BY MSysObjects.name;"
+   DO CASE
+   CASE lMDB .OR. lACCDB
+      cCOMANDO := "SELECT MSysObjects.name AS TABLE_NAME FROM MSysObjects WHERE MSysObjects.type IN (1,4,6) "+;
+       "AND MSysObjects.name NOT LIKE '~*' AND MSysObjects.name NOT LIKE 'MSys%' "+;
+       "ORDER BY MSysObjects.name;"
 
-       CASE cTIPOSQL == "SQLITE" .OR. IsSQLiteExt( cDatabaseX )
-          cCOMANDO := "SELECT name AS TABLE_NAME FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name;"
+   CASE cTIPOSQL == "SQLITE" .OR. IsSQLiteExt(cDatabaseX)
+      cCOMANDO := "SELECT name AS TABLE_NAME FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name;"
 
-       CASE cTIPOSQL == "MYSQL" .OR. cTIPOSQL == "MYSQL64" .OR. cTIPOSQL == "MARIADB"
-          // Permite o uso padronizado do alias "TABLE_NAME" e aceita filtrar por banco/schema (cOwnerx)
-          if Empty( cOwnerx )
-             cCOMANDO := "SELECT table_name AS TABLE_NAME FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema = DATABASE() ORDER BY table_name;"
-          else
-             cCOMANDO := "SELECT table_name AS TABLE_NAME FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema = '" + cOwnerx + "' ORDER BY table_name;"
-          endif
+   CASE cTIPOSQL == "MYSQL" .OR. cTIPOSQL == "MYSQL64" .OR. cTIPOSQL == "MARIADB"
+      // Permite o uso padronizado do alias "TABLE_NAME" e aceita filtrar por banco/schema (cOwnerx)
+      if Empty(cOwnerx)
+         cCOMANDO := "SELECT table_name AS TABLE_NAME FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema = DATABASE() ORDER BY table_name;"
+      else
+         cCOMANDO := "SELECT table_name AS TABLE_NAME FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema = '"+cOwnerx+"' ORDER BY table_name;"
+      endif
 
-       CASE cTIPOSQL == "PGSQL" .OR. cTIPOSQL == "PGSQL64" .OR. cTIPOSQL == "POSTGRESQL"
-          if Empty( cOwnerx )
-             cCOMANDO := "SELECT tablename AS TABLE_NAME FROM pg_tables WHERE schemaname='public' ORDER BY tablename;"
-          else
-             cCOMANDO := "SELECT tablename AS TABLE_NAME FROM pg_tables WHERE schemaname = '" + cOwnerx + "' ORDER BY tablename;"
-          endif
-          
-       CASE cTIPOSQL == "MSSQL" .OR. cTIPOSQL == "SQLSERVER"
-          if Empty( cOwnerx )
-             cCOMANDO := "SELECT TABLE_NAME AS TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' ORDER BY TABLE_NAME;"
-          else
-             cCOMANDO := "SELECT TABLE_NAME AS TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_SCHEMA = '" + cOwnerx + "' ORDER BY TABLE_NAME;"
-          endif
+   CASE cTIPOSQL == "PGSQL" .OR. cTIPOSQL == "PGSQL64" .OR. cTIPOSQL == "POSTGRESQL"
+      if Empty(cOwnerx)
+         cCOMANDO := "SELECT tablename AS TABLE_NAME FROM pg_tables WHERE schemaname='public' ORDER BY tablename;"
+      else
+         cCOMANDO := "SELECT tablename AS TABLE_NAME FROM pg_tables WHERE schemaname = '"+cOwnerx+"' ORDER BY tablename;"
+      endif
 
-       CASE cTIPOSQL == "ORACLE" .OR. cTIPOSQL == "OCI" 
-          if Empty( cOwnerx )
-             cCOMANDO := "SELECT table_name AS TABLE_NAME FROM user_tables ORDER BY TABLE_NAME;"
-          else
-             cCOMANDO := "SELECT table_name AS TABLE_NAME FROM all_tables WHERE owner = '" + Upper(cOwnerx) + "' ORDER BY TABLE_NAME;"
-          endif
-      CASE cTIPOSQL == "DUCKDB"
-           if Empty( cOwnerx )
-              cCOMANDO := "SELECT table_name AS TABLE_NAME FROM duckdb_tables WHERE schema_name = 'main' ORDER BY table_name;"
-           else
-              cCOMANDO := "SELECT table_name AS TABLE_NAME FROM duckdb_tables WHERE schema_name = '" + Lower(cOwnerx) + "' ORDER BY table_name;"
-           endif
+   CASE cTIPOSQL == "MSSQL" .OR. cTIPOSQL == "SQLSERVER"
+      if Empty(cOwnerx)
+         cCOMANDO := "SELECT TABLE_NAME AS TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' ORDER BY TABLE_NAME;"
+      else
+         cCOMANDO := "SELECT TABLE_NAME AS TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_SCHEMA = '"+cOwnerx+"' ORDER BY TABLE_NAME;"
+      endif
 
-       CASE lFDB 
-          // RDB$SYSTEM_FLAG = 0 traz apenas tabelas criadas pelo usuário (ignora tabelas do sistema do Firebird)
-          // TRIM() remove espaços em branco à direita que o Firebird gera nativamente nos metadados
-          if Empty( cOwnerx )
-             cCOMANDO := "SELECT TRIM(RDB$RELATION_NAME) AS TABLE_NAME FROM RDB$RELATIONS WHERE COALESCE(RDB$SYSTEM_FLAG, 0) = 0 AND RDB$VIEW_BLR IS NULL ORDER BY RDB$RELATION_NAME;"
-          else
-             cCOMANDO := "SELECT TRIM(RDB$RELATION_NAME) AS TABLE_NAME FROM RDB$RELATIONS WHERE COALESCE(RDB$SYSTEM_FLAG, 0) = 0 AND RDB$VIEW_BLR IS NULL AND RDB$OWNER_NAME = '" + cOwnerx + "' ORDER BY RDB$RELATION_NAME;"
-          endif
-          
-       CASE cTIPOSQL == "SYBASE"
-          if Empty( cOwnerx )
-             cCOMANDO := "SELECT name AS TABLE_NAME FROM sysobjects WHERE type = N'U' ORDER BY name;"
-          else
-             cCOMANDO := "SELECT name AS TABLE_NAME FROM sysobjects WHERE type = N'U' AND USER_NAME(uid) = '" + cOwnerx + "' ORDER BY name;"
-          endif
+   CASE cTIPOSQL == "ORACLE" .OR. cTIPOSQL == "OCI"
+      if Empty(cOwnerx)
+         cCOMANDO := "SELECT table_name AS TABLE_NAME FROM user_tables ORDER BY TABLE_NAME;"
+      else
+         cCOMANDO := "SELECT table_name AS TABLE_NAME FROM all_tables WHERE owner = '"+Upper(cOwnerx)+"' ORDER BY TABLE_NAME;"
+      endif
+   CASE cTIPOSQL == "DUCKDB"
+      if Empty(cOwnerx)
+         cCOMANDO := "SELECT table_name AS TABLE_NAME FROM duckdb_tables WHERE schema_name = 'main' ORDER BY table_name;"
+      else
+         cCOMANDO := "SELECT table_name AS TABLE_NAME FROM duckdb_tables WHERE schema_name = '"+Lower(cOwnerx)+"' ORDER BY table_name;"
+      endif
+
+   CASE lFDB
+      // RDB$SYSTEM_FLAG = 0 traz apenas tabelas criadas pelo usuário (ignora tabelas do sistema do Firebird)
+      // TRIM() remove espaços em branco à direita que o Firebird gera nativamente nos metadados
+      if Empty(cOwnerx)
+         cCOMANDO := "SELECT TRIM(RDB$RELATION_NAME) AS TABLE_NAME FROM RDB$RELATIONS WHERE COALESCE(RDB$SYSTEM_FLAG, 0) = 0 AND RDB$VIEW_BLR IS NULL ORDER BY RDB$RELATION_NAME;"
+      else
+         cCOMANDO := "SELECT TRIM(RDB$RELATION_NAME) AS TABLE_NAME FROM RDB$RELATIONS WHERE COALESCE(RDB$SYSTEM_FLAG, 0) = 0 AND RDB$VIEW_BLR IS NULL AND RDB$OWNER_NAME = '"+cOwnerx+"' ORDER BY RDB$RELATION_NAME;"
+      endif
+
+   CASE cTIPOSQL == "SYBASE"
+      if Empty(cOwnerx)
+         cCOMANDO := "SELECT name AS TABLE_NAME FROM sysobjects WHERE type = N'U' ORDER BY name;"
+      else
+         cCOMANDO := "SELECT name AS TABLE_NAME FROM sysobjects WHERE type = N'U' AND USER_NAME(uid) = '"+cOwnerx+"' ORDER BY name;"
+      endif
    ENDCASE
 ENDIF
 IF cTIPOINFO = "ESTRUTURA"
-   cCOMANDO :=DIALETO_Estrutura(cTIPOSQL,cTABELA,cOwnerx)
+   cCOMANDO := DIALETO_Estrutura(cTIPOSQL,cTABELA,cOwnerx)
 ENDIF
 IF cTIPOINFO = "CCAMPOSQL"
    cCOMANDO := cCAMPOSQL
 ENDIF
 IF cTIPOINFO = "__INDEX__"
-  DO CASE
+   DO CASE
    CASE cTIPOSQL == "MYSQL" .OR. cTIPOSQL == "MYSQL64" .OR. cTIPOSQL == "MARIADB"
       // Em vez de SHOW INDEXES (que dificulta aliases), usamos a STATISTICS da information_schema
-      cSchemaMY := iif( Empty(cOwnerx), "DATABASE()", "'" + cOwnerx + "'" )
-      cCOMANDO := "SELECT INDEX_NAME AS INDEX_NAME, COLUMN_NAME AS COLUMN_NAME " + ;
-                  "FROM INFORMATION_SCHEMA.STATISTICS " + ;
-                  "WHERE TABLE_NAME = '" + cTabela + "' AND TABLE_SCHEMA = " + cSchemaMY + " " + ;
-                  "ORDER BY INDEX_NAME, SEQ_IN_INDEX;"
+      cSchemaMY := iif(Empty(cOwnerx),"DATABASE()","'"+cOwnerx+"'")
+      cCOMANDO  := "SELECT INDEX_NAME AS INDEX_NAME, COLUMN_NAME AS COLUMN_NAME "+;
+       "FROM INFORMATION_SCHEMA.STATISTICS "+;
+       "WHERE TABLE_NAME = '"+cTabela+"' AND TABLE_SCHEMA = "+cSchemaMY+" "+;
+       "ORDER BY INDEX_NAME, SEQ_IN_INDEX;"
 
    CASE cTIPOSQL == "PGSQL" .OR. cTIPOSQL == "PGSQL64" .OR. cTIPOSQL == "POSTGRESQL"
       // No Postgres precisamos cruzar o catálogo interno para extrair os nomes das colunas de forma ordenada
-      cSchemaPG := iif( Empty(cOwnerx), "public", cOwnerx )
-      cCOMANDO := "SELECT t.relname AS INDEX_NAME, a.attname AS COLUMN_NAME " + ;
-                  "FROM pg_class t " + ;
-                  "JOIN pg_index ix ON t.oid = ix.indexrelid " + ;
-                  "JOIN pg_class i ON i.oid = ix.indrelid " + ;
-                  "JOIN pg_attribute a ON a.attrelid = t.oid " + ;
-                  "JOIN pg_namespace n ON n.oid = i.relnamespace " + ;
-                  "WHERE LOWER(i.relname) = '" + Lower(cTabela) + "' AND n.nspname = '" + cSchemaPG + "' " + ;
-                  "ORDER BY t.relname, a.attnum;"
+      cSchemaPG := iif(Empty(cOwnerx),"public",cOwnerx)
+      cCOMANDO  := "SELECT t.relname AS INDEX_NAME, a.attname AS COLUMN_NAME "+;
+       "FROM pg_class t "+;
+       "JOIN pg_index ix ON t.oid = ix.indexrelid "+;
+       "JOIN pg_class i ON i.oid = ix.indrelid "+;
+       "JOIN pg_attribute a ON a.attrelid = t.oid "+;
+       "JOIN pg_namespace n ON n.oid = i.relnamespace "+;
+       "WHERE LOWER(i.relname) = '"+Lower(cTabela)+"' AND n.nspname = '"+cSchemaPG+"' "+;
+       "ORDER BY t.relname, a.attnum;"
    CASE cTIPOSQL == "DUCKDB"
-      cSchemaDK := iif( Empty(cOwnerx), "main", Lower(cOwnerx) )
-      cCOMANDO := "SELECT index_name AS INDEX_NAME, expressions AS COLUMN_NAME " + ;
-                  "FROM duckdb_indexes " + ;
-                  "WHERE table_name = '" + cTabela + "' AND schema_name = '" + cSchemaDK + "' " + ;
-                  "ORDER BY index_name;"               
+      cSchemaDK := iif(Empty(cOwnerx),"main",Lower(cOwnerx))
+      cCOMANDO  := "SELECT index_name AS INDEX_NAME, expressions AS COLUMN_NAME "+;
+       "FROM duckdb_indexes "+;
+       "WHERE table_name = '"+cTabela+"' AND schema_name = '"+cSchemaDK+"' "+;
+       "ORDER BY index_name;"
 
    CASE cTIPOSQL == "MSSQL" .OR. cTIPOSQL == "SQLSERVER"
       // Consulta padrão na sys.indexes do SQL Server
-      cCOMANDO := "SELECT ind.name AS INDEX_NAME, col.name AS COLUMN_NAME " + ;
-                  "FROM sys.indexes ind " + ;
-                  "JOIN sys.index_columns ic ON ind.object_id = ic.object_id AND ind.index_id = ic.index_id " + ;
-                  "JOIN sys.columns col ON ic.object_id = col.object_id AND ic.column_id = col.column_id " + ;
-                  "JOIN sys.tables t ON ind.object_id = t.object_id " + ;
-                  "WHERE t.name = '" + cTabela + "' AND ind.is_primary_key = 0 " + ;
-                  "ORDER BY ind.name, ic.key_ordinal;"
+      cCOMANDO := "SELECT ind.name AS INDEX_NAME, col.name AS COLUMN_NAME "+;
+       "FROM sys.indexes ind "+;
+       "JOIN sys.index_columns ic ON ind.object_id = ic.object_id AND ind.index_id = ic.index_id "+;
+       "JOIN sys.columns col ON ic.object_id = col.object_id AND ic.column_id = col.column_id "+;
+       "JOIN sys.tables t ON ind.object_id = t.object_id "+;
+       "WHERE t.name = '"+cTabela+"' AND ind.is_primary_key = 0 "+;
+       "ORDER BY ind.name, ic.key_ordinal;"
 
-   CASE cTIPOSQL == "SQLITE" .OR. IsSQLiteExt( cDatabaseX )
-      // Nota: O SQLite exige comandos em lote ou PRAGMA. Para leitura via Recordset genérico, 
+   CASE cTIPOSQL == "SQLITE" .OR. IsSQLiteExt(cDatabaseX)
+      // Nota: O SQLite exige comandos em lote ou PRAGMA. Para leitura via Recordset genérico,
       // o mais seguro é ler os metadados diretamente da tabela sqlite_master caso queira a query pura,
       // mas o comando pragma nativo é: "PRAGMA index_list('" + cTabela + "')"
-      cCOMANDO := "SELECT name AS INDEX_NAME, '' AS COLUMN_NAME FROM sqlite_master WHERE type='index' AND tbl_name='" + cTabela + "';"
-      
-CASE cTIPOSQL == "DUCKDB"
-   cSchemaDK := iif( Empty(cOwnerx), "main", Lower(cOwnerx) )
-   cCOMANDO := "SELECT index_name AS INDEX_NAME, expressions AS COLUMN_NAME " + ;
-               "FROM duckdb_indexes " + ;
-               "WHERE table_name = '" + cTabela + "' AND schema_name = '" + cSchemaDK + "' " + ;
-               "ORDER BY index_name;"      
-      
+      cCOMANDO := "SELECT name AS INDEX_NAME, '' AS COLUMN_NAME FROM sqlite_master WHERE type='index' AND tbl_name='"+cTabela+"';"
+
+   CASE cTIPOSQL == "DUCKDB"
+      cSchemaDK := iif(Empty(cOwnerx),"main",Lower(cOwnerx))
+      cCOMANDO  := "SELECT index_name AS INDEX_NAME, expressions AS COLUMN_NAME "+;
+       "FROM duckdb_indexes "+;
+       "WHERE table_name = '"+cTabela+"' AND schema_name = '"+cSchemaDK+"' "+;
+       "ORDER BY index_name;"
+
    ENDCASE
 ENDIF
 IF cTIPOINFO = "__VERSION__"
-   cCOMANDO :=Dialeto_Version()
+   cCOMANDO := Dialeto_Version()
 ENDIF
 
 
@@ -1150,18 +1279,18 @@ IF (cTIPOINFO = "ESTRUTURA" .OR. cTIPOINFO = "__INDEX__") .AND. lARQMDBACCDB
    //abaixo com catalog
 ELSE
    TRY
-   oRS:Open(cCOMANDO,oConN,adOpenDynamic,adLockOptimistic)
-   lOPEN := .T.
+      oRS:Open(cCOMANDO,oConN,adOpenDynamic,adLockOptimistic)
+      lOPEN := .T.
    CATCH oERR
-   lOPEN := .F.
-   IF lARQMDBACCDB .AND. cTIPOINFO = "TABELA"
-      //erro permisao acesso mysy
-      EXECUTACMD(cdatabase,"GRANT SELECT ON TABLE MSysObjects TO ADMIN,PUBLIC")
-      EXECUTACMD(cdatabase,"create view showtables as select name from MSysObjects where MSysObjects.type In (1,4,6) and MSysObjects.name not like '~*' and MSysObjects.name not like 'MSys%'")
-   ELSE
-      ShowADOError(oERR,oConn,cCOMANDO)
-   ENDIF
-END
+      lOPEN := .F.
+      IF lARQMDBACCDB .AND. cTIPOINFO = "TABELA"
+         //erro permisao acesso mysy
+         EXECUTACMD(cdatabase,"GRANT SELECT ON TABLE MSysObjects TO ADMIN,PUBLIC")
+         EXECUTACMD(cdatabase,"create view showtables as select name from MSysObjects where MSysObjects.type In (1,4,6) and MSysObjects.name not like '~*' and MSysObjects.name not like 'MSys%'")
+      ELSE
+         ShowADOError(oERR,oConn,cCOMANDO)
+      ENDIF
+   END
 ENDIF
 
 
@@ -1179,7 +1308,7 @@ IF lOPEN
          AADD(aRETU,ors:fields(0) :value)   //ors:fields(0) inicia as colunas com zero ou pelo nome da coluna fields("name")
       ENDIF
       IF cTIPOINFO = "ESTRUTURA"
-        
+
          cFieldName   := ''
          cFieldType   := ''
          nFieldLength := 0
@@ -1190,59 +1319,59 @@ IF lOPEN
          // Como a nossa 'Dialeto_ShowColumns()' padronizou o retorno usando ALIASES ("AS ..."),
          // não precisamos mais de um CASE para separar a leitura dos campos por banco!
          // Todos os SGBDs agora devolvem as mesmas colunas textuais em 'ors'.
-         
+
          TRY
             // Captura segura por nome do alias unificado
-            cFieldName   := Upper(AllTrim( hb_valToStr(ors:Fields("FIELD_NAME"):Value) ))
-            cFieldType   := Upper(AllTrim( hb_valToStr(ors:Fields("DATA_TYPE"):Value) ))
-            nFieldLength := fixnum( ors:Fields("FIELD_LEN"):Value )
-            nFieldDec    := fixnum( ors:Fields("FIELD_DEC"):Value )
+            cFieldName   := Upper(AllTrim(hb_valToStr(ors:Fields("FIELD_NAME") :Value)))
+            cFieldType   := Upper(AllTrim(hb_valToStr(ors:Fields("DATA_TYPE") :Value)))
+            nFieldLength := fixnum(ors:Fields("FIELD_LEN") :Value)
+            nFieldDec    := fixnum(ors:Fields("FIELD_DEC") :Value)
          CATCH
             // Tratamento de contingência para o SQLite antigo (caso o PRAGMA nativo ignore aliases)
-            IF cTIPOSQL == "SQLITE" .OR. IsSQLiteExt( cDatabaseX )
+            IF cTIPOSQL == "SQLITE" .OR. IsSQLiteExt(cDatabaseX)
                TRY
-                  cFieldName   := Upper(AllTrim( hb_valToStr(ors:Fields("name"):Value) ))
-                  cFieldType   := Upper(AllTrim( hb_valToStr(ors:Fields("type"):Value) ))
+                  cFieldName   := Upper(AllTrim(hb_valToStr(ors:Fields("name") :Value)))
+                  cFieldType   := Upper(AllTrim(hb_valToStr(ors:Fields("type") :Value)))
                   nFieldLength := 0
                   nFieldDec    := 0
                CATCH
-                  cFieldName   := ""
+                  cFieldName := ""
                END
             ENDIF
          END
 
          // Se o metadado for válido, adiciona ao array de retorno estruturado para o DBF
          IF !Empty(cFieldName)
-            AADD(aRETU, geracampodbf(cFieldName, cFieldType, nFieldLength, nFieldDec))
+            AADD(aRETU,geracampodbf(cFieldName,cFieldType,nFieldLength,nFieldDec))
          ENDIF
 
       ENDIF
       IF cTIPOINFO = "__INDEX__"
-        cCHAVENAME  := ""
-        cCHAVECAMPO := ""
+         cCHAVENAME  := ""
+         cCHAVECAMPO := ""
 
-           // Graças aos aliases fixos da Dialeto_ShowIndexes(), 
-           // NÃO precisamos mais separar a leitura por "CASE cTIPOSQL" !
-           TRY
-              cCHAVENAME  := Upper(AllTrim( hb_valToStr(ors:Fields("INDEX_NAME"):Value) ))
-              cCHAVECAMPO := Upper(AllTrim( hb_valToStr(ors:Fields("COLUMN_NAME"):Value) ))
-           CATCH
-              // Contingência para o SQLite se o driver do PRAGMA nativo for utilizado diretamente
-              IF cTIPOSQL == "SQLITE" .OR. IsSQLiteExt( cDatabase )
-                 TRY
-                    cCHAVENAME  := Upper(AllTrim( hb_valToStr(ors:Fields("name"):Value) ))
-                    cCHAVECAMPO := "" // Índices do SQLite puro exigem um segundo passo (index_info) se lidos via pragma nativo
-                 CATCH
-                    cCHAVENAME  := ""
-                 END
-              ENDIF
-           END
+         // Graças aos aliases fixos da Dialeto_ShowIndexes(),
+         // NÃO precisamos mais separar a leitura por "CASE cTIPOSQL" !
+         TRY
+            cCHAVENAME  := Upper(AllTrim(hb_valToStr(ors:Fields("INDEX_NAME") :Value)))
+            cCHAVECAMPO := Upper(AllTrim(hb_valToStr(ors:Fields("COLUMN_NAME") :Value)))
+         CATCH
+            // Contingência para o SQLite se o driver do PRAGMA nativo for utilizado diretamente
+            IF cTIPOSQL == "SQLITE" .OR. IsSQLiteExt(cDatabase)
+               TRY
+                  cCHAVENAME  := Upper(AllTrim(hb_valToStr(ors:Fields("name") :Value)))
+                  cCHAVECAMPO := ""   // Índices do SQLite puro exigem um segundo passo (index_info) se lidos via pragma nativo
+               CATCH
+                  cCHAVENAME := ""
+               END
+            ENDIF
+         END
 
-           // Se capturou um índice válido, adiciona ao array de retorno do Harbour
-           IF !Empty(cCHAVENAME)
-              // Retorna o par { Nome_Do_Indice, Coluna_Do_Banco }
-              AADD(aRETU, { cCHAVENAME, cCHAVECAMPO })
-           ENDIF
+         // Se capturou um índice válido, adiciona ao array de retorno do Harbour
+         IF !Empty(cCHAVENAME)
+            // Retorna o par { Nome_Do_Indice, Coluna_Do_Banco }
+            AADD(aRETU,{cCHAVENAME,cCHAVECAMPO})
+         ENDIF
 
 
 
@@ -1258,7 +1387,7 @@ ENDIF
 if LEN(aRETU) = 0 .AND. cTIPOINFO = "TABELA"
    //necessario nova conecaro
    //nao funcionou criando olecreate adox.catalog
-   IF lARQMDBACCDB  
+   IF lARQMDBACCDB
       oXConection := win_oleCreateObject("ADODB.Connection")
       oXConection:Open(CCONN)
       oXCatalog := oXConection:OpenSchema(adSchemaTables)
@@ -1273,7 +1402,7 @@ if LEN(aRETU) = 0 .AND. cTIPOINFO = "TABELA"
 endif
 
 if LEN(aRETU) = 0 .AND. cTIPOINFO = "ESTRUTURA"
-   IF lARQMDBACCDB  
+   IF lARQMDBACCDB
       //nao funcionou criando olecreate adox.catalog
       //necessario nova conecaro
       oXConection := win_oleCreateObject("ADODB.Connection")
@@ -1320,7 +1449,7 @@ endif
 
 
 if LEN(aRETU) = 0 .AND. cTIPOINFO = "__INDEX__"
-   IF lARQMDBACCDB  
+   IF lARQMDBACCDB
       //nao funcionou criando olecreate adox.catalog
       //necessario nova conecaro
       oXConection := win_oleCreateObject("ADODB.Connection")
@@ -1339,7 +1468,7 @@ if LEN(aRETU) = 0 .AND. cTIPOINFO = "__INDEX__"
 endif
 
 TRY
-oConN:close()
+   oConN:close()
 END
 RETURN aRETU
 
@@ -1355,7 +1484,15 @@ RETURN aRETU
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function TipoDado2()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -1363,7 +1500,12 @@ RETURN aRETU
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 Function TipoDado2(nTipo)
+
 
 do case
 case nTipo = 8 .or. nTipo = 12 .or. nTipo = 72 .or. nTipo = 129 .or. nTipo = 130 .or. (nTipo >= 200 .and. nTipo <= 203)
@@ -1432,7 +1574,15 @@ return 'U'
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function Adotipodbf()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -1440,7 +1590,12 @@ return 'U'
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 function Adotipodbf(nADOFieldType,nTIPORETORNO)
+
 
 //HB_FT_PICTURE ="P" sem equivalente ado harbour
 //adarray nao padrao rdd harbour conta na adox e na adordd
@@ -1590,11 +1745,18 @@ RETURN if(nTIPORETORNO = 1,nDBFFieldType,cDBFFieldType)
 
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 *+    Function geraconn(cCAMBASE,lPROVIDER,StrUsuario,StrSenha,StrServer,StrPort)
+*+
+*+
 *+
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 FUNCTION geraconn(cCAMBASE,lPROVIDER,StrUsuario,StrSenha,StrServer,StrPort)
+
 
 LOCAL cCONN
 LOCAL cSQLUSER
@@ -1608,38 +1770,38 @@ IF vALTYPE(lPROVIDER) <> "L"
    lPROVIDER := .T.
 ENDIF
 
-    cCAMDIR := hb_FNameDir( cCAMBASE ) 
-    IF Right( AllTrim( cCAMDIR ), 1 ) != "\" .AND. Right( AllTrim( cCAMDIR ), 1 ) != "/"
-      cCAMDIR += "\"
-   ENDIF
+cCAMDIR := hb_FNameDir(cCAMBASE)
+IF Right(AllTrim(cCAMDIR),1) != "\" .AND. Right(AllTrim(cCAMDIR),1) != "/"
+   cCAMDIR += "\"
+ENDIF
 
-   IF ! EMPTY (cBANCOX)
-      buscachaves( cBANCOX )
-   ENDIF
+IF !EMPTY(cBANCOX)
+   buscachaves(cBANCOX)
+ENDIF
 
-   IF Empty( cUSERX ) .and. ! empty(StrUsuario)
-      cUSERX := StrUsuario
-   ENDIF
+IF Empty(cUSERX) .and. !empty(StrUsuario)
+   cUSERX := StrUsuario
+ENDIF
 
-   IF Empty( cPASSX ) .and. ! empty(StrSenha)
-      cPASSX := StrSenha
-   ENDIF
-   
-   IF Empty( cSERVERX ) .and. ! empty(StrServer)
-      cSERVERX := StrServer
-   ENDIF
+IF Empty(cPASSX) .and. !empty(StrSenha)
+   cPASSX := StrSenha
+ENDIF
 
-   IF Empty( cPORTAX ) .and. ! empty(StrPort)
-      cPORTAX := StrPort
-   ENDIF
+IF Empty(cSERVERX) .and. !empty(StrServer)
+   cSERVERX := StrServer
+ENDIF
+
+IF Empty(cPORTAX) .and. !empty(StrPort)
+   cPORTAX := StrPort
+ENDIF
 
 
 DO CASE
-  CASE cTIPOMIX = "ODBC"  .AND. cTIPODBC =  "DSN"    
-       cCONN:="Provider=MSDASQL;Data Source="+cBANCOX+";" //Uid=admin;Pwd=secret;"
+CASE cTIPOMIX = "ODBC" .AND. cTIPODBC = "DSN"
+   cCONN := "Provider=MSDASQL;Data Source="+cBANCOX+";"   //Uid=admin;Pwd=secret;"
 
 
-CASE lMDB .OR. at(".MDB",upper(cCAMBASE)) > 0   
+CASE lMDB .OR. at (".MDB",upper(cCAMBASE)) > 0
    if loledb  // provider ou driver que fixa o nome independente da versao do access sqlmix(usa driver) adordd(use provider)
       IF lPROVIDER
          cConn := "Provider=Microsoft.Jet.OLEDB.4.0;Data Source="+cCAMBASE+";Mode=Share Deny None"  //32 bit jet oledb
@@ -1654,21 +1816,21 @@ CASE lMDB .OR. at(".MDB",upper(cCAMBASE)) > 0
       ENDIF
    endif
 
-CASE Laccdb .or. at(".ACCDB",upper(cCAMBASE)) > 0   
+CASE Laccdb .or. at (".ACCDB",upper(cCAMBASE)) > 0
    //provider ou driver que fixa o nome independente da versao do access sqlmix(usa driver) adordd(use provider)
    IF lPROVIDER
       cConn := "Provider=Microsoft.ACE.OLEDB.12.0;Data Source="+cCAMBASE+";Mode=Share Deny None"  //driver 32 e 64 devem estar instalados
    ELSE
       cCONN := "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq="+cDATABASEX+";Mode=Share Deny None"
    ENDIF
-CASE cTIPOSQL = "SQLITE" .OR. IsSQLiteExt( cCAMBASE )
+CASE cTIPOSQL = "SQLITE" .OR. IsSQLiteExt(cCAMBASE)
    cConn := "Driver={SQLite3 ODBC Driver};Database="+cCAMBASE+";"   //mesmo nome de driver para 32 e 64 ambos devem estar instaldos
-   
-CASE cTIPOSQL = "DUCKDB" 
+
+CASE cTIPOSQL = "DUCKDB"
    cConn := "Driver={DuckDB Driver};Database="+cCAMBASE+";"   //mesmo nome de driver para 32 e 64 ambos devem estar instaldos
-   
-   
-   
+
+
+
 
 CASE cTIPOSQL = "MYSQL" .OR. cTIPOSQL = "MYSQL64"
    if empty(cDATABASEX)
@@ -1685,51 +1847,51 @@ CASE cTIPOSQL = "MYSQL" .OR. cTIPOSQL = "MYSQL64"
       endif
    endif
 CASE cTIPOSQL == "MARIADB"
-   cConn := "DRIVER={MariaDB ODBC 3.2 Driver};" + ;
-            "SERVER=" + AllTrim( cSERVERX ) + ";" + ;
-            iif( !Empty(cPORTAX), "PORT=" + AllTrim( cPORTAX ) + ";", "" ) + ;
-            iif( !Empty(cDATABASEX), "DATABASE=" + AllTrim( cDATABASEX ) + ";", "" ) + ;
-            "UID=" + AllTrim( cUSERX ) + ";" + ;
-            "PWD=" + cPASSX + ";"
-   
-   
-   
+   cConn := "DRIVER={MariaDB ODBC 3.2 Driver};"+;
+    "SERVER="+AllTrim(cSERVERX)+";"+;
+    iif(!Empty(cPORTAX),"PORT="+AllTrim(cPORTAX)+";","")+;
+    iif(!Empty(cDATABASEX),"DATABASE="+AllTrim(cDATABASEX)+";","")+;
+    "UID="+AllTrim(cUSERX)+";"+;
+    "PWD="+cPASSX+";"
+
+
+
 CASE cTIPOSQL == "PGSQL" .OR. cTIPOSQL == "PGSQL64" .OR. cTIPOSQL == "POSTGRESQL"
-   cConn := "DRIVER={" + iif( loledb, "PostgreSQL ANSI", "PostgreSQL ANSI(x64)" ) + "};" + ;
-            "Server=" + AllTrim( cSERVERX ) + ";" + ;
-            iif( !Empty(cPORTAX), "Port=" + AllTrim( cPORTAX ) + ";", "" ) + ;
-            iif( !Empty(cDATABASEX), "Database=" + AllTrim( cDATABASEX ) + ";", "" ) + ;
-            "Uid=" + AllTrim( cUSERX ) + ";" + ;
-            "Pwd=" + cPASSX + ";" + ;
-            "ConnSettings=SET client_encoding TO 'WIN1252';"
-   
+   cConn := "DRIVER={"+iif(loledb,"PostgreSQL ANSI","PostgreSQL ANSI(x64)")+"};"+;
+    "Server="+AllTrim(cSERVERX)+";"+;
+    iif(!Empty(cPORTAX),"Port="+AllTrim(cPORTAX)+";","")+;
+    iif(!Empty(cDATABASEX),"Database="+AllTrim(cDATABASEX)+";","")+;
+    "Uid="+AllTrim(cUSERX)+";"+;
+    "Pwd="+cPASSX+";"+;
+    "ConnSettings=SET client_encoding TO 'WIN1252';"
+
 CASE cTIPOSQL == "MSSQL" .OR. cTIPOSQL == "SQLSERVER" .OR. cTIPOSQL == "SQL"
    IF EMPTY(cUSERX)
       cSQLUSER := "; Trusted_Connection=True;"
    ELSE
-      cSQLUSER := "; Uid=" + AllTrim(cUSERX) + "; Pwd=" + cPASSX + ";"
+      cSQLUSER := "; Uid="+AllTrim(cUSERX)+"; Pwd="+cPASSX+";"
    ENDIF
-   
-   cConn := iif( lPROVIDER, "Provider=SQLOLEDB;", "Driver={SQL Server};" ) + ;
-            "Server=" + AllTrim( cSERVERX ) + iif( !Empty(cPORTAX), "," + AllTrim( cPORTAX ), "" ) + ";" + ;
-            iif( !Empty(cDATABASEX), "Database=" + AllTrim( cDATABASEX ) + ";", "" ) + ;
-            cSQLUSER
-            
+
+   cConn := iif(lPROVIDER,"Provider=SQLOLEDB;","Driver={SQL Server};")+;
+    "Server="+AllTrim(cSERVERX)+iif(!Empty(cPORTAX),","+AllTrim(cPORTAX),"")+";"+;
+    iif(!Empty(cDATABASEX),"Database="+AllTrim(cDATABASEX)+";","")+;
+    cSQLUSER
+
 CASE cTIPOSQL = "JETFOX"
-   cCONN = "Provider=VFPOLEDB.1;Data Source=" + cCAMDIR + ";Mode=ReadWrite|Share Deny None;Persist Security Info=False;Collating Sequence=MACHINE;DELETED=True;"  //'NULL=NO"
+   cCONN := "Provider=VFPOLEDB.1;Data Source="+cCAMDIR+";Mode=ReadWrite|Share Deny None;Persist Security Info=False;Collating Sequence=MACHINE;DELETED=True;"   //'NULL=NO"
 CASE cTIPOSQL = "DBASE"
    cCONN := "Provider=Microsoft.Jet.OLEDB.4.0;Data Source="+cCAMDIR+";Extended Properties=dBASE IV;"
-CASE lFDB 
+CASE lFDB
    IF EMPTY(cUSERX)
-      cUSERX:="SYSDBA"
+      cUSERX := "SYSDBA"
    ENDIF
    cUSERX := ALLTRIM(cUSERX)
-   
-   cConn := "DRIVER={" + DriverFirebird() + "};" + ;
-            "UID=" + cUSERX + ";" + ;
-            "PWD=" + cPASSX + ";" + ;
-            iif( !Empty(cPORTAX), "PORT=" + AllTrim( cPORTAX ) + ";", "" ) + ;
-            iif( !Empty(cCAMBASE), "DBNAME=" + AllTrim( cCAMBASE ) + ";", "" )
+
+   cConn := "DRIVER={"+DriverFirebird()+"};"+;
+    "UID="+cUSERX+";"+;
+    "PWD="+cPASSX+";"+;
+    iif(!Empty(cPORTAX),"PORT="+AllTrim(cPORTAX)+";","")+;
+    iif(!Empty(cCAMBASE),"DBNAME="+AllTrim(cCAMBASE)+";","")
 CASE cTIPOSQL = "PARADOX"   // ADOPX
    cCONN := "Provider=Microsoft.Jet.OLEDB.4.0;Data Source="+cCAMDIR+";Extended Properties=Paradox 5.x;"
 CASE cTIPOSQL == "XMLDB"  // ADOXML
@@ -1741,13 +1903,13 @@ CASE cTIPOSQL = "XLS"   // ADOXLS
 CASE cTIPOSQL = "REMOTE"  // ADORDS
    cCONN := "Provider=MS Remote;Remote Provider=Microsoft.Jet.OLEDB.4.0;Data Source="+cDATABASEX+";Remote Server="+cSERVERX
 Case cTIPOSQL == "ORACLE" .OR. cTIPOSQL == "OCI"
-   cSQLUSER := ";User ID=" + AllTrim(cUSERX) + ";Password=" + cPASSX
+   cSQLUSER := ";User ID="+AllTrim(cUSERX)+";Password="+cPASSX
    IF lPROVIDER
-      cConn := "Provider=MSDAORA.1;Persist Security Info=False;Data source=" + AllTrim(cDATABASEX) + cSQLUSER
+      cConn := "Provider=MSDAORA.1;Persist Security Info=False;Data source="+AllTrim(cDATABASEX)+cSQLUSER
    ELSE
-      cConn := "DRIVER={Microsoft ODBC For Oracle};SERVER=" + AllTrim(cSERVERX) + ;
-               iif( !Empty(cPORTAX), ":" + AllTrim(cPORTAX), "" ) + ";" + ;
-               "UID=" + AllTrim(cUSERX) + ";PWD=" + cPASSX
+      cConn := "DRIVER={Microsoft ODBC For Oracle};SERVER="+AllTrim(cSERVERX)+;
+       iif(!Empty(cPORTAX),":"+AllTrim(cPORTAX),"")+";"+;
+       "UID="+AllTrim(cUSERX)+";PWD="+cPASSX
    ENDIF
 ENDCASE
 RETURN cConn
@@ -1755,134 +1917,148 @@ RETURN cConn
 
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 *+    Function executacmd()
 *+
+*+
+*+
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 
-Function executacmd(cCAMBASE, eCOMANDO)
-   LOCAL cConn, aCOMANDOS := {}, nFIM, cCOMANDO := "", i
-   LOCAL lRet := .T.
-   LOCAL oConn, oComm, oErr
+Function executacmd(cCAMBASE,eCOMANDO)
 
-   IF VALTYPE(eCOMANDO) = "C"
-      AAdd(aCOMANDOS, eCOMANDO)
-   ELSE
-      aCOMANDOS := eCOMANDO
-   ENDIF
-   nFIM := LEN(aCOMANDOS)
+LOCAL cConn,aCOMANDOS := {},nFIM,cCOMANDO := "",i
+LOCAL lRet  := .T.
+LOCAL oConn,oComm,oErr
 
-   cConn := geraconn(cCAMBASE)
-   IF EMPTY(cConn)
-      RETURN .F.
-   ENDIF
+IF VALTYPE(eCOMANDO) = "C"
+   AAdd(aCOMANDOS,eCOMANDO)
+ELSE
+   aCOMANDOS := eCOMANDO
+ENDIF
+nFIM := LEN(aCOMANDOS)
 
-   BEGIN SEQUENCE
-      oConn := WIN_OLECreateObject("ADODB.Connection")
-      oConn:ConnectionString := cConn
-      oConn:Open()
+cConn := geraconn(cCAMBASE)
+IF EMPTY(cConn)
+   RETURN .F.
+ENDIF
 
-      oComm := WIN_OLECreateObject("ADODB.Command")
-   RECOVER USING oErr
-      ShowAdoError(oErr, oConn)
-      lRet := .F.
-   END SEQUENCE
+BEGIN SEQUENCE
+   oConn                  := WIN_OLECreateObject("ADODB.Connection")
+   oConn:ConnectionString := cConn
+   oConn:Open()
 
-   IF lRet
-      FOR i := 1 TO nFIM
-         cCOMANDO := aCOMANDOS[i]
-         IF ! EMPTY(cCOMANDO)
-            BEGIN SEQUENCE
-               oComm:CommandText      := cCOMANDO
-               oComm:CommandType      := adCmdText
-               oComm:ActiveConnection := oConn
-               oComm:Execute()
-            RECOVER USING oErr
-               ShowADOError(oErr, oConn, cCOMANDO)
-               lRet := .F.
-               EXIT
-            END SEQUENCE
-         ENDIF
-      NEXT i
-   ENDIF
+   oComm := WIN_OLECreateObject("ADODB.Command")
+RECOVER USING oErr
+   ShowAdoError(oErr,oConn)
+   lRet := .F.
+END SEQUENCE
 
-   IF oComm != NIL
-      oComm := NIL
-   ENDIF
-
-   IF oConn != NIL
-      IF oConn:State != 0
-         oConn:Close()
+IF lRet
+   FOR i := 1 TO nFIM
+      cCOMANDO := aCOMANDOS[i]
+      IF !EMPTY(cCOMANDO)
+         BEGIN SEQUENCE
+            oComm:CommandText      := cCOMANDO
+            oComm:CommandType      := adCmdText
+            oComm:ActiveConnection := oConn
+            oComm:Execute()
+         RECOVER USING oErr
+            ShowADOError(oErr,oConn,cCOMANDO)
+            lRet := .F.
+            EXIT
+         END SEQUENCE
       ENDIF
-      oConn := NIL
-   ENDIF
+   NEXT i
+ENDIF
 
-   RETURN lRet
+IF oComm != NIL
+   oComm := NIL
+ENDIF
+
+IF oConn != NIL
+   IF oConn:State != 0
+      oConn:Close()
+   ENDIF
+   oConn := NIL
+ENDIF
+
+RETURN lRet
 
 *+--------------------------------------------------------------------
+*+
+*+
 *+
 *+    Function CreateAccessDatabase(cDatabase, cUserName, cPassword, lEncrypt)
 *+
+*+
+*+
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 
-FUNCTION CreateAccessDatabase(cDatabase, cUserName, cPassword, lEncrypt)
+FUNCTION CreateAccessDatabase(cDatabase,cUserName,cPassword,lEncrypt)
 
-    LOCAL oCatalog
-    LOCAL cEXTENSAO, cDIRETORIO, cNAME
 
-    cNAME      := ""
-    cEXTENSAO  := ""
-    cDIRETORIO := ""
+LOCAL oCatalog
+LOCAL cEXTENSAO,cDIRETORIO,cNAME
 
-    hb_FNameSplit(cDatabase, @cDIRETORIO, @cName, @cEXTENSAO)
-    cEXTENSAO := LOWER(cEXTENSAO)
+cNAME      := ""
+cEXTENSAO  := ""
+cDIRETORIO := ""
 
-    // Ajustes de segurança conforme sua lógica original 
-    IIF(cPassword == NIL, cPassword := "''", NIL)
-    IIF(lEncrypt == NIL, lEncrypt := .F., NIL)
+hb_FNameSplit(cDatabase,@cDIRETORIO,@cName,@cEXTENSAO)
+cEXTENSAO := LOWER(cEXTENSAO)
 
-    // Bloco isolado para tratar a criação do objeto COM [cite: 5, 20]
-    TRY
-        oCatalog := CreateObject("ADOX.Catalog.2.8") 
-    CATCH
-        // Fallback caso a versão 2.8 não esteja registrada
-        TRY
-            oCatalog := CreateObject("ADOX.Catalog")
-        CATCH
-            ? "Erro: Classe ADOX.Catalog não registrada no sistema."
-            RETURN NIL
-        END
-    END
+// Ajustes de segurança conforme sua lógica original
+IIF(cPassword == NIL,cPassword := "''",NIL)
+IIF(lEncrypt == NIL,lEncrypt := .F.,NIL)
 
-    IF ! hb_FileExists(cDatabase)
-       DO CASE
-          CASE lACCDB .OR. cEXTENSAO == ".accdb"
-             oCatalog:Create("Provider=Microsoft.ACE.OLEDB.12.0;" + ;
-              "Data Source=" + cDatabase + ";" + ;
-              "JET OLEDB:Engine Type=6;")
+// Bloco isolado para tratar a criação do objeto COM [cite: 5, 20]
+TRY
+   oCatalog := CreateObject("ADOX.Catalog.2.8")
+CATCH
+   // Fallback caso a versão 2.8 não esteja registrada
+   TRY
+      oCatalog := CreateObject("ADOX.Catalog")
+   CATCH
+      ? "Erro: Classe ADOX.Catalog não registrada no sistema."
+      RETURN NIL
+   END
+END
 
-          CASE lMDB .OR. cEXTENSAO == ".mdb"
-             IF loledb // 32 bits mdb [cite: 23]
-                oCatalog:Create("Provider=Microsoft.Jet.OLEDB.4.0;" + ;
-                 "Data Source=" + cDatabase + ";" + ;
-                 "JET OLEDB:Engine Type=5;") 
-             ELSE
-                oCatalog:Create("Provider=Microsoft.ACE.OLEDB.12.0;" + ;
-                 "Data Source=" + cDatabase + ";" + ;
-                 "JET OLEDB:Engine Type=5;") 
-             ENDIF
+IF !hb_FileExists(cDatabase)
+   DO CASE
+   CASE lACCDB .OR. cEXTENSAO == ".accdb"
+      oCatalog:Create("Provider=Microsoft.ACE.OLEDB.12.0;"+;
+       "Data Source="+cDatabase+";"+;
+       "JET OLEDB:Engine Type=6;")
 
-          CASE cTIPOSQL = "SQLITE" .OR. IsSQLiteExt( cDatabase ) //.OR. cEXTENSAO == ".sqlite" .OR. cEXTENSAO == ".sqlite3" .OR. cEXTENSAO == ".fossil" .OR. cEXTENSAO == ".db3"
-             oCatalog:Create("DRIVER=SQLite3 ODBC Driver;Database=" + cDatabase) 
+   CASE lMDB .OR. cEXTENSAO == ".mdb"
+      IF loledb   // 32 bits mdb [cite: 23]
+         oCatalog:Create("Provider=Microsoft.Jet.OLEDB.4.0;"+;
+          "Data Source="+cDatabase+";"+;
+          "JET OLEDB:Engine Type=5;")
+      ELSE
+         oCatalog:Create("Provider=Microsoft.ACE.OLEDB.12.0;"+;
+          "Data Source="+cDatabase+";"+;
+          "JET OLEDB:Engine Type=5;")
+      ENDIF
 
-          CASE cTIPOSQL = "XLS" .OR. cEXTENSAO == ".xls"
-             oCatalog:Create("Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + cDatabase + ";Extended Properties='Excel 8.0;HDR=YES';Persist Security Info=False") 
+   CASE cTIPOSQL = "SQLITE" .OR. IsSQLiteExt(cDatabase)   //.OR. cEXTENSAO == ".sqlite" .OR. cEXTENSAO == ".sqlite3" .OR. cEXTENSAO == ".fossil" .OR. cEXTENSAO == ".db3"
+      oCatalog:Create("DRIVER=SQLite3 ODBC Driver;Database="+cDatabase)
 
-          CASE cEXTENSAO == ".db" .OR. cTIPOSQL == "PARADOX"
-             //nao funciona catalog e a paradoxcreatetable precisas da estrutura(nao cria vazia)
+   CASE cTIPOSQL = "XLS" .OR. cEXTENSAO == ".xls"
+      oCatalog:Create("Provider=Microsoft.Jet.OLEDB.4.0;Data Source="+cDatabase+";Extended Properties='Excel 8.0;HDR=YES';Persist Security Info=False")
 
-         /* o driver nao suporta catalogo
+   CASE cEXTENSAO == ".db" .OR. cTIPOSQL == "PARADOX"
+      //nao funciona catalog e a paradoxcreatetable precisas da estrutura(nao cria vazia)
+
+      /* o driver nao suporta catalogo
           CASE cEXTENSAO == ".fdb" .OR. cEXTENSAO == ".gdb" .OR. cEXTENSAO == ".ib" .OR. lFDB 
                cConn := "DRIVER={" + DriverFirebird() + "};" + ;
                "Uid=SYSDBA;" + ;
@@ -1891,26 +2067,33 @@ FUNCTION CreateAccessDatabase(cDatabase, cUserName, cPassword, lEncrypt)
                "CHARSET=ISO8859_1;" + ; // Define o Character Set
               "DIALECT=3;"        // Define o Dialeto (sempre use 3 para Firebird moderno)
               oCatalog:Create(cConn)
-          */    
-       ENDCASE
-    ENDIF
+          */
+   ENDCASE
+ENDIF
 
-    oCatalog := NIL
-    RETURN NIL
+oCatalog := NIL
+RETURN NIL
 
 
 
 *+--------------------------------------------------------------------
+*+
+*+
 *+
 *+    Function mdltodos()
 *+
+*+
+*+
 *+--------------------------------------------------------------------
+*+
+*+
 *+
 
 function mdltodos(cPASTA)
 
+
 IF EMPTY(CPASTA)
-  cPASTA:=SelectFolder()
+   cPASTA := SelectFolder()
 ENDIF
 /* aqui e dbf para md dbml porem geradbml suporta mdb accdb sqlite
 IF ! EMPTY(cPASTA)
@@ -1924,30 +2107,38 @@ IF ! EMPTY(cPASTA)
    ENDCASE
 ENDIF
 */
-cPASTA+="\*."+TABLEEXT
+cPASTA += "\*."+TABLEEXT
 GeraMDdbml(cPASTA)
 RETURN .T.
 
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 *+    Function sqltodos(cTIPOSQL)
+*+
+*+
 *+
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 
 function sqltodos(cTIPOSQL,cPASTA)
+
 IF EMPTY(CPASTA)
-   cPASTA:=SelectFolder()
-ENDIF   
-IF ! EMPTY(cPASTA)
-   cPASTA+="\*."+TABLEEXT
+   cPASTA := SelectFolder()
 ENDIF
-cTEXTO:=""
+IF !EMPTY(cPASTA)
+   cPASTA += "\*."+TABLEEXT
+ENDIF
+cTEXTO := ""
 //FAZERDBF(bUSO                                                           , lSHARE[.F.] , bPRE, bPOS, cMASK["*."+TABLEEXT],LOPEN[.T.])
-FAZERDBF( {|| cTEXTO+=FormataBlocoSql(SqliteCreateTable( , , cTIPOSQL,.T.,.T. )) }, .F. ,     ,     ,cPASTA)
-hb_MemoWrit(cTIPOSQL+".sql", cTEXTO ) 
+FAZERDBF({|| cTEXTO += FormataBlocoSql(SqliteCreateTable(,,cTIPOSQL,.T.,.T.))},.F.,,,cPASTA)
+hb_MemoWrit(cTIPOSQL+".sql",cTEXTO)
 RETURN .T.
 
 
-*+ EOF: mdb2dbf.prg
+
+*+ EOF: dburddadofuncoes.prg
 *+

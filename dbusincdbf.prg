@@ -1,19 +1,29 @@
-// +--------------------------------------------------------------------
-// +
-// +    Programa  : dbusincdbf.prg
-// +
-// +     Sistema:
-// +
-// +     Linguagem: Harbour
-// +
-// +     Autor: jcassiano
-// +
-// +     Copyright (c) 2024,  jcassiano
-// +
-// +    Documentado em 28-Dez-2024 as 10:07 am
-// +
-// +--------------------------------------------------------------------
-// +
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Programa  : dbusincdbf.prg
+*+
+*+
+*+
+*+     Sistema:
+*+
+*+     Linguagem: Harbour
+*+
+*+     Autor: jcassiano
+*+
+*+     Copyright (c) 2024,  jcassiano
+*+
+*+     
+*+
+*+
+*+
+*+    Documentado em 15-Out-2026 as  2:12 pm
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
 
 #include "dbinfo.ch"
 
@@ -32,91 +42,92 @@
 // +
 FUNCTION dBUsincdbf()
 
-   aAMBIENTE := SALVAA()
-   nOLDTIPO  := TIPODBF
 
-   alertX( "escolha origem" )
-   tipodbfesc()
-   nORITIPO   := TIPODBF
-   cORIDRIVER := RDDNOME( TIPODBF )
-   cARQORI    := win_GetOpenFileName(, "Arquivos de Origem", hb_cwd(), "Arquivos de Origem", "*."+TABLEEXT, 1 )
+aAMBIENTE := SALVAA()
+nOLDTIPO  := TIPODBF
 
-   alertX( "escolha destino" )
-   tipodbfesc()
-   nDESTIPO   := TIPODBF
-   cDESDRIVER := RDDNOME( TIPODBF )
-   cARQDES    := win_GetOpenFileName(, "Arquivos de Destino", hb_cwd(), "Arquivos de Destino", "*."+TABLEEXT, 1 )
-   lAPAGA     := MDG( "Apagar Dados do Arquivo de Destino" )
-   lREPL      := .F.
-   IF lAPAGA
-      IF !MDG( "Deseja Realmente apagar dados da destino" )
-         lAPAGA := .F.
-      ENDIF
+alertX("escolha origem")
+tipodbfesc()
+nORITIPO   := TIPODBF
+cORIDRIVER := RDDNOME(TIPODBF)
+cARQORI    := win_GetOpenFileName(,"Arquivos de Origem",hb_cwd(),"Arquivos de Origem","*."+TABLEEXT,1)
+
+alertX("escolha destino")
+tipodbfesc()
+nDESTIPO   := TIPODBF
+cDESDRIVER := RDDNOME(TIPODBF)
+cARQDES    := win_GetOpenFileName(,"Arquivos de Destino",hb_cwd(),"Arquivos de Destino","*."+TABLEEXT,1)
+lAPAGA     := MDG("Apagar Dados do Arquivo de Destino")
+lREPL      := .F.
+IF lAPAGA
+   IF !MDG("Deseja Realmente apagar dados da destino")
+      lAPAGA := .F.
    ENDIF
-   IF !lAPAGA
-      lREPL := MDG( "Complentar campos em Branco" )
-   ENDIF
+ENDIF
+IF !lAPAGA
+   lREPL := MDG("Complentar campos em Branco")
+ENDIF
 
-   MDT( "Fazendo copia de reserva: " + "old_" + cARQDES )
-   filecopy( cARQDES, trocaext( cARQDES, "_old."+TABLEEXT ) )
+MDT("Fazendo copia de reserva: "+"old_"+cARQDES)
+filecopy(cARQDES,trocaext(cARQDES,"_old."+TABLEEXT))
 
-   MDT( "abrindo arquivo de origen: " + cARQORI )
-   //USE ( cARQORI ) ALIAS ORIGEM SHARED NEW VIA ( cORIDRIVER )
-   dbUseArea( .T., ( cORIDRIVER ), ( cARQORI ), "ORIGEM", .T. , .F. )
+MDT("abrindo arquivo de origen: "+cARQORI)
+//USE ( cARQORI ) ALIAS ORIGEM SHARED NEW VIA ( cORIDRIVER )
+dbUseArea(.T.,(cORIDRIVER),(cARQORI),"ORIGEM",.T.,.F.)
 
-   MDT( "abrindo arquivo de destino: " + cARQDES )
-   //USE ( cARQDES ) ALIAS DESTINO EXCLUSIVE NEW VIA ( cDESDRIVER )
-   dbUseArea( .T., ( cDESDRIVER ), ( cARQDES ), "DESTINO", .F. , .F. )
+MDT("abrindo arquivo de destino: "+cARQDES)
+//USE ( cARQDES ) ALIAS DESTINO EXCLUSIVE NEW VIA ( cDESDRIVER )
+dbUseArea(.T.,(cDESDRIVER),(cARQDES),"DESTINO",.F.,.F.)
 
-   MDT( "Importando registros para: " + cARQDES )
-   dbSelectAr( "ORIGEM" )
-   INITVARS()
-   CLRVARS()
+MDT("Importando registros para: "+cARQDES)
+dbSelectAr("ORIGEM")
+INITVARS()
+CLRVARS()
 
-   dbSelectAr( "DESTINO" )
-   INITVARS()
-   CLRVARS()
-   IF lAPAGA
-      ZAP
-   ENDIF
-   IF OrdCount() == 0
-      dbcloseall()
-      RDDNOME( nOLDTIPO )   // retorna tipo anterior
-      RESTAA( aAMBIENTE )
-      alertX("Erro: O destino precisa de um índice para sincronizar!")
-      RETURN
-   ENDIF
-   
-   dbSetOrder( 1 )
-   cCHAVE := IndexKey()
+dbSelectAr("DESTINO")
+INITVARS()
+CLRVARS()
+IF lAPAGA
+   ZAP
+ENDIF
+IF OrdCount() == 0
+   dbcloseall()
+   RDDNOME(nOLDTIPO)  // retorna tipo anterior
+   RESTAA(aAMBIENTE)
+   alertX("Erro: O destino precisa de um índice para sincronizar!")
+   RETURN
+ENDIF
 
-   dbSelectAr( "ORIGEM" )
-   nLASTREC := LastRec()
-   zei_fort( nLASTREC,,, 0 )
+dbSetOrder(1)
+cCHAVE := IndexKey()
+
+dbSelectAr("ORIGEM")
+nLASTREC := LastRec()
+zei_fort(nLASTREC,,,0)
+dbGoTop()
+WHILE !Eof()
+   EQUVARS()
+   xBUSCA := &CCHAVE.
+   dbSelectAr("DESTINO")
    dbGoTop()
-   WHILE !Eof()
-      EQUVARS()
-      xBUSCA := &CCHAVE.
-      dbSelectAr( "DESTINO" )
-      dbGoTop()
-      IF ! dbSeek( xBUSCA )
-         dbAppend()
-         REPLVARS( .T., .T. )
-      ELSE
-         IF lREPL
-            REPLVARS( .T., .T. )
-         ENDIF
+   IF !dbSeek(xBUSCA)
+      dbAppend()
+      REPLVARS(.T.,.T.)
+   ELSE
+      IF lREPL
+         REPLVARS(.T.,.T.)
       ENDIF
-      dbSelectAr( "ORIGEM" )
-      dbSkip()
-      ZEI_FORT( nLASTREC,,, 1 )
-   ENDDO
-   FREEVARS()
-   dbCloseAll()
+   ENDIF
+   dbSelectAr("ORIGEM")
+   dbSkip()
+   ZEI_FORT(nLASTREC,,,1)
+ENDDO
+FREEVARS()
+dbCloseAll()
 
-   RDDNOME( nOLDTIPO )   // retorna tipo anterior
-   RESTAA( aAMBIENTE )
-   alertX( "sincronizado" )
+RDDNOME(nOLDTIPO)   // retorna tipo anterior
+RESTAA(aAMBIENTE)
+alertX("sincronizado")
 
 
 
@@ -135,80 +146,95 @@ FUNCTION dBUsincdbf()
 
 FUNCTION sortdbf()
 
-   LOCAL aCAMPOS
 
-   aAMBIENTE := SALVAA()
-   nOLDTIPO  := TIPODBF
-   cSORTED   := Space( 60 )
+LOCAL aCAMPOS
 
-   alertX( "escolha origem" )
-   tipodbfesc()
-   nORITIPO   := TIPODBF
-   cORIDRIVER := RDDNOME( TIPODBF )
-   cARQORI    := win_GetOpenFileName(, "Arquivos de Origem", hb_cwd(), "Arquivos de Origem", "*."+TABLEEXT, 1 )
+aAMBIENTE := SALVAA()
+nOLDTIPO  := TIPODBF
+cSORTED   := Space(60)
 
-   alertX( "escolha destino" )
-   tipodbfesc()
-   nDESTIPO   := TIPODBF
-   cDESDRIVER := RDDNOME( TIPODBF )
-   cARQDES    := trocaext( cARQORI, "_sorted."+TABLEEXT )
+alertX("escolha origem")
+tipodbfesc()
+nORITIPO   := TIPODBF
+cORIDRIVER := RDDNOME(TIPODBF)
+cARQORI    := win_GetOpenFileName(,"Arquivos de Origem",hb_cwd(),"Arquivos de Origem","*."+TABLEEXT,1)
 
-   @ MaxRow()-1, 0      SAY "Digite os Campos separados por virgula  (,)"
-   @ MaxRow(), 1 GET cSORTED
-   READ
-   
+alertX("escolha destino")
+tipodbfesc()
+nDESTIPO   := TIPODBF
+cDESDRIVER := RDDNOME(TIPODBF)
+cARQDES    := trocaext(cARQORI,"_sorted."+TABLEEXT)
 
-   MDT( "Fazendo copia de destino: " + "sortet_" + cARQORI )
-   filecopy( cARQORI, cARQDES )
+@ MaxRow() - 1,0 SAY "Digite os Campos separados por virgula  (,)"         
+@ MaxRow(), 1    GET cSORTED                                               
+READ
 
-   MDT( "abrindo arquivo de origem: " + cARQORI )
-   //USE ( cARQORI ) ALIAS ORIGEM EXCLUSIVE NEW VIA ( cORIDRIVER )
-   dbUseArea( .T., ( cORIDRIVER ), ( cARQORI ), "ORIGEM", .F. , .F. )
-   
-   IF !ValidarCampos( cSORTED )
-      // Se for invalido, interrompe a execucao
-      dbcloseall()
-      RDDNOME( nOLDTIPO )
-      RESTAA( aAMBIENTE )
-      RETURN NIL
-   ENDIF
-   aCAMPOS := hb_ATokens( cSORTED, "," )
-   
 
-   mdt( "Ordenando por: " + cSORTED )
-// __dbSort( cToFileName, aFields, bFor, bWhile, nNext, nRecord, lRest, cRDD     , nConnection, cCodePage )
-   __dbSort( cARQDES, aCAMPOS,,,,,, cDESDRIVER,, )
+MDT("Fazendo copia de destino: "+"sortet_"+cARQORI)
+filecopy(cARQORI,cARQDES)
 
+MDT("abrindo arquivo de origem: "+cARQORI)
+//USE ( cARQORI ) ALIAS ORIGEM EXCLUSIVE NEW VIA ( cORIDRIVER )
+dbUseArea(.T.,(cORIDRIVER),(cARQORI),"ORIGEM",.F.,.F.)
+
+IF !ValidarCampos(cSORTED)
+   // Se for invalido, interrompe a execucao
    dbcloseall()
-   RDDNOME( nOLDTIPO )   // retorna tipo anterior
-   RESTAA( aAMBIENTE )
-   alertX( "sincronizado" )
+   RDDNOME(nOLDTIPO)
+   RESTAA(aAMBIENTE)
+   RETURN NIL
+ENDIF
+aCAMPOS := hb_ATokens(cSORTED,",")
+
+
+mdt("Ordenando por: "+cSORTED)
+// __dbSort( cToFileName, aFields, bFor, bWhile, nNext, nRecord, lRest, cRDD     , nConnection, cCodePage )
+__dbSort(cARQDES,aCAMPOS,,,,,,cDESDRIVER,,)
+
+dbcloseall()
+RDDNOME(nOLDTIPO)   // retorna tipo anterior
+RESTAA(aAMBIENTE)
+alertX("sincronizado")
 
 // +--------------------------------------------------------------------
 // + Funcao para validar se os nomes de campos em uma string (separados por virgula)
 // + existem no alias atual.
 // +--------------------------------------------------------------------
-STATIC FUNCTION ValidarCampos( cCampos )
-   LOCAL aCampos  := hb_ATokens( cCampos, "," )
-   LOCAL cCampo   := ""
-   LOCAL lValido  := .T.
-   LOCAL nPos     := 0
 
-   IF Empty( cCampos )
-      alertX( "Nenhum campo informado!" )
-      RETURN .F.
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Static Function ValidarCampos()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+STATIC FUNCTION ValidarCampos(cCampos)
+
+LOCAL aCampos := hb_ATokens(cCampos,",")
+LOCAL cCampo  := ""
+LOCAL lValido := .T.
+LOCAL nPos    := 0
+
+IF Empty(cCampos)
+   alertX("Nenhum campo informado!")
+   RETURN .F.
+ENDIF
+
+FOR EACH cCampo IN aCampos
+   cCampo := AllTrim(cCampo)
+
+   // Verifica se o campo existe na estrutura do DBF atual
+   IF FieldPos(cCampo) == 0
+      alertX("Campo invalido: "+cCampo)
+      lValido := .F.
+      EXIT
    ENDIF
-
-   FOR EACH cCampo IN aCampos
-      cCampo := AllTrim( cCampo )
-      
-      // Verifica se o campo existe na estrutura do DBF atual
-      IF FieldPos( cCampo ) == 0
-         alertX( "Campo invalido: " + cCampo )
-         lValido := .F.
-         EXIT
-      ENDIF
-   NEXT
+NEXT
 
 RETURN lValido
 
@@ -228,51 +254,53 @@ RETURN lValido
 
 FUNCTION limparegdupdbf()
 
-   aAMBIENTE := SALVAA()
-   nOLDTIPO  := TIPODBF
 
-   alertX( "escolha origem" )
-   tipodbfesc()
-   nORITIPO   := TIPODBF
-   cORIDRIVER := RDDNOME( TIPODBF )
-   cARQORI    := win_GetOpenFileName(, "Arquivos de Origem", hb_cwd(), "Arquivos de Origem", "*."+TABLEEXT, 1 )
+aAMBIENTE := SALVAA()
+nOLDTIPO  := TIPODBF
 
-   lPACK := MDG( "Fazer pack(remove registros marcados para apagar) apos a checagem" )
+alertX("escolha origem")
+tipodbfesc()
+nORITIPO   := TIPODBF
+cORIDRIVER := RDDNOME(TIPODBF)
+cARQORI    := win_GetOpenFileName(,"Arquivos de Origem",hb_cwd(),"Arquivos de Origem","*."+TABLEEXT,1)
 
-   MDT( "Fazendo copia de reserva: " + "old_" + cARQORI )
-   filecopy( cARQORI, trocaext( cARQORI, "_old."+TABLEEXT ) )
+lPACK := MDG("Fazer pack(remove registros marcados para apagar) apos a checagem")
 
-   MDT( "abrindo arquivo de origem: " + cARQORI )
-   //USE ( cARQORI ) ALIAS ORIGEM EXCLUSIVE NEW VIA ( cORIDRIVER )
-   dbUseArea( .T., ( cORIDRIVER ), ( cARQORI ), "ORIGEM", .F., .F. )
+MDT("Fazendo copia de reserva: "+"old_"+cARQORI)
+filecopy(cARQORI,trocaext(cARQORI,"_old."+TABLEEXT))
 
-   MDT( "Limpando Registro Duplicados: " )
-   dbSelectArEA( "ORIGEM" )
-   dbSetOrder( 1 )
-   cCHAVE   := IndexKey()
-   nLASTREC := LastRec()
-   zei_fort( nLASTREC,,, 0 )
-   dbGoTop()
-   WHILE !Eof()
-      xCHAVEANTERIOR := &CCHAVE.
-      dbSkip()
-      ZEI_FORT( nLASTREC,,, 1 )
-      IF !Eof()
-         xCHAVEATUAL := &CCHAVE.
-         IF xCHAVEANTERIOR == xCHAVEATUAL
-            dbDelete()
-         ENDIF
+MDT("abrindo arquivo de origem: "+cARQORI)
+//USE ( cARQORI ) ALIAS ORIGEM EXCLUSIVE NEW VIA ( cORIDRIVER )
+dbUseArea(.T.,(cORIDRIVER),(cARQORI),"ORIGEM",.F.,.F.)
+
+MDT("Limpando Registro Duplicados: ")
+dbSelectArEA("ORIGEM")
+dbSetOrder(1)
+cCHAVE   := IndexKey()
+nLASTREC := LastRec()
+zei_fort(nLASTREC,,,0)
+dbGoTop()
+WHILE !Eof()
+   xCHAVEANTERIOR := &CCHAVE.
+   dbSkip()
+   ZEI_FORT(nLASTREC,,,1)
+   IF !Eof()
+      xCHAVEATUAL := &CCHAVE.
+      IF xCHAVEANTERIOR == xCHAVEATUAL
+         dbDelete()
       ENDIF
-   ENDDO
-   MDT( "Fazendo pack(removendo registros marcados para apagar)" )
-   IF lPACK
-      PACK
    ENDIF
-   dbCloseAll()
+ENDDO
+MDT("Fazendo pack(removendo registros marcados para apagar)")
+IF lPACK
+   PACK
+ENDIF
+dbCloseAll()
 
-   RDDNOME( nOLDTIPO )   // retorna tipo anterior
-   RESTAA( aAMBIENTE )
-   alertX( "chaves duplicadas removidas" )
+RDDNOME(nOLDTIPO)   // retorna tipo anterior
+RESTAA(aAMBIENTE)
+alertX("chaves duplicadas removidas")
 
-// + EOF: dbusincdbf.prg
-// +
+
+*+ EOF: dbusincdbf.prg
+*+

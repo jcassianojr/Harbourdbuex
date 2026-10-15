@@ -1,3 +1,30 @@
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Programa  : dbumddbml.prg
+*+
+*+
+*+
+*+     Sistema:
+*+
+*+     Linguagem: Harbour
+*+
+*+     Autor: jcassiano
+*+
+*+     Copyright (c) 2024,  jcassiano
+*+
+*+     
+*+
+*+
+*+
+*+    Documentado em 15-Out-2026 as  2:12 pm
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+
 #include "fileio.ch"
 #include "directry.ch"
 #include "hbsqlit3.ch"
@@ -8,562 +35,756 @@
 #require "hbsqlit3"
 
 
+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function GeraMDdbml()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
 FUNCTION GeraMDdbml(cMASK,cCONNSTRING)
-   LOCAL aArquivos 
-   LOCAL nHandle, nHandleDbml, nHandlePuml, oFile, cExt
-   LOCAL cOut := "documentacao_dados.md"
-   LOCAL cOutDbml := "estrutura.dbml"
-   LOCAL cOutPuml := "estrutura.puml" // Novo arquivo PUML
-   LOCAL cCAMMASK
 
-   aARQUIVOS:={}
-   IF EMPTY(cCONNSTRING)
-       aArquivos := Directory( cMASK )
-       cCAMMASK:=SPACE(100)
-       hb_FNameSplit( cMASK, @cCAMMASK, ,  )
-       
-       IF LEN(aArquivos)=1
-           cOut     := HB_FNAMENAME(cMASK)+"_documentacao.md"
-           cOutDbml := HB_FNAMENAME(cMASK)+"_estrutura.dbml"
-           cOutPuml := HB_FNAMENAME(cMASK)+"_estrutura.puml"
-       ENDIF
-   ENDIF 
+LOCAL aArquivos
+LOCAL nHandle,nHandleDbml,nHandlePuml,oFile,cExt
+LOCAL cOut      := "documentacao_dados.md"
+LOCAL cOutDbml  := "estrutura.dbml"
+LOCAL cOutPuml  := "estrutura.puml"   // Novo arquivo PUML
+LOCAL cCAMMASK
 
-   // Cria os arquivos
-   nHandle := fCreate( cOut )
-   nHandleDbml := fCreate( cOutDbml )
-   nHandlePuml := fCreate( cOutPuml ) // Cria o PUML
+aARQUIVOS := {}
+IF EMPTY(cCONNSTRING)
+   aArquivos := Directory(cMASK)
+   cCAMMASK  := SPACE(100)
+   hb_FNameSplit(cMASK,@cCAMMASK,,)
 
-   // Cabeçalhos MD e PUML
-   fWrite( nHandle, hb_StrToUTF8("# ") + "Dicionario de Estruturas de Dados do Projeto" + hb_eol() )
-   fWrite( nHandle, "> Varredura automatica realizada em: " + DToC(Date()) + hb_eol() + hb_eol() )
-   
-   fWrite( nHandlePuml, "@startuml" + hb_eol() + "hide circle" + hb_eol() + "skinparam linetype ortho" + hb_eol() + hb_eol() )
-
-   IF LEN(aArquivos)>0
-       FOR EACH oFile IN aArquivos
-          cExt := Lower( SubStr( oFile[ F_NAME ], At( ".", oFile[ F_NAME ] ) + 1 ) )
-          
-          DO CASE
-             CASE cExt == "dbf"
-                Doc_DBF( cCAMMASK+oFile[ F_NAME ], nHandle, nHandleDbml, nHandlePuml )
-             
-             CASE cExt == "sqlite" .or. cExt == "sqlite3" .or. cExt == "fossil" .or. cExt == "db" .or. cExt == "db3"
-                Doc_SQLite( cCAMMASK+oFile[ F_NAME ], nHandle, nHandleDbml, nHandlePuml )
-             
-             CASE cExt == "mdb" .OR. cExt == "accdb"
-                Doc_Access( cCAMMASK+oFile[ F_NAME ], nHandle, nHandleDbml, nHandlePuml )
-          ENDCASE
-       NEXT
-   ELSE
-      IF ! EMPTY(cCONNSTRING)
-         Doc_Access( cCONNSTRING, nHandle, nHandleDbml, nHandlePuml )
-      ENDIF   
+   IF LEN(aArquivos) = 1
+      cOut     := HB_FNAMENAME(cMASK)+"_documentacao.md"
+      cOutDbml := HB_FNAMENAME(cMASK)+"_estrutura.dbml"
+      cOutPuml := HB_FNAMENAME(cMASK)+"_estrutura.puml"
    ENDIF
+ENDIF
 
-   // Fechamento PUML e Arquivos
-   fWrite( nHandlePuml, hb_eol() + "@enduml" + hb_eol() )
-   
-   fClose( nHandle )
-   fClose( nHandleDbml )
-   fClose( nHandlePuml )
-   
-   ? "Documentacao gerada em " + cOut + ", " + cOutDbml + " e " + cOutPuml + " com sucesso."
+// Cria os arquivos
+nHandle     := fCreate(cOut)
+nHandleDbml := fCreate(cOutDbml)
+nHandlePuml := fCreate(cOutPuml)  // Cria o PUML
+
+// Cabeçalhos MD e PUML
+fWrite(nHandle,hb_StrToUTF8("# ")+"Dicionario de Estruturas de Dados do Projeto"+hb_eol())
+fWrite(nHandle,"> Varredura automatica realizada em: "+DToC(Date())+hb_eol()+hb_eol())
+
+fWrite(nHandlePuml,"@startuml"+hb_eol()+"hide circle"+hb_eol()+"skinparam linetype ortho"+hb_eol()+hb_eol())
+
+IF LEN(aArquivos) > 0
+   FOR EACH oFile IN aArquivos
+      cExt := Lower(SubStr(oFile[F_NAME],At(".",oFile[F_NAME])+1))
+
+      DO CASE
+      CASE cExt == "dbf"
+         Doc_DBF(cCAMMASK+oFile[F_NAME],nHandle,nHandleDbml,nHandlePuml)
+
+      CASE cExt == "sqlite" .or. cExt == "sqlite3" .or. cExt == "fossil" .or. cExt == "db" .or. cExt == "db3"
+         Doc_SQLite(cCAMMASK+oFile[F_NAME],nHandle,nHandleDbml,nHandlePuml)
+
+      CASE cExt == "mdb" .OR. cExt == "accdb"
+         Doc_Access(cCAMMASK+oFile[F_NAME],nHandle,nHandleDbml,nHandlePuml)
+      ENDCASE
+   NEXT
+ELSE
+   IF !EMPTY(cCONNSTRING)
+      Doc_Access(cCONNSTRING,nHandle,nHandleDbml,nHandlePuml)
+   ENDIF
+ENDIF
+
+// Fechamento PUML e Arquivos
+fWrite(nHandlePuml,hb_eol()+"@enduml"+hb_eol())
+
+fClose(nHandle)
+fClose(nHandleDbml)
+fClose(nHandlePuml)
+
+? "Documentacao gerada em "+cOut+", "+cOutDbml+" e "+cOutPuml+" com sucesso."
 RETURN
 
 // --- Processa DBF com Indices e gera Documentacao e DBML ---
-FUNCTION Doc_DBF( cFile, nHandle, nHandleDbml, nHandlePuml )
-   LOCAL nI, cTag, cExpr, cDbmlStr, aSTRU, aINDICES := {}
-   LOCAL cMmd, nMmdI // <- NOVAS VARIAVEIS AQUI
-   
-   ? cFILE 
-   dbUseArea( .T.,zusovia, cFile, "TEMP", .T., .T. )
-   
-   cFILE:=HB_FNAMENAME(cFILE)
 
-   IF ! NetErr()
-      // Inclui informacao da origem no cabecalho do Markdown
-      fWrite( nHandle, hb_StrToUTF8("## ") + "Tabela DBF: `" + cFile + "`" + hb_eol() )
-      fWrite( nHandle, "> **Origem:** `" + cFile + "` (Driver: DBFCDX)" + hb_eol() + hb_eol() )
-      fWrite( nHandle, "| Campo | Tipo | Tam | Dec |" + hb_eol() )
-      fWrite( nHandle, "| :--- | :--- | :--- | :--- |" + hb_eol() )
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function Doc_DBF()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+FUNCTION Doc_DBF(cFile,nHandle,nHandleDbml,nHandlePuml)
 
-      FOR nI := 1 TO FCount()
-         fWrite( nHandle, "| " + FieldName(nI) + " | " + FieldType(nI) + " | " + ;
-                 AllTrim(Str(FieldLen(nI))) + " | " + AllTrim(Str(FieldDec(nI))) + " |" + hb_eol() )
+LOCAL nI,cTag,cExpr,cDbmlStr,aSTRU,aINDICES := {}
+LOCAL cMmd,nMmdI  // <- NOVAS VARIAVEIS AQUI
+
+? cFILE
+dbUseArea(.T.,zusovia,cFile,"TEMP",.T.,.T.)
+
+cFILE := HB_FNAMENAME(cFILE)
+
+IF !NetErr()
+   // Inclui informacao da origem no cabecalho do Markdown
+   fWrite(nHandle,hb_StrToUTF8("## ")+"Tabela DBF: `"+cFile+"`"+hb_eol())
+   fWrite(nHandle,"> **Origem:** `"+cFile+"` (Driver: DBFCDX)"+hb_eol()+hb_eol())
+   fWrite(nHandle,"| Campo | Tipo | Tam | Dec |"+hb_eol())
+   fWrite(nHandle,"| :--- | :--- | :--- | :--- |"+hb_eol())
+
+   FOR nI := 1 TO FCount()
+      fWrite(nHandle,"| "+FieldName(nI)+" | "+FieldType(nI)+" | "+;
+       AllTrim(Str(FieldLen(nI)))+" | "+AllTrim(Str(FieldDec(nI)))+" |"+hb_eol())
+   NEXT
+
+   IF dbOrderInfo(DBOI_ORDERCOUNT) > 0
+      fWrite(nHandle,hb_eol()+"**Indices vinculados:**"+hb_eol())
+      FOR nI := 1 TO dbOrderInfo(DBOI_ORDERCOUNT)
+         cTag  := dbOrderInfo(DBOI_NAME,,nI)
+         cExpr := dbOrderInfo(DBOI_EXPRESSION,,nI)
+         fWrite(nHandle,"- Tag: `"+cTag+"` Expressao: `"+cExpr+"`"+hb_eol())
+         AAdd(aINDICES,{nI,cTag,cExpr})
       NEXT
-
-      IF dbOrderInfo( DBOI_ORDERCOUNT ) > 0
-         fWrite( nHandle, hb_eol() + "**Indices vinculados:**" + hb_eol() )
-         FOR nI := 1 TO dbOrderInfo( DBOI_ORDERCOUNT )
-            cTag  := dbOrderInfo( DBOI_NAME, , nI )
-            cExpr := dbOrderInfo( DBOI_EXPRESSION, , nI )
-            fWrite( nHandle, "- Tag: `" + cTag + "` Expressao: `" + cExpr + "`" + hb_eol() )
-            AAdd( aINDICES, { nI, cTag, cExpr } )
-         NEXT
-      ENDIF
-      
-      aSTRU := DBSTRUCT()
-      
-      // Passa o arquivo físico e tipo para o DBML
-      cDbmlStr := GERADBML_Custom( HB_FNAMENAME(cFile), aSTRU, aINDICES, cFile, zusovia )
-      fWrite( nHandleDbml, cDbmlStr + hb_eol() )
-      
-      // Novo: Gerar PUML
-      fWrite( nHandlePuml, GERAPUML_Custom( HB_FNAMENAME(cFile), aSTRU, aINDICES ) + hb_eol() )
-      
-      
-      // --- NOVO: GERAR MERMAID DIRETO NO MARKDOWN ---
-      cMmd := "```mermaid" + hb_eol() + "erDiagram" + hb_eol()
-      cMmd += "    " + StrTran(HB_FNAMENAME(cFile), ".", "_") + " {" + hb_eol()
-      FOR nMmdI := 1 TO Len(aSTRU)
-         cMmd += "        " + aSTRU[nMmdI, 2] + " " + aSTRU[nMmdI, 1] + hb_eol()
-      NEXT
-      cMmd += "    }" + hb_eol() + "```" + hb_eol()
-      fWrite( nHandle, hb_eol() + cMmd )
-      // ----------------------------------------------
-
-      dbCloseArea()
-      fWrite( nHandle, hb_eol() + "---" + hb_eol() )
    ENDIF
+
+   aSTRU := DBSTRUCT()
+
+   // Passa o arquivo físico e tipo para o DBML
+   cDbmlStr := GERADBML_Custom(HB_FNAMENAME(cFile),aSTRU,aINDICES,cFile,zusovia)
+   fWrite(nHandleDbml,cDbmlStr+hb_eol())
+
+   // Novo: Gerar PUML
+   fWrite(nHandlePuml,GERAPUML_Custom(HB_FNAMENAME(cFile),aSTRU,aINDICES)+hb_eol())
+
+
+   // --- NOVO: GERAR MERMAID DIRETO NO MARKDOWN ---
+   cMmd := "```mermaid"+hb_eol()+"erDiagram"+hb_eol()
+   cMmd += "    "+StrTran(HB_FNAMENAME(cFile),".","_")+" {"+hb_eol()
+   FOR nMmdI := 1 TO Len(aSTRU)
+      cMmd += "        "+aSTRU[nMmdI,2]+" "+aSTRU[nMmdI,1]+hb_eol()
+   NEXT
+   cMmd += "    }"+hb_eol()+"```"+hb_eol()
+   fWrite(nHandle,hb_eol()+cMmd)
+   // ----------------------------------------------
+
+   dbCloseArea()
+   fWrite(nHandle,hb_eol()+"---"+hb_eol())
+ENDIF
 RETURN
 
 
 // --- Processa SQLite e gera Documentacao e DBML ---
-FUNCTION Doc_SQLite( cDbFile, nHandleDoc, nHandleDbml, nHandlePuml )
-   LOCAL db, stmt, stmtCol, stmtIdx, stmtInfo
-   LOCAL cTabName, cIdxName, cCamposIdx, cIsUnique
-   LOCAL lHasIdx, cDbmlStr, aStruct, aIndicesTab
-   LOCAL cMmd, nMmdI // <- NOVAS VARIAVEIS AQUI
 
-   db := sqlite3_open( cDbFile )
-   
-   cDbFile:=HB_FNAMENAME(cDbFile)
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function Doc_SQLite()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+FUNCTION Doc_SQLite(cDbFile,nHandleDoc,nHandleDbml,nHandlePuml)
 
-   IF Empty( db )
-      fWrite( nHandleDoc, hb_StrToUTF8("### ") + "Erro ao abrir: " + cDbFile + hb_eol() )
-      RETURN
-   ENDIF
+LOCAL db,stmt,stmtCol,stmtIdx,stmtInfo
+LOCAL cTabName,cIdxName,cCamposIdx,cIsUnique
+LOCAL lHasIdx,cDbmlStr,aStruct,aIndicesTab
+LOCAL cMmd,nMmdI  // <- NOVAS VARIAVEIS AQUI
+
+db := sqlite3_open(cDbFile)
+
+cDbFile := HB_FNAMENAME(cDbFile)
+
+IF Empty(db)
+   fWrite(nHandleDoc,hb_StrToUTF8("### ")+"Erro ao abrir: "+cDbFile+hb_eol())
+   RETURN
+ENDIF
 
 
 
-   stmt := sqlite3_prepare( db, "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'" )
+stmt := sqlite3_prepare(db,"SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
 
-   DO WHILE sqlite3_step( stmt ) == SQLITE_ROW
-      cTabName := sqlite3_column_text( stmt, 1 )
-      
-      // Inclui informacao da origem no cabecalho do Markdown
-      fWrite( nHandleDoc, hb_eol() + hb_StrToUTF8("#### ") + "Tabela: `" + cTabName + "`" + hb_eol() )
-      fWrite( nHandleDoc, "> **Origem:** `" + cDbFile + "` (SQLite)" + hb_eol() + hb_eol() )
-      fWrite( nHandleDoc, "| Campo | Tipo | PK | NotNull |" + hb_eol() )
-      fWrite( nHandleDoc, "| :--- | :--- | :---: | :---: |" + hb_eol() )
+DO WHILE sqlite3_step(stmt) == SQLITE_ROW
+   cTabName := sqlite3_column_text(stmt,1)
 
-      aStruct := {}
-      stmtCol := sqlite3_prepare( db, "PRAGMA table_info('" + cTabName + "')" )
-      DO WHILE sqlite3_step( stmtCol ) == SQLITE_ROW
-         AAdd( aStruct, { sqlite3_column_text( stmtCol, 2 ), sqlite3_column_text( stmtCol, 3 ), iif( sqlite3_column_int( stmtCol, 4 ) == 1, .T., .F. ) } )
-         fWrite( nHandleDoc, "| " + sqlite3_column_text( stmtCol, 2 ) + ;
-                          " | " + sqlite3_column_text( stmtCol, 3 ) + ;
-                          " | " + iif( sqlite3_column_int( stmtCol, 6 ) == 1, "Sim", " " ) + ;
-                          " | " + iif( sqlite3_column_int( stmtCol, 4 ) == 1, "Sim", " " ) + " |" + hb_eol() )
+   // Inclui informacao da origem no cabecalho do Markdown
+   fWrite(nHandleDoc,hb_eol()+hb_StrToUTF8("#### ")+"Tabela: `"+cTabName+"`"+hb_eol())
+   fWrite(nHandleDoc,"> **Origem:** `"+cDbFile+"` (SQLite)"+hb_eol()+hb_eol())
+   fWrite(nHandleDoc,"| Campo | Tipo | PK | NotNull |"+hb_eol())
+   fWrite(nHandleDoc,"| :--- | :--- | :---: | :---: |"+hb_eol())
+
+   aStruct := {}
+   stmtCol := sqlite3_prepare(db,"PRAGMA table_info('"+cTabName+"')")
+   DO WHILE sqlite3_step(stmtCol) == SQLITE_ROW
+      AAdd(aStruct,{sqlite3_column_text(stmtCol,2),sqlite3_column_text(stmtCol,3),iif(sqlite3_column_int(stmtCol,4) == 1,.T.,.F.)})
+      fWrite(nHandleDoc,"| "+sqlite3_column_text(stmtCol,2)+;
+       " | "+sqlite3_column_text(stmtCol,3)+;
+       " | "+iif(sqlite3_column_int(stmtCol,6) == 1,"Sim"," ")+;
+       " | "+iif(sqlite3_column_int(stmtCol,4) == 1,"Sim"," ")+" |"+hb_eol())
+   ENDDO
+   sqlite3_finalize(stmtCol)
+
+   aIndicesTab := {}
+   fWrite(nHandleDoc,hb_eol()+"**Indices e Chaves:**"+hb_eol())
+   stmtIdx := sqlite3_prepare(db,"PRAGMA index_list('"+cTabName+"')")
+   lHasIdx := .F.
+
+   DO WHILE sqlite3_step(stmtIdx) == SQLITE_ROW
+      lHasIdx   := .T.
+      cIdxName  := sqlite3_column_text(stmtIdx,2)
+      cIsUnique := iif(sqlite3_column_int(stmtIdx,3) == 1," (Unico)","")
+
+      stmtInfo   := sqlite3_prepare(db,"PRAGMA index_info('"+cIdxName+"')")
+      cCamposIdx := ""
+
+      DO WHILE sqlite3_step(stmtInfo) == SQLITE_ROW
+         cCamposIdx += sqlite3_column_text(stmtInfo,3)+", "
       ENDDO
-      sqlite3_finalize( stmtCol )
+      sqlite3_finalize(stmtInfo)
 
-      aIndicesTab := {}
-      fWrite( nHandleDoc, hb_eol() + "**Indices e Chaves:**" + hb_eol() )
-      stmtIdx := sqlite3_prepare( db, "PRAGMA index_list('" + cTabName + "')" )
-      lHasIdx := .F.
-
-      DO WHILE sqlite3_step( stmtIdx ) == SQLITE_ROW
-         lHasIdx   := .T.
-         cIdxName  := sqlite3_column_text( stmtIdx, 2 )
-         cIsUnique := iif( sqlite3_column_int( stmtIdx, 3 ) == 1, " (Unico)", "" )
-         
-         stmtInfo   := sqlite3_prepare( db, "PRAGMA index_info('" + cIdxName + "')" )
-         cCamposIdx := ""
-         
-         DO WHILE sqlite3_step( stmtInfo ) == SQLITE_ROW
-            cCamposIdx += sqlite3_column_text( stmtInfo, 3 ) + ", "
-         ENDDO
-         sqlite3_finalize( stmtInfo )
-         
-         IF !Empty(cCamposIdx)
-            cCamposIdx := Left( cCamposIdx, Len(cCamposIdx) - 2 )
-            AAdd( aIndicesTab, { cIdxName, cCamposIdx } )
-            fWrite( nHandleDoc, "- **" + cIdxName + "**: `" + cCamposIdx + "`" + cIsUnique + hb_eol() )
-         ENDIF
-      ENDDO
-      
-      IF !lHasIdx
-         fWrite( nHandleDoc, "> *Nenhum indice definido.*" + hb_eol() )
+      IF !Empty(cCamposIdx)
+         cCamposIdx := Left(cCamposIdx,Len(cCamposIdx) - 2)
+         AAdd(aIndicesTab,{cIdxName,cCamposIdx})
+         fWrite(nHandleDoc,"- **"+cIdxName+"**: `"+cCamposIdx+"`"+cIsUnique+hb_eol())
       ENDIF
-      sqlite3_finalize( stmtIdx )
-
-      cDbmlStr := GERADBML_SQLite( cTabName, aStruct, aIndicesTab, cDbFile, "SQLite" )
-      fWrite( nHandleDbml, cDbmlStr + hb_eol() )
-
-      // Novo: Gerar PUML
-      fWrite( nHandlePuml, GERAPUML_SQLite( cTabName, aStruct, aIndicesTab ) + hb_eol() )
-
-
-      // --- NOVO: GERAR MERMAID DIRETO NO MARKDOWN ---
-      cMmd := "```mermaid" + hb_eol() + "erDiagram" + hb_eol()
-      cMmd += "    " + cTabName + " {" + hb_eol()
-      FOR nMmdI := 1 TO Len(aStruct)
-         cMmd += "        " + StrTran(aStruct[nMmdI, 2], " ", "_") + " " + aStruct[nMmdI, 1] + hb_eol()
-      NEXT
-      cMmd += "    }" + hb_eol() + "```" + hb_eol()
-      fWrite( nHandleDoc, hb_eol() + cMmd )
-      // ----------------------------------------------
-
-      fWrite( nHandleDoc, hb_eol() + "---" + hb_eol() )
    ENDDO
 
-   sqlite3_finalize( stmt )
+   IF !lHasIdx
+      fWrite(nHandleDoc,"> *Nenhum indice definido.*"+hb_eol())
+   ENDIF
+   sqlite3_finalize(stmtIdx)
+
+   cDbmlStr := GERADBML_SQLite(cTabName,aStruct,aIndicesTab,cDbFile,"SQLite")
+   fWrite(nHandleDbml,cDbmlStr+hb_eol())
+
+   // Novo: Gerar PUML
+   fWrite(nHandlePuml,GERAPUML_SQLite(cTabName,aStruct,aIndicesTab)+hb_eol())
+
+
+   // --- NOVO: GERAR MERMAID DIRETO NO MARKDOWN ---
+   cMmd := "```mermaid"+hb_eol()+"erDiagram"+hb_eol()
+   cMmd += "    "+cTabName+" {"+hb_eol()
+   FOR nMmdI := 1 TO Len(aStruct)
+      cMmd += "        "+StrTran(aStruct[nMmdI,2]," ","_")+" "+aStruct[nMmdI,1]+hb_eol()
+   NEXT
+   cMmd += "    }"+hb_eol()+"```"+hb_eol()
+   fWrite(nHandleDoc,hb_eol()+cMmd)
+   // ----------------------------------------------
+
+   fWrite(nHandleDoc,hb_eol()+"---"+hb_eol())
+ENDDO
+
+sqlite3_finalize(stmt)
 RETURN
 
 // --- Processa Access (MDB, ACCDB ou String de Conexao Direta) com Precisao e Escala ---
-STATIC PROCEDURE Doc_Access( cMdbFile, nHandleDoc, nHandleDbml, nHandlePuml )
-   LOCAL oConn, oCat, oTable, oColumn, oIndex, oIdxCol
-   LOCAL cConnStr, nType, cSizeStr, cExt, cIdxFields
-   LOCAL nTbl, nCol, nIdx, nIdxC 
-   LOCAL aStruct, aIndicesTab, cDbmlStr, cIdentificador
-   LOCAL nPrec, nScale, nLen, sDetalhe, sTipoFormatado
-   LOCAL cMmd, nMmdI // <- NOVAS VARIAVEIS AQUI
-   
-   cExt := Lower( SubStr( cMdbFile, Rat( ".", cMdbFile ) + 1 ) )
-   
-   DO CASE
-      CASE cExt == "mdb"
-         cConnStr := "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + cMdbFile + ";"
-         cIdentificador := cMdbFile
-      CASE cExt == "accdb"
-         cConnStr := "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + cMdbFile + ";"
-         cIdentificador := cMdbFile
-      OTHERWISE
-         cConnStr := cMdbFile
-         cIdentificador := "Conexao_Externa"
-   ENDCASE
 
-   TRY
-      oConn := win_oleCreateObject( "ADODB.Connection" )
-      oConn:Open( cConnStr )
-      
-      oCat := win_oleCreateObject( "ADOX.Catalog" )
-      oCat:ActiveConnection := oConn
-   CATCH
-      fWrite( nHandleDoc, hb_StrToUTF8("### ") + "Erro: Falha na conexao OLE com " + cIdentificador + hb_eol() )
-      RETURN
-   END
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Static Procedure Doc_Access()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+STATIC PROCEDURE Doc_Access(cMdbFile,nHandleDoc,nHandleDbml,nHandlePuml)
 
-   FOR nTbl := 0 TO oCat:Tables:Count - 1
-      oTable := oCat:Tables:Item( nTbl )
-      
-      IF AllTrim( Upper( hb_ValToStr( oTable:Type ) ) ) == "TABLE"
-         fWrite( nHandleDoc, hb_eol() + hb_StrToUTF8("#### ") + cIdentificador + " / `" + oTable:Name + "`" + hb_eol() )
-         fWrite( nHandleDoc, "> **Origem:** `" + cIdentificador + "` (Access/ADOX)" + hb_eol() + hb_eol() )
-         fWrite( nHandleDoc, "| Campo | Tipo | Detalhe / Tam |" + hb_eol() )
-         fWrite( nHandleDoc, "| :--- | :--- | :---: |" + hb_eol() )
+LOCAL oConn,oCat,oTable,oColumn,oIndex,oIdxCol
+LOCAL cConnStr,nType,cSizeStr,cExt,cIdxFields
+LOCAL nTbl,nCol,nIdx,nIdxC
+LOCAL aStruct,aIndicesTab,cDbmlStr,cIdentificador
+LOCAL nPrec,nScale,nLen,sDetalhe,sTipoFormatado
+LOCAL cMmd,nMmdI  // <- NOVAS VARIAVEIS AQUI
 
-         aStruct := {}
-         FOR nCol := 0 TO oTable:Columns:Count - 1
-            oColumn := oTable:Columns:Item( nCol )
-            nType := oColumn:Type
-            sTipoFormatado := cValToType( nType )
-            
-            // Inicializa precisao e escala
-            nPrec := 0
+cExt := Lower(SubStr(cMdbFile,Rat(".",cMdbFile)+1))
+
+DO CASE
+CASE cExt == "mdb"
+   cConnStr       := "Provider=Microsoft.Jet.OLEDB.4.0;Data Source="+cMdbFile+";"
+   cIdentificador := cMdbFile
+CASE cExt == "accdb"
+   cConnStr       := "Provider=Microsoft.ACE.OLEDB.12.0;Data Source="+cMdbFile+";"
+   cIdentificador := cMdbFile
+OTHERWISE
+   cConnStr       := cMdbFile
+   cIdentificador := "Conexao_Externa"
+ENDCASE
+
+TRY
+   oConn := win_oleCreateObject("ADODB.Connection")
+   oConn:Open(cConnStr)
+
+   oCat                  := win_oleCreateObject("ADOX.Catalog")
+   oCat:ActiveConnection := oConn
+CATCH
+   fWrite(nHandleDoc,hb_StrToUTF8("### ")+"Erro: Falha na conexao OLE com "+cIdentificador+hb_eol())
+   RETURN
+END
+
+FOR nTbl := 0 TO oCat:Tables:Count - 1
+   oTable := oCat:Tables:Item(nTbl)
+
+   IF AllTrim(Upper(hb_ValToStr(oTable:Type))) == "TABLE"
+      fWrite(nHandleDoc,hb_eol()+hb_StrToUTF8("#### ")+cIdentificador+" / `"+oTable:Name+"`"+hb_eol())
+      fWrite(nHandleDoc,"> **Origem:** `"+cIdentificador+"` (Access/ADOX)"+hb_eol()+hb_eol())
+      fWrite(nHandleDoc,"| Campo | Tipo | Detalhe / Tam |"+hb_eol())
+      fWrite(nHandleDoc,"| :--- | :--- | :---: |"+hb_eol())
+
+      aStruct := {}
+      FOR nCol := 0 TO oTable:Columns:Count - 1
+         oColumn        := oTable:Columns:Item(nCol)
+         nType          := oColumn:Type
+         sTipoFormatado := cValToType(nType)
+
+         // Inicializa precisao e escala
+         nPrec  := 0
+         nScale := 0
+
+         // Tenta capturar propriedades OLE DB de precisao e escala com seguranca
+         TRY
+            nPrec  := oColumn:Properties("NumericPrecision") :Value
+            nScale := oColumn:Properties("NumericScale") :Value
+         CATCH
+            nPrec  := 0
             nScale := 0
-            
-            // Tenta capturar propriedades OLE DB de precisao e escala com seguranca
-            TRY
-               nPrec := oColumn:Properties("NumericPrecision"):Value
-               nScale := oColumn:Properties("NumericScale"):Value
-            CATCH
-               nPrec := 0
-               nScale := 0
-            END
+         END
 
-            sDetalhe := ""
-            
-            // Caso 1: Numerico com Precisao
-            IF nPrec > 0
-               IF nScale > 0
-                  sDetalhe := "(" + AllTrim(Str(nPrec)) + "," + AllTrim(Str(nScale)) + ")"
-               ELSE
-                  sDetalhe := "(" + AllTrim(Str(nPrec)) + ")"
-               ENDIF
-            // Caso 2: Texto / Caractere
-            ELSEIF nType == 129 .OR. nType == 200 .OR. nType == 202 .OR. nType == 203
-               nLen := oColumn:DefinedSize
-               IF nLen <= 0 .OR. nLen > 250
-                  nLen := 250
-               ENDIF
-               sDetalhe := "(" + AllTrim(Str(nLen)) + ")"
-            // Caso 3: Logico (Boolean)
-            ELSEIF nType == 11
-               sDetalhe := "(1)"
+         sDetalhe := ""
+
+         // Caso 1: Numerico com Precisao
+         IF nPrec > 0
+            IF nScale > 0
+               sDetalhe := "("+AllTrim(Str(nPrec))+","+AllTrim(Str(nScale))+")"
+            ELSE
+               sDetalhe := "("+AllTrim(Str(nPrec))+")"
             ENDIF
-
-            AAdd( aStruct, { hb_ValToStr(oColumn:Name), sTipoFormatado, sDetalhe } )
-
-            fWrite( nHandleDoc, "| " + PadR( hb_ValToStr(oColumn:Name), 25) + ;
-                             " | " + PadR( sTipoFormatado, 15) + ;
-                             " | " + PadR( sDetalhe, 10) + " |" + hb_eol() )
-         NEXT
-
-         fWrite( nHandleDoc, hb_eol() + "**Indices:**" + hb_eol() )
-         aIndicesTab := {}
-         
-         IF oTable:Indexes:Count > 0
-            FOR nIdx := 0 TO oTable:Indexes:Count - 1
-               oIndex := oTable:Indexes:Item( nIdx )
-               cIdxFields := ""
-               
-               FOR nIdxC := 0 TO oIndex:Columns:Count - 1
-                  oIdxCol := oIndex:Columns:Item( nIdxC )
-                  cIdxFields += hb_ValToStr( oIdxCol:Name ) + ", "
-               NEXT
-               
-               cIdxFields := Left( cIdxFields, Len(cIdxFields) - 2 )
-               AAdd( aIndicesTab, { hb_ValToStr(oIndex:Name), cIdxFields } )
-
-               fWrite( nHandleDoc, "- **" + hb_ValToStr(oIndex:Name) + "**: `" + cIdxFields + "`" + ;
-                                iif( oIndex:Unique, " (Unico)", "" ) + iif( oIndex:PrimaryKey, " [PK]", "" ) + hb_eol() )
-            NEXT
-         ELSE
-            fWrite( nHandleDoc, "> *Nenhum indice detectado.*" + hb_eol() )
+            // Caso 2: Texto / Caractere
+         ELSEIF nType == 129 .OR. nType == 200 .OR. nType == 202 .OR. nType == 203
+            nLen := oColumn:DefinedSize
+            IF nLen <= 0 .OR. nLen > 250
+               nLen := 250
+            ENDIF
+            sDetalhe := "("+AllTrim(Str(nLen))+")"
+            // Caso 3: Logico (Boolean)
+         ELSEIF nType == 11
+            sDetalhe := "(1)"
          ENDIF
-         
-         cDbmlStr := GERADBML_Access( oTable:Name, aStruct, aIndicesTab, cIdentificador, "Access" )
-         fWrite( nHandleDbml, cDbmlStr + hb_eol() )
 
-         // Novo: Gerar PUMl
-         fWrite( nHandlePuml, GERAPUML_Access( oTable:Name, aStruct, aIndicesTab ) + hb_eol() )
+         AAdd(aStruct,{hb_ValToStr(oColumn:Name),sTipoFormatado,sDetalhe})
 
-// --- NOVO: GERAR MERMAID DIRETO NO MARKDOWN ---
-         cMmd := "```mermaid" + hb_eol() + "erDiagram" + hb_eol()
-         cMmd += "    " + StrTran(oTable:Name, " ", "_") + " {" + hb_eol()
-         FOR nMmdI := 1 TO Len(aStruct)
-            cMmd += "        " + StrTran(aStruct[nMmdI, 2], " ", "_") + " " + StrTran(aStruct[nMmdI, 1], " ", "_") + hb_eol()
+         fWrite(nHandleDoc,"| "+PadR(hb_ValToStr(oColumn:Name),25)+;
+          " | "+PadR(sTipoFormatado,15)+;
+          " | "+PadR(sDetalhe,10)+" |"+hb_eol())
+      NEXT
+
+      fWrite(nHandleDoc,hb_eol()+"**Indices:**"+hb_eol())
+      aIndicesTab := {}
+
+      IF oTable:Indexes:Count > 0
+         FOR nIdx := 0 TO oTable:Indexes:Count - 1
+            oIndex     := oTable:Indexes:Item(nIdx)
+            cIdxFields := ""
+
+            FOR nIdxC := 0 TO oIndex:Columns:Count - 1
+               oIdxCol    := oIndex:Columns:Item(nIdxC)
+               cIdxFields += hb_ValToStr(oIdxCol:Name)+", "
+            NEXT
+
+            cIdxFields := Left(cIdxFields,Len(cIdxFields) - 2)
+            AAdd(aIndicesTab,{hb_ValToStr(oIndex:Name),cIdxFields})
+
+            fWrite(nHandleDoc,"- **"+hb_ValToStr(oIndex:Name)+"**: `"+cIdxFields+"`"+;
+             iif(oIndex:Unique," (Unico)","")+iif(oIndex:PrimaryKey," [PK]","")+hb_eol())
          NEXT
-         cMmd += "    }" + hb_eol() + "```" + hb_eol()
-         fWrite( nHandleDoc, hb_eol() + cMmd )
-         // ----------------------------------------------
-
-         fWrite( nHandleDoc, hb_eol() + "---" + hb_eol() )
+      ELSE
+         fWrite(nHandleDoc,"> *Nenhum indice detectado.*"+hb_eol())
       ENDIF
-   NEXT
 
-   oConn:Close()
+      cDbmlStr := GERADBML_Access(oTable:Name,aStruct,aIndicesTab,cIdentificador,"Access")
+      fWrite(nHandleDbml,cDbmlStr+hb_eol())
+
+      // Novo: Gerar PUMl
+      fWrite(nHandlePuml,GERAPUML_Access(oTable:Name,aStruct,aIndicesTab)+hb_eol())
+
+      // --- NOVO: GERAR MERMAID DIRETO NO MARKDOWN ---
+      cMmd := "```mermaid"+hb_eol()+"erDiagram"+hb_eol()
+      cMmd += "    "+StrTran(oTable:Name," ","_")+" {"+hb_eol()
+      FOR nMmdI := 1 TO Len(aStruct)
+         cMmd += "        "+StrTran(aStruct[nMmdI,2]," ","_")+" "+StrTran(aStruct[nMmdI,1]," ","_")+hb_eol()
+      NEXT
+      cMmd += "    }"+hb_eol()+"```"+hb_eol()
+      fWrite(nHandleDoc,hb_eol()+cMmd)
+      // ----------------------------------------------
+
+      fWrite(nHandleDoc,hb_eol()+"---"+hb_eol())
+   ENDIF
+NEXT
+
+oConn:Close()
 RETURN
 
 // --- Funcao Auxiliar de Geracao DBML para Access atualizada com Detalhes ---
-FUNCTION GERADBML_Access( cARQ, aUSO, aINDICES, cOrigemFile, cTipoOrigem )
-   LOCAL cLINHA := "", K, j
-   cLINHA += '// Origem: ' + cOrigemFile + ' (' + cTipoOrigem + ')' + hb_eol()
-   cLINHA += 'Table "' + cARQ + '" {' + hb_eol()
-   cLINHA += '  Note: "Origem: ' + cOrigemFile + '"' + hb_eol()
 
-   FOR K := 1 TO LEN(aUSO)
-      cLINHA += '  "' + AllTrim( aUSO[K, 1] ) + '" ' + AllTrim( aUSO[K, 2] ) + AllTrim( aUSO[K, 3] )
-      cLINHA += hb_eol()          
-   NEXT K
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function GERADBML_Access()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+FUNCTION GERADBML_Access(cARQ,aUSO,aINDICES,cOrigemFile,cTipoOrigem)
 
-   IF LEN(aINDICES) > 0
-      cLINHA += "  Indexes {" + hb_eol()
-      FOR j := 1 TO LEN(aINDICES)
-         cLINHA += "    (" + aINDICES[j,2] + ") [name: " + CHR(34) + aINDICES[j,1] + CHR(34) + "]" + hb_eol()
-      NEXT j 
-      cLINHA += "  }" + hb_eol()     
-   ENDIF 
-   cLINHA += "}" + hb_eol()
-RETURN 
+LOCAL cLINHA := "",K,j
+cLINHA += '// Origem: '+cOrigemFile+' ('+cTipoOrigem+')'+hb_eol()
+cLINHA += 'Table "'+cARQ+'" {'+hb_eol()
+cLINHA += '  Note: "Origem: '+cOrigemFile+'"'+hb_eol()
+
+FOR K := 1 TO LEN(aUSO)
+   cLINHA += '  "'+AllTrim(aUSO[K,1])+'" '+AllTrim(aUSO[K,2])+AllTrim(aUSO[K,3])
+   cLINHA += hb_eol()
+NEXT K
+
+IF LEN(aINDICES) > 0
+   cLINHA += "  Indexes {"+hb_eol()
+   FOR j := 1 TO LEN(aINDICES)
+      cLINHA += "    ("+aINDICES[j,2]+") [name: "+CHR(34)+aINDICES[j,1]+CHR(34)+"]"+hb_eol()
+   NEXT j
+   cLINHA += "  }"+hb_eol()
+ENDIF
+cLINHA += "}"+hb_eol()
+RETURN
 
 // --- Funcao Ampliada para Traducao de Tipos ADO (Access / OLEDB) ---
-FUNCTION cValToType( nType )
-   LOCAL cRet
-   DO CASE
-      CASE nType == 0   ; cRet := "EMPTY"          // adEmpty
-      CASE nType == 2   ; cRet := "SMALLINT"       // adSmallInt
-      CASE nType == 3   ; cRet := "INTEGER"        // adInteger
-      CASE nType == 4   ; cRet := "SINGLE"         // adSingle
-      CASE nType == 5   ; cRet := "DOUBLE"         // adDouble
-      CASE nType == 6   ; cRet := "CURRENCY"       // adCurrency
-      CASE nType == 7   ; cRet := "DATETIME"       // adDate
-      CASE nType == 8   ; cRet := "BSTR"           // adBSTR
-      CASE nType == 9   ; cRet := "IDISPATCH"      // adIDispatch
-      CASE nType == 10  ; cRet := "ERROR"          // adError
-      CASE nType == 11  ; cRet := "BOOLEAN"        // adBoolean
-      CASE nType == 12  ; cRet := "VARIANT"        // adVariant
-      CASE nType == 13  ; cRet := "IUNKNOWN"       // adIUnknown
-      CASE nType == 14  ; cRet := "DECIMAL"        // adDecimal
-      CASE nType == 16  ; cRet := "TINYINT"        // adTinyInt
-      CASE nType == 17  ; cRet := "USMALLINT"      // adUnsignedTinyInt
-      CASE nType == 18  ; cRet := "UINTEGER"       // adUnsignedSmallInt
-      CASE nType == 19  ; cRet := "UINT"           // adUnsignedInt
-      CASE nType == 20  ; cRet := "BIGINT"         // adBigInt
-      CASE nType == 21  ; cRet := "UBIGINT"        // adUnsignedBigInt
-      CASE nType == 64  ; cRet := "FILETIME"       // adFileTime
-      CASE nType == 72  ; cRet := "GUID"           // adGUID
-      CASE nType == 128 ; cRet := "BINARY"         // adBinary
-      CASE nType == 129 ; cRet := "CHAR"           // adChar
-      CASE nType == 130 ; cRet := "WCHAR"          // adWChar
-      CASE nType == 131 ; cRet := "NUMERIC"        // adNumeric
-      CASE nType == 132 ; cRet := "USERDEFINED"    // adUserDefined
-      CASE nType == 133 ; cRet := "DBDATE"         // adDBDate
-      CASE nType == 134 ; cRet := "DBTIME"         // adDBTime
-      CASE nType == 135 ; cRet := "DBTIMESTAMP"    // adDBTimeStamp
-      CASE nType == 200 ; cRet := "VARCHAR"        // adVarChar
-      CASE nType == 201 ; cRet := "LONGVARCHAR"    // adLongVarChar
-      CASE nType == 202 ; cRet := "VARCHAR"        // adVarWChar
-      CASE nType == 203 ; cRet := "LONGTEXT"       // adLongVarWChar (Memo)
-      CASE nType == 204 ; cRet := "VARBINARY"      // adVarBinary
-      CASE nType == 205 ; cRet := "LONGVARBINARY"  // adLongVarBinary
-      OTHERWISE         ; cRet := "OUTRO (" + AllTrim(Str(nType)) + ")"
-   ENDCASE
+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function cValToType()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+FUNCTION cValToType(nType)
+
+LOCAL cRet
+DO CASE
+CASE nType == 0   // adEmpty
+   cRet := "EMPTY"
+CASE nType == 2   // adSmallInt
+   cRet := "SMALLINT"
+CASE nType == 3   // adInteger
+   cRet := "INTEGER"
+CASE nType == 4   // adSingle
+   cRet := "SINGLE"
+CASE nType == 5   // adDouble
+   cRet := "DOUBLE"
+CASE nType == 6   // adCurrency
+   cRet := "CURRENCY"
+CASE nType == 7   // adDate
+   cRet := "DATETIME"
+CASE nType == 8   // adBSTR
+   cRet := "BSTR"
+CASE nType == 9   // adIDispatch
+   cRet := "IDISPATCH"
+CASE nType == 10    // adError
+   cRet := "ERROR"
+CASE nType == 11    // adBoolean
+   cRet := "BOOLEAN"
+CASE nType == 12    // adVariant
+   cRet := "VARIANT"
+CASE nType == 13    // adIUnknown
+   cRet := "IUNKNOWN"
+CASE nType == 14    // adDecimal
+   cRet := "DECIMAL"
+CASE nType == 16    // adTinyInt
+   cRet := "TINYINT"
+CASE nType == 17    // adUnsignedTinyInt
+   cRet := "USMALLINT"
+CASE nType == 18    // adUnsignedSmallInt
+   cRet := "UINTEGER"
+CASE nType == 19    // adUnsignedInt
+   cRet := "UINT"
+CASE nType == 20    // adBigInt
+   cRet := "BIGINT"
+CASE nType == 21    // adUnsignedBigInt
+   cRet := "UBIGINT"
+CASE nType == 64    // adFileTime
+   cRet := "FILETIME"
+CASE nType == 72    // adGUID
+   cRet := "GUID"
+CASE nType == 128   // adBinary
+   cRet := "BINARY"
+CASE nType == 129   // adChar
+   cRet := "CHAR"
+CASE nType == 130   // adWChar
+   cRet := "WCHAR"
+CASE nType == 131   // adNumeric
+   cRet := "NUMERIC"
+CASE nType == 132   // adUserDefined
+   cRet := "USERDEFINED"
+CASE nType == 133   // adDBDate
+   cRet := "DBDATE"
+CASE nType == 134   // adDBTime
+   cRet := "DBTIME"
+CASE nType == 135   // adDBTimeStamp
+   cRet := "DBTIMESTAMP"
+CASE nType == 200   // adVarChar
+   cRet := "VARCHAR"
+CASE nType == 201   // adLongVarChar
+   cRet := "LONGVARCHAR"
+CASE nType == 202   // adVarWChar
+   cRet := "VARCHAR"
+CASE nType == 203   // adLongVarWChar (Memo)
+   cRet := "LONGTEXT"
+CASE nType == 204   // adVarBinary
+   cRet := "VARBINARY"
+CASE nType == 205   // adLongVarBinary
+   cRet := "LONGVARBINARY"
+OTHERWISE 
+   cRet := "OUTRO ("+AllTrim(Str(nType))+")"
+ENDCASE
 RETURN cRet
 
 // --- Funcoes Auxiliares de Geracao DBML ---
 
-FUNCTION GERADBML_Custom( cARQ, aUSO, aINDICES, cOrigemFile, cTipoOrigem )
-   LOCAL cLINHA := "", K, j
-   cLINHA += '// Origem: ' + cOrigemFile + ' (' + cTipoOrigem + ')' + hb_eol()
-   cLINHA += 'Table "' + cARQ + '" {' + hb_eol()
-   cLINHA += '  Note: "Origem: ' + cOrigemFile + '"' + hb_eol()
 
-   FOR K := 1 TO LEN(aUSO)
-      cLINHA += '  "' + AllTrim( aUSO[ K ][ DBS_NAME ] ) + '"'
-      DO CASE
-         CASE aUSO[ K ][ DBS_TYPE ] = "C"
-              cLINHA += " VARCHAR(" + AllTrim( Str( aUSO[ K ][ DBS_LEN ] ) ) + ")"
-         CASE aUSO[ K ][ DBS_TYPE ] = "D"
-              cLINHA += " DATETIME"
-         CASE aUSO[ K ][ DBS_TYPE ] = "L"
-              cLINHA += " TINYINT(1)"
-         CASE aUSO[ K ][ DBS_TYPE ] = "N"
-              IF aUSO[ K ][ DBS_DEC ] = 0
-                 cLINHA += " INTEGER [default: 0]"
-              ELSE
-                 cLINHA += " DECIMAL(" + AllTrim( Str( aUSO[ K ][ DBS_LEN ] ) ) + "," + AllTrim( Str( aUSO[ K ][ DBS_DEC ] ) ) + ") [default: 0]"
-              ENDIF  
-         CASE aUSO[ K ][ DBS_TYPE ] = "M"   
-              cLINHA += " LONGTEXT"
-      ENDCASE
-      cLINHA += hb_eol()          
-   NEXT K
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function GERADBML_Custom()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+FUNCTION GERADBML_Custom(cARQ,aUSO,aINDICES,cOrigemFile,cTipoOrigem)
 
-   IF LEN(aINDICES) > 0
-      cLINHA += "  Indexes {" + hb_eol()
-      FOR j := 1 TO LEN(aINDICES)
-         cLINHA += "    (" + MDPCHAVEI(aINDICES[j,3]) + ") [name: " + CHR(34) + aINDICES[j,2] + CHR(34) + "]" + hb_eol()
-      NEXT j 
-      cLINHA += "  }" + hb_eol()     
-   ENDIF 
-   cLINHA += "}" + hb_eol()
+LOCAL cLINHA := "",K,j
+cLINHA += '// Origem: '+cOrigemFile+' ('+cTipoOrigem+')'+hb_eol()
+cLINHA += 'Table "'+cARQ+'" {'+hb_eol()
+cLINHA += '  Note: "Origem: '+cOrigemFile+'"'+hb_eol()
+
+FOR K := 1 TO LEN(aUSO)
+   cLINHA += '  "'+AllTrim(aUSO[K,DBS_NAME])+'"'
+   DO CASE
+   CASE aUSO[K ,  DBS_TYPE] = "C"
+      cLINHA += " VARCHAR("+AllTrim(Str(aUSO[K,DBS_LEN]))+")"
+   CASE aUSO[K ,  DBS_TYPE] = "D"
+      cLINHA += " DATETIME"
+   CASE aUSO[K ,  DBS_TYPE] = "L"
+      cLINHA += " TINYINT(1)"
+   CASE aUSO[K ,  DBS_TYPE] = "N"
+      IF aUSO[K ,  DBS_DEC] = 0
+         cLINHA += " INTEGER [default: 0]"
+      ELSE
+         cLINHA += " DECIMAL("+AllTrim(Str(aUSO[K,DBS_LEN]))+","+AllTrim(Str(aUSO[K,DBS_DEC]))+") [default: 0]"
+      ENDIF
+   CASE aUSO[K ,  DBS_TYPE] = "M"
+      cLINHA += " LONGTEXT"
+   ENDCASE
+   cLINHA += hb_eol()
+NEXT K
+
+IF LEN(aINDICES) > 0
+   cLINHA += "  Indexes {"+hb_eol()
+   FOR j := 1 TO LEN(aINDICES)
+      cLINHA += "    ("+MDPCHAVEI(aINDICES[j,3])+") [name: "+CHR(34)+aINDICES[j,2]+CHR(34)+"]"+hb_eol()
+   NEXT j
+   cLINHA += "  }"+hb_eol()
+ENDIF
+cLINHA += "}"+hb_eol()
 RETURN cLINHA
 
-FUNCTION GERADBML_SQLite( cARQ, aUSO, aINDICES, cOrigemFile, cTipoOrigem )
-   LOCAL cLINHA := "", K, j
-   cLINHA += '// Origem: ' + cOrigemFile + ' (' + cTipoOrigem + ')' + hb_eol()
-   cLINHA += 'Table "' + cARQ + '" {' + hb_eol()
-   cLINHA += '  Note: "Origem: ' + cOrigemFile + '"' + hb_eol()
 
-   FOR K := 1 TO LEN(aUSO)
-      cLINHA += '  "' + AllTrim( aUSO[K, 1] ) + '" ' + AllTrim( aUSO[K, 2] )
-      cLINHA += hb_eol()          
-   NEXT K
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function GERADBML_SQLite()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+FUNCTION GERADBML_SQLite(cARQ,aUSO,aINDICES,cOrigemFile,cTipoOrigem)
 
-   IF LEN(aINDICES) > 0
-      cLINHA += "  Indexes {" + hb_eol()
-      FOR j := 1 TO LEN(aINDICES)
-         cLINHA += "    (" + aINDICES[j,2] + ") [name: " + CHR(34) + aINDICES[j,1] + CHR(34) + "]" + hb_eol()
-      NEXT j 
-      cLINHA += "  }" + hb_eol()     
-   ENDIF 
-   cLINHA += "}" + hb_eol()
+LOCAL cLINHA := "",K,j
+cLINHA += '// Origem: '+cOrigemFile+' ('+cTipoOrigem+')'+hb_eol()
+cLINHA += 'Table "'+cARQ+'" {'+hb_eol()
+cLINHA += '  Note: "Origem: '+cOrigemFile+'"'+hb_eol()
+
+FOR K := 1 TO LEN(aUSO)
+   cLINHA += '  "'+AllTrim(aUSO[K,1])+'" '+AllTrim(aUSO[K,2])
+   cLINHA += hb_eol()
+NEXT K
+
+IF LEN(aINDICES) > 0
+   cLINHA += "  Indexes {"+hb_eol()
+   FOR j := 1 TO LEN(aINDICES)
+      cLINHA += "    ("+aINDICES[j,2]+") [name: "+CHR(34)+aINDICES[j,1]+CHR(34)+"]"+hb_eol()
+   NEXT j
+   cLINHA += "  }"+hb_eol()
+ENDIF
+cLINHA += "}"+hb_eol()
 RETURN cLINHA
 
 
 // --- Funcoes Auxiliares de Geracao PlantUML ---
 
-FUNCTION GERAPUML_Custom( cARQ, aUSO, aINDICES )
-   LOCAL cLINHA := "", K, j
-   cLINHA += 'entity "' + cARQ + '" as ' + cARQ + ' {' + hb_eol()
-   FOR K := 1 TO LEN(aUSO)
-      cLINHA += '  ' + AllTrim( aUSO[ K ][ DBS_NAME ] ) + ' : '
-      DO CASE
-         CASE aUSO[ K ][ DBS_TYPE ] = "C"
-              cLINHA += "varchar(" + AllTrim( Str( aUSO[ K ][ DBS_LEN ] ) ) + ")"
-         CASE aUSO[ K ][ DBS_TYPE ] = "D"
-              cLINHA += "datetime"
-         CASE aUSO[ K ][ DBS_TYPE ] = "L"
-              cLINHA += "boolean"
-         CASE aUSO[ K ][ DBS_TYPE ] = "N"
-              IF aUSO[ K ][ DBS_DEC ] = 0
-                 cLINHA += "integer"
-              ELSE
-                 cLINHA += "decimal(" + AllTrim( Str( aUSO[ K ][ DBS_LEN ] ) ) + "," + AllTrim( Str( aUSO[ K ][ DBS_DEC ] ) ) + ")"
-              ENDIF  
-         CASE aUSO[ K ][ DBS_TYPE ] = "M"   
-              cLINHA += "longtext"
-      ENDCASE
-      cLINHA += hb_eol()          
-   NEXT K
 
-   // INCLUI OS INDICES DO DBF
-   IF LEN(aINDICES) > 0
-      cLINHA += '  --' + hb_eol()
-      cLINHA += '  .. Índices ..' + hb_eol()
-      FOR j := 1 TO LEN(aINDICES)
-         // O array aINDICES no DBF tem o formato: { nI, cTag, cExpr }
-         cLINHA += '  + ' + aINDICES[j,2] + ' : ' + aINDICES[j,3] + hb_eol()
-      NEXT j
-   ENDIF
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function GERAPUML_Custom()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+FUNCTION GERAPUML_Custom(cARQ,aUSO,aINDICES)
 
-   cLINHA += "}" + hb_eol()
-RETURN cLINHA
-
-FUNCTION GERAPUML_SQLite( cARQ, aUSO, aINDICES )
-   LOCAL cLINHA := "", K, j
-   cLINHA += 'entity "' + cARQ + '" as ' + cARQ + ' {' + hb_eol()
-   FOR K := 1 TO LEN(aUSO)
-      IF aUSO[K, 3] 
-         cLINHA += '  * ' + AllTrim( aUSO[K, 1] ) + ' : ' + AllTrim( aUSO[K, 2] ) + ' <<PK>>' + hb_eol()
+LOCAL cLINHA := "",K,j
+cLINHA += 'entity "'+cARQ+'" as '+cARQ+' {'+hb_eol()
+FOR K := 1 TO LEN(aUSO)
+   cLINHA += '  '+AllTrim(aUSO[K,DBS_NAME])+' : '
+   DO CASE
+   CASE aUSO[K ,  DBS_TYPE] = "C"
+      cLINHA += "varchar("+AllTrim(Str(aUSO[K,DBS_LEN]))+")"
+   CASE aUSO[K ,  DBS_TYPE] = "D"
+      cLINHA += "datetime"
+   CASE aUSO[K ,  DBS_TYPE] = "L"
+      cLINHA += "boolean"
+   CASE aUSO[K ,  DBS_TYPE] = "N"
+      IF aUSO[K ,  DBS_DEC] = 0
+         cLINHA += "integer"
       ELSE
-         cLINHA += '  ' + AllTrim( aUSO[K, 1] ) + ' : ' + AllTrim( aUSO[K, 2] ) + hb_eol()
+         cLINHA += "decimal("+AllTrim(Str(aUSO[K,DBS_LEN]))+","+AllTrim(Str(aUSO[K,DBS_DEC]))+")"
       ENDIF
-   NEXT K
+   CASE aUSO[K ,  DBS_TYPE] = "M"
+      cLINHA += "longtext"
+   ENDCASE
+   cLINHA += hb_eol()
+NEXT K
 
-   // INCLUI OS INDICES DO SQLITE
-   IF LEN(aINDICES) > 0
-      cLINHA += '  --' + hb_eol()
-      cLINHA += '  .. Índices ..' + hb_eol()
-      FOR j := 1 TO LEN(aINDICES)
-         // O array aIndicesTab no SQLite tem o formato: { cIdxName, cCamposIdx }
-         cLINHA += '  + ' + aINDICES[j,1] + ' : ' + aINDICES[j,2] + hb_eol()
-      NEXT j
-   ENDIF
+// INCLUI OS INDICES DO DBF
+IF LEN(aINDICES) > 0
+   cLINHA += '  --'+hb_eol()
+   cLINHA += '  .. Índices ..'+hb_eol()
+   FOR j := 1 TO LEN(aINDICES)
+      // O array aINDICES no DBF tem o formato: { nI, cTag, cExpr }
+      cLINHA += '  + '+aINDICES[j,2]+' : '+aINDICES[j,3]+hb_eol()
+   NEXT j
+ENDIF
 
-   cLINHA += "}" + hb_eol()
+cLINHA += "}"+hb_eol()
 RETURN cLINHA
 
-FUNCTION GERAPUML_Access( cARQ, aUSO, aINDICES )
-   LOCAL cLINHA := "", K, j
-   cLINHA += 'entity "' + cARQ + '" as ' + cARQ + ' {' + hb_eol()
-   FOR K := 1 TO LEN(aUSO)
-      cLINHA += '  ' + AllTrim( aUSO[K, 1] ) + ' : ' + AllTrim( aUSO[K, 2] ) + AllTrim( aUSO[K, 3] ) + hb_eol()
-   NEXT K
 
-   // INCLUI OS INDICES DO ACCESS
-   IF LEN(aINDICES) > 0
-      cLINHA += '  --' + hb_eol()
-      cLINHA += '  .. Índices ..' + hb_eol()
-      FOR j := 1 TO LEN(aINDICES)
-         // O array aIndicesTab no Access tem o formato: { nome_indice, campos }
-         cLINHA += '  + ' + aINDICES[j,1] + ' : ' + aINDICES[j,2] + hb_eol()
-      NEXT j
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function GERAPUML_SQLite()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+FUNCTION GERAPUML_SQLite(cARQ,aUSO,aINDICES)
+
+LOCAL cLINHA := "",K,j
+cLINHA += 'entity "'+cARQ+'" as '+cARQ+' {'+hb_eol()
+FOR K := 1 TO LEN(aUSO)
+   IF aUSO[K,3]
+      cLINHA += '  * '+AllTrim(aUSO[K,1])+' : '+AllTrim(aUSO[K,2])+' <<PK>>'+hb_eol()
+   ELSE
+      cLINHA += '  '+AllTrim(aUSO[K,1])+' : '+AllTrim(aUSO[K,2])+hb_eol()
    ENDIF
+NEXT K
 
-   cLINHA += "}" + hb_eol()
+// INCLUI OS INDICES DO SQLITE
+IF LEN(aINDICES) > 0
+   cLINHA += '  --'+hb_eol()
+   cLINHA += '  .. Índices ..'+hb_eol()
+   FOR j := 1 TO LEN(aINDICES)
+      // O array aIndicesTab no SQLite tem o formato: { cIdxName, cCamposIdx }
+      cLINHA += '  + '+aINDICES[j,1]+' : '+aINDICES[j,2]+hb_eol()
+   NEXT j
+ENDIF
+
+cLINHA += "}"+hb_eol()
 RETURN cLINHA
+
+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function GERAPUML_Access()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+FUNCTION GERAPUML_Access(cARQ,aUSO,aINDICES)
+
+LOCAL cLINHA := "",K,j
+cLINHA += 'entity "'+cARQ+'" as '+cARQ+' {'+hb_eol()
+FOR K := 1 TO LEN(aUSO)
+   cLINHA += '  '+AllTrim(aUSO[K,1])+' : '+AllTrim(aUSO[K,2])+AllTrim(aUSO[K,3])+hb_eol()
+NEXT K
+
+// INCLUI OS INDICES DO ACCESS
+IF LEN(aINDICES) > 0
+   cLINHA += '  --'+hb_eol()
+   cLINHA += '  .. Índices ..'+hb_eol()
+   FOR j := 1 TO LEN(aINDICES)
+      // O array aIndicesTab no Access tem o formato: { nome_indice, campos }
+      cLINHA += '  + '+aINDICES[j,1]+' : '+aINDICES[j,2]+hb_eol()
+   NEXT j
+ENDIF
+
+cLINHA += "}"+hb_eol()
+RETURN cLINHA
+
+*+ EOF: dbumddbml.prg
+*+

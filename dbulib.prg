@@ -1,17 +1,29 @@
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 *+    Programa  : dbulib.prg
 *+
+*+
+*+
 *+     Sistema:
+*+
 *+     Linguagem: Harbour
+*+
 *+     Autor: jcassiano
+*+
 *+     Copyright (c) 2024,  jcassiano
 *+
-*+    Documentado em 28-Dez-2024 as 10:07 am
+*+     
+*+
+*+
+*+
+*+    Documentado em 15-Out-2026 as  2:12 pm
+*+
+*+
 *+
 *+--------------------------------------------------------------------
 *+
-
 
 #INCLUDE "BOX.CH"
 #include "ads.ch"
@@ -27,7 +39,15 @@ REQUEST DBFCDXEX
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function inputbox()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -35,7 +55,12 @@ REQUEST DBFCDXEX
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 Function inputbox(eVAR,cTITULO)
+
 
 LOCAL aAMBIENTE
 IF VALTYPE(EVAR) = "U"
@@ -56,11 +81,18 @@ RETURN eVAR
 
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 *+    Function LAYOUT()
+*+
+*+
 *+
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 function LAYOUT()
+
 
 LOCAL n
 clear
@@ -71,20 +103,20 @@ next
 @  2,0 say replicate("-",80)         
 //alguns rdd nao tem RDDI_TABLEEXT RDDI_MEMOEX RDDI_ORDBAGEXT usando try para ignonar
 TRY
-  @ MAXROW() - 4,0 say cTIPOSQL+" Server: "+cSERVERX+" Banco: "+cBANCOX+" Database: "+cDATABASEX+" Tabela: "+cTABELAX
+   @ MAXROW() - 4,0 say cTIPOSQL+" Server: "+cSERVERX+" Banco: "+cBANCOX+" Database: "+cDATABASEX+" Tabela: "+cTABELAX         
 END
 TRY
-@ MAXROW() - 3,0 say "RDD("+zUSOVIA+") Extensao("+hb_rddInfo(RDDI_TABLEEXT)+") Memo("+hb_rddInfo(RDDI_MEMOEXT)+") Index("+hb_rddInfo(RDDI_ORDBAGEXT)+")"         
+   @ MAXROW() - 3,0 say "RDD("+zUSOVIA+") Extensao("+hb_rddInfo(RDDI_TABLEEXT)+") Memo("+hb_rddInfo(RDDI_MEMOEXT)+") Index("+hb_rddInfo(RDDI_ORDBAGEXT)+")"         
 END
-@ MAXROW() - 2,0 say "Exportar Para("+ZEXPOREXT+") Delimitador("+ZDELIMITE+") Oem Ansi("+ZCNVCHAR+")"                                                                                               
+@ MAXROW() - 2,0 say "Exportar Para("+ZEXPOREXT+") Delimitador("+ZDELIMITE+") Oem Ansi("+ZCNVCHAR+")"                                                          
 @ MAXROW() - 1,0 say "Sepador Decimal("+ZDECSIM+") Separador Registro("+Zregsep+")"+" Ano("+ALLTRIM(ZANOFOR)+ZANOSEP+ZANOTAM+") Logico("+zSEPLOGIC+")"         
 TRY
- criar_m[3]:=TABLEEXT+"->EXP"
- setar_m[6]:="Tipo "+TABLEEXT
- util_m[3]:="Sort "+TABLEEXT
- util_m[6]:="DBEs->"+TABLEEXT
- util_m[9]:="Sinc "+TABLEEXT
- util_m[11]:="Format->"+TABLEEXT
+   criar_m[ 3 ] := TABLEEXT+"->EXP"
+   setar_m[ 6 ] := "Tipo "+TABLEEXT
+   util_m[ 3 ]  := "Sort "+TABLEEXT
+   util_m[ 6 ]  := "DBEs->"+TABLEEXT
+   util_m[ 9 ]  := "Sinc "+TABLEEXT
+   util_m[ 11 ] := "Format->"+TABLEEXT
 END
 return .T.
 
@@ -93,7 +125,15 @@ return .T.
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function MD()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -101,7 +141,12 @@ return .T.
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 function MD
+
 
 @ maxrow(),00
 retuRN .T.
@@ -112,7 +157,15 @@ retuRN .T.
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function MDT()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -120,7 +173,12 @@ retuRN .T.
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 function MDT(cMSG)
+
 
 hb_Alert(cMSG,,,1)
 retuRN .t.
@@ -128,35 +186,49 @@ retuRN .t.
 
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 *+    Function XEXT()
+*+
+*+
 *+
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 function XEXT
+
 LOCAL cEXT
-cEXT:=""
+cEXT := ""
 TRY
-  CEXT:=hb_rddInfo(RDDI_ORDBAGEXT)
+   CEXT := hb_rddInfo(RDDI_ORDBAGEXT)
 END
-RETURN cEXT  
+RETURN cEXT
 
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 *+    Function EINDEXCOMPOUND()
+*+
+*+
 *+
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 FUNCTION EINDEXCOMPOUND()
+
 LOCAL cEXT
 LOCAL lRETU
-lRETU:=.T.
-cEXT:=""
+lRETU := .T.
+cEXT  := ""
 TRY
-  cEXT:=hb_rddInfo(RDDI_ORDBAGEXT)
+   cEXT := hb_rddInfo(RDDI_ORDBAGEXT)
 END
-cEXT:=UPPER(STRTRAN(cEXT,".",""))
-IF cEXT="NDX" .OR. cEXT="NTX" .OR. cEXT="IDX"
-   lRETU:=.F.
+cEXT := UPPER(STRTRAN(cEXT,".",""))
+IF cEXT = "NDX" .OR. cEXT = "NTX" .OR. cEXT = "IDX"
+   lRETU := .F.
 ENDIF
 RETURN lRETU
 
@@ -164,7 +236,15 @@ RETURN lRETU
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function MENUSQL()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -172,70 +252,75 @@ RETURN lRETU
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 FUNCTION MENUSQL(cTIPOSQL)
+
 
 LOCAL aAMBIENTE
 aAMBIENTE := SALVAA()
 WHILE .T.
    HB_dispbox(3,18,18,55,B_DOUBLE+" ")
    @ 03,24 SAY cTIPOSQL         
-   OPCAO( 4,24,"&Nativo clientelib   ",78)   //N
-   OPCAO( 5,24,"&ADORDD ODBC         ",65)   //A
-   OPCAO( 6,24,"&RDD SQLMIX SDD      ",82)   //R
-   OPCAO( 7,24,"&ODBC                ",79)   //D
-   OPCAO( 8,24,"ADO&X ODBC           ",88)   //X
-   OPCAO( 9,24,"&Tclass              ",84)   //t  
-   OPCAO(10,24,"&SQLRDD    SR        ",83)   //S
-   
+   OPCAO(4,24,"&Nativo clientelib   ",78)   //N
+   OPCAO(5,24,"&ADORDD ODBC         ",65)   //A
+   OPCAO(6,24,"&RDD SQLMIX SDD      ",82)   //R
+   OPCAO(7,24,"&ODBC                ",79)   //D
+   OPCAO(8,24,"ADO&X ODBC           ",88)   //X
+   OPCAO(9,24,"&Tclass              ",84)   //t
+   OPCAO(10,24,"&SQLRDD    SR        ",83)  //S
+
    KEY := menu(1,0)
    DO CASE
-       CASE KEY = 1 .AND. cTIPOSQL = "SQLITE"
-          sqlitemenu()
-      #ifdef USE_MENU_PGSQL
-         CASE KEY = 1 .AND. cTIPOSQL = "PGSQL"
-              pgsqlmenu()
-      #endif         
-      #ifdef USE_MENU_MYSQL    
-         CASE KEY = 1 .AND. cTIPOSQL = "MYSQL"
-              mysqlmenu()
-      #endif         
-       #ifdef USE_MENU_FIREBIRD   
-         CASE KEY = 1 .AND. cTIPOSQL = "FIREBIRD"
-            Firebirdmenu()
-       #endif  
-       #ifdef USE_MENU_FIREBIRD5   
-         CASE KEY = 1 .AND. cTIPOSQL = "FIREBIRD"
-            Firebirdmenu5()
-       #endif       
-     
-       #ifdef USE_MENU_PARADOX
-         CASE KEY = 1 .AND. cTIPOSQL = "PARADOX"
-            paradoxmenu()
-       #endif      
-       #ifdef USE_MENU_DUCKDB 
-         CASE KEY = 1 .AND. cTIPOSQL = "DUCKDB"
-            Duckdbmenu()
-       #endif      
-       CASE KEY = 1
-          MDT("Sem clientelib para "+cTIPOSQL)
-       CASE KEY = 2
-          mdbmenu(cTIPOSQL)  //ADORDD engine e ODBC
-       CASE KEY = 3 
-          mixmenu(cTIPOSQL)  //SQLMIX RDD SDD engine e odbc
-       CASE KEY = 4
-          ODBCmenu(cTIPOSQL) //odbc e dsn
-       CASE KEY = 5
-          #ifdef USE_MENU_ADOX
-            adoxmenu(cTIPOSQL)  //adox engine e odbc e dsn
-          #endif  
-      CASE KEY = 6
-          #ifdef USE_MENU_TD
-            tclassmenu(cTIPOSQL)   //ao entrar trato os tipo que funcionam
-          #endif  
-      CASE KEY = 7
-          sqlrddmenu(cTIPOSQL)   //sqlrdd engines odbc e dsn
-       OTHERWISE
-          RETURN
+   CASE KEY = 1 .AND. cTIPOSQL = "SQLITE"
+      sqlitemenu()
+#ifdef USE_MENU_PGSQL
+   CASE KEY = 1 .AND. cTIPOSQL = "PGSQL"
+      pgsqlmenu()
+#endif         
+#ifdef USE_MENU_MYSQL    
+   CASE KEY = 1 .AND. cTIPOSQL = "MYSQL"
+      mysqlmenu()
+#endif         
+#ifdef USE_MENU_FIREBIRD   
+   CASE KEY = 1 .AND. cTIPOSQL = "FIREBIRD"
+      Firebirdmenu()
+#endif  
+#ifdef USE_MENU_FIREBIRD5   
+   CASE KEY = 1 .AND. cTIPOSQL = "FIREBIRD"
+      Firebirdmenu5()
+#endif       
+
+#ifdef USE_MENU_PARADOX
+   CASE KEY = 1 .AND. cTIPOSQL = "PARADOX"
+      paradoxmenu()
+#endif      
+#ifdef USE_MENU_DUCKDB 
+   CASE KEY = 1 .AND. cTIPOSQL = "DUCKDB"
+      Duckdbmenu()
+#endif      
+   CASE KEY = 1
+      MDT("Sem clientelib para "+cTIPOSQL)
+   CASE KEY = 2
+      mdbmenu(cTIPOSQL)   //ADORDD engine e ODBC
+   CASE KEY = 3
+      mixmenu(cTIPOSQL)   //SQLMIX RDD SDD engine e odbc
+   CASE KEY = 4
+      ODBCmenu(cTIPOSQL)  //odbc e dsn
+   CASE KEY = 5
+#ifdef USE_MENU_ADOX
+      adoxmenu(cTIPOSQL)  //adox engine e odbc e dsn
+#endif  
+   CASE KEY = 6
+#ifdef USE_MENU_TD
+      tclassmenu(cTIPOSQL)  //ao entrar trato os tipo que funcionam
+#endif  
+   CASE KEY = 7
+      sqlrddmenu(cTIPOSQL)  //sqlrdd engines odbc e dsn
+   OTHERWISE
+      RETURN
    ENDCASE
 ENDDO
 HB_dispbox(3,22,22,55,B_DOUBLE+" ")
@@ -249,11 +334,23 @@ return.t.
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function tipodbfesc()
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+--------------------------------------------------------------------
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -293,138 +390,191 @@ PXRDD  baseada na pxlib        implementacao
 
 *+--------------------------------------------------------------------
 *+
-*+    Function tipodbfesc()
 *+
-*+--------------------------------------------------------------------
-*+
-*+--------------------------------------------------------------------
 *+
 *+    Function tipodbfesc()
 *+
+*+
+*+
 *+--------------------------------------------------------------------
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
+*+
+*+    Function tipodbfesc()
+*+
+*+
+*+
+*+--------------------------------------------------------------------
+*+
+*+
 *+
 FUNCTION tipodbfesc()
 
+
 LOCAL aAMBIENTE
 LOCAL KEY
-LOCAL nOpSub := 0
+LOCAL nOpSub    := 0
 
 aAMBIENTE := SALVAA()
 
 DO WHILE .T.
    HB_dispbox(03,08,20,54,B_DOUBLE+" ")
-   @ 03,12 SAY " SELECIONE A RDD / DRIVER "
-   OPCAO( 05, 11, "1. DBFCDX                 ", 68 ) // 1 -> Direto DBFCDX (2)
-   OPCAO( 06, 11, "2. ADSADT                 ", 65 ) // 2 -> Direto ADSADT (6)
-   OPCAO( 07, 11, "3. DBF Drivers            ", 66 ) // 3 -> Submenu DBF
-   OPCAO( 08, 11, "4. ADS Drivers            ", 83 ) // 4 -> Submenu ADS
-   OPCAO( 09, 11, "5. BMDBF Drivers          ", 77 ) // 5 -> Submenu BMDBF
-   OPCAO( 10, 11, "6. Outros Drivers         ", 79 ) // 6 -> Submenu Outros
-   OPCAO( 11, 11, "7. FCSVRDD (CSV)          ", 67 ) // 7 -> FCSVRDD (20)
-   OPCAO( 12, 11, "8. JSONRDD (JSON)         ", 74 ) // 8 -> JSONRDD (21)
+   @ 03,12 SAY " SELECIONE A RDD / DRIVER "         
+   OPCAO(05,11,"1. DBFCDX                 ",68)   // 1 -> Direto DBFCDX (2)
+   OPCAO(06,11,"2. ADSADT                 ",65)   // 2 -> Direto ADSADT (6)
+   OPCAO(07,11,"3. DBF Drivers            ",66)   // 3 -> Submenu DBF
+   OPCAO(08,11,"4. ADS Drivers            ",83)   // 4 -> Submenu ADS
+   OPCAO(09,11,"5. BMDBF Drivers          ",77)   // 5 -> Submenu BMDBF
+   OPCAO(10,11,"6. Outros Drivers         ",79)   // 6 -> Submenu Outros
+   OPCAO(11,11,"7. FCSVRDD (CSV)          ",67)   // 7 -> FCSVRDD (20)
+   OPCAO(12,11,"8. JSONRDD (JSON)         ",74)   // 8 -> JSONRDD (21)
 #ifdef USE_PXRDD
-   OPCAO( 13, 11, "9. PARADOX (PXRDD)        ", 80 ) // 9 -> PXRDD (22)
-   OPCAO( 14, 11, "0. Sair / Cancelar        ", 83 )
+   OPCAO(13,11,"9. PARADOX (PXRDD)        ",80)   // 9 -> PXRDD (22)
+   OPCAO(14,11,"0. Sair / Cancelar        ",83)
 #else
-   OPCAO( 13, 11, "0. Sair / Cancelar        ", 83 )
+   OPCAO(13,11,"0. Sair / Cancelar        ",83)
 #endif
 
-   KEY := menu(1, 0)
+   KEY := menu(1,0)
 
    DO CASE
-      CASE KEY == 1 // DBFCDX direto
+   CASE KEY == 1  // DBFCDX direto
+      TIPODBF := 2
+      EXIT
+
+   CASE KEY == 2  // ADSADT direto
+      TIPODBF := 6
+      EXIT
+
+   CASE KEY == 3  // Submenu DBF Drivers
+      HB_dispbox(06,20,13,50,B_DOUBLE+" ")
+      @ 06,22 SAY " DRIVERS DBF "         
+      OPCAO(07,22,"DBF&NTX   (DBF/NTX/DBT) ",78)  // 1
+      OPCAO(08,22,"DBF&CDX   (DBF/CDX/FPT) ",67)  // 2
+      OPCAO(09,22,"DBFCDXEX  (Crypto AES)  ",88)  // 19
+      OPCAO(10,22,"&DBFNSX   (DBF/NSX/MST) ",68)  // 11
+      OPCAO(11,22,"DBFB&LOB  (DBV Blob)    ",76)  // 12
+      OPCAO(12,22,"RMDBFCDX  RushMore      ",77)  // 13
+      nOpSub := menu(2,0)
+      DO CASE
+      CASE nOpSub == 1 
+         TIPODBF := 1
+         EXIT
+      CASE nOpSub == 2 
          TIPODBF := 2
          EXIT
+      CASE nOpSub == 3 
+         TIPODBF := 19
+         EXIT
+      CASE nOpSub == 4 
+         TIPODBF := 11
+         EXIT
+      CASE nOpSub == 5 
+         TIPODBF := 12
+         EXIT
+      CASE nOpSub == 6 
+         TIPODBF := 22
+         EXIT
+      ENDCASE
 
-      CASE KEY == 2 // ADSADT direto
+   CASE KEY == 4  // Submenu ADS Drivers
+      HB_dispbox(07,20,13,50,B_DOUBLE+" ")
+      @ 07,22 SAY " DRIVERS ADS "         
+      OPCAO(08,22,"&ADSCDX   (DBF/CDX)     ",65)  // 3
+      OPCAO(09,22,"ADSNT&X   (DBF/NTX)     ",88)  // 4
+      OPCAO(10,22,"ADSVF&P   (VFP Table)   ",80)  // 5
+      OPCAO(11,22,"ADSAD&T   (ADT Table)   ",84)  // 6
+      nOpSub := menu(2,0)
+      DO CASE
+      CASE nOpSub == 1 
+         TIPODBF := 3
+         EXIT
+      CASE nOpSub == 2 
+         TIPODBF := 4
+         EXIT
+      CASE nOpSub == 3 
+         TIPODBF := 5
+         EXIT
+      CASE nOpSub == 4 
          TIPODBF := 6
          EXIT
+      ENDCASE
 
-      CASE KEY == 3 // Submenu DBF Drivers
-         HB_dispbox(06,20,13,50,B_DOUBLE+" ")
-         @ 06,22 SAY " DRIVERS DBF "
-         OPCAO( 07, 22, "DBF&NTX   (DBF/NTX/DBT) ", 78 ) // 1
-         OPCAO( 08, 22, "DBF&CDX   (DBF/CDX/FPT) ", 67 ) // 2
-         OPCAO( 09, 22, "DBFCDXEX  (Crypto AES)  ", 88 ) // 19
-         OPCAO( 10, 22, "&DBFNSX   (DBF/NSX/MST) ", 68 ) // 11
-         OPCAO( 11, 22, "DBFB&LOB  (DBV Blob)    ", 76 ) // 12
-         OPCAO( 12, 22, "RMDBFCDX  RushMore      ", 77 ) // 13
-         nOpSub := menu(2, 0)
-         DO CASE
-            CASE nOpSub == 1; TIPODBF := 1;  EXIT
-            CASE nOpSub == 2; TIPODBF := 2;  EXIT
-            CASE nOpSub == 3; TIPODBF := 19; EXIT
-            CASE nOpSub == 4; TIPODBF := 11; EXIT
-            CASE nOpSub == 5; TIPODBF := 12; EXIT
-            CASE nOpSub == 6; TIPODBF := 22; EXIT
-         ENDCASE
-
-      CASE KEY == 4 // Submenu ADS Drivers
-         HB_dispbox(07,20,13,50,B_DOUBLE+" ")
-         @ 07,22 SAY " DRIVERS ADS "
-         OPCAO( 08, 22, "&ADSCDX   (DBF/CDX)     ", 65 ) // 3
-         OPCAO( 09, 22, "ADSNT&X   (DBF/NTX)     ", 88 ) // 4
-         OPCAO( 10, 22, "ADSVF&P   (VFP Table)   ", 80 ) // 5
-         OPCAO( 11, 22, "ADSAD&T   (ADT Table)   ", 84 ) // 6
-         nOpSub := menu(2, 0)
-         DO CASE
-            CASE nOpSub == 1; TIPODBF := 3; EXIT
-            CASE nOpSub == 2; TIPODBF := 4; EXIT
-            CASE nOpSub == 3; TIPODBF := 5; EXIT
-            CASE nOpSub == 4; TIPODBF := 6; EXIT
-         ENDCASE
-
-      CASE KEY == 5 // Submenu BMDBF Drivers
-         HB_dispbox(08,20,12,50,B_DOUBLE+" ")
-         @ 08,22 SAY " DRIVERS BMDBF "
-         OPCAO( 09, 22, "B&MDBFCDX (DBF/CDX)     ", 77 ) // 16
-         OPCAO( 10, 22, "BMDBFNSX  (DBF/NSX)     ", 49 ) // 17
-         OPCAO( 11, 22, "BMDBFNTX  (DBF/NTX)     ", 50 ) // 18
-         nOpSub := menu(2, 0)
-         DO CASE
-            CASE nOpSub == 1; TIPODBF := 16; EXIT
-            CASE nOpSub == 2; TIPODBF := 17; EXIT
-            CASE nOpSub == 3; TIPODBF := 18; EXIT
-         ENDCASE
-
-      CASE KEY == 6 // Submenu Outros Drivers
-         HB_dispbox(09,20,17,50,B_DOUBLE+" ")
-         @ 09,22 SAY " OUTROS DRIVERS "
-         OPCAO( 10, 22, "D&BTCDX   (DBF/CDX/DBT) ", 66 ) // 7
-         OPCAO( 11, 22, "&SMTCDX   (DBF/CDX/SMT) ", 83 ) // 8
-         OPCAO( 12, 22, "&FPTCDX   (DBF/CDX/FPT) ", 70 ) // 9
-         OPCAO( 13, 22, "S&IXCDX   (SIx Driver)  ", 73 ) // 10
-         OPCAO( 14, 22, "&HSCDX    (HSCDX)       ", 72 ) // 13
-         OPCAO( 15, 22, "&RLCDX    (RLCDX)       ", 82 ) // 14
-         OPCAO( 16, 22, "&VFPCDX   (VFPCDX)      ", 86 ) // 15
-         nOpSub := menu(2, 0)
-         DO CASE
-            CASE nOpSub == 1; TIPODBF := 7;  EXIT
-            CASE nOpSub == 2; TIPODBF := 8;  EXIT
-            CASE nOpSub == 3; TIPODBF := 9;  EXIT
-            CASE nOpSub == 4; TIPODBF := 10; EXIT
-            CASE nOpSub == 5; TIPODBF := 13; EXIT
-            CASE nOpSub == 6; TIPODBF := 14; EXIT
-            CASE nOpSub == 7; TIPODBF := 15; EXIT
-         ENDCASE
-
-      CASE KEY == 7 // FCSVRDD
-         TIPODBF := 20
+   CASE KEY == 5  // Submenu BMDBF Drivers
+      HB_dispbox(08,20,12,50,B_DOUBLE+" ")
+      @ 08,22 SAY " DRIVERS BMDBF "         
+      OPCAO(09,22,"B&MDBFCDX (DBF/CDX)     ",77)  // 16
+      OPCAO(10,22,"BMDBFNSX  (DBF/NSX)     ",49)  // 17
+      OPCAO(11,22,"BMDBFNTX  (DBF/NTX)     ",50)  // 18
+      nOpSub := menu(2,0)
+      DO CASE
+      CASE nOpSub == 1 
+         TIPODBF := 16
          EXIT
-
-      CASE KEY == 8 // JSONRDD
-         TIPODBF := 21
+      CASE nOpSub == 2 
+         TIPODBF := 17
          EXIT
+      CASE nOpSub == 3 
+         TIPODBF := 18
+         EXIT
+      ENDCASE
+
+   CASE KEY == 6  // Submenu Outros Drivers
+      HB_dispbox(09,20,17,50,B_DOUBLE+" ")
+      @ 09,22 SAY " OUTROS DRIVERS "         
+      OPCAO(10,22,"D&BTCDX   (DBF/CDX/DBT) ",66)  // 7
+      OPCAO(11,22,"&SMTCDX   (DBF/CDX/SMT) ",83)  // 8
+      OPCAO(12,22,"&FPTCDX   (DBF/CDX/FPT) ",70)  // 9
+      OPCAO(13,22,"S&IXCDX   (SIx Driver)  ",73)  // 10
+      OPCAO(14,22,"&HSCDX    (HSCDX)       ",72)  // 13
+      OPCAO(15,22,"&RLCDX    (RLCDX)       ",82)  // 14
+      OPCAO(16,22,"&VFPCDX   (VFPCDX)      ",86)  // 15
+      nOpSub := menu(2,0)
+      DO CASE
+      CASE nOpSub == 1 
+         TIPODBF := 7
+         EXIT
+      CASE nOpSub == 2 
+         TIPODBF := 8
+         EXIT
+      CASE nOpSub == 3 
+         TIPODBF := 9
+         EXIT
+      CASE nOpSub == 4 
+         TIPODBF := 10
+         EXIT
+      CASE nOpSub == 5 
+         TIPODBF := 13
+         EXIT
+      CASE nOpSub == 6 
+         TIPODBF := 14
+         EXIT
+      CASE nOpSub == 7 
+         TIPODBF := 15
+         EXIT
+      ENDCASE
+
+   CASE KEY == 7  // FCSVRDD
+      TIPODBF := 20
+      EXIT
+
+   CASE KEY == 8  // JSONRDD
+      TIPODBF := 21
+      EXIT
 
 #ifdef USE_PXRDD
-      CASE KEY == 9 // PXRDD
-         TIPODBF := 30
-         EXIT
+   CASE KEY == 9  // PXRDD
+      TIPODBF := 30
+      EXIT
 #endif
 
-      OTHERWISE
-         TIPODBF := 2 // Padrão DBFCDX caso cancele
-         EXIT
+   OTHERWISE
+      TIPODBF := 2  // Padrão DBFCDX caso cancele
+      EXIT
    ENDCASE
 ENDDO
 
@@ -436,133 +586,140 @@ RETURN TIPODBF
 
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 *+    Function RDDNOME()
+*+
+*+
 *+
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 FUNCTION RDDNOME(nTIPODBF)
+
 
 LOCAL USOVIA
 IF VALTYPE(nTIPODBF) <> "N"
    nTIPODBF := TIPODBF  //Atribui a publica se nao for passado
 ENDIF
-TABLEEXT:="DBF"
+TABLEEXT := "DBF"
 //pego abaixo pelo redinfo
 //MEMOEXT  := "FPT"    //hb_rddInfo(RDDI_MEMOEXT)
 //INDIEXT  := "CDX"   //hb_rddInfo(RDDI_ORDBAGEXT)
 do case
-    case nTIPODBF = 1
-       USOVIA := "DBFNTX"
-       rddSetDefault("DBFNTX")
-    case nTIPODBF = 2
-       USOVIA := "DBFCDX"
-       rddsetdefault("DBFCDX")
-    case nTIPODBF = 3
-       USOVIA := "ADSCDX"
-       rddSetDefault("ADSCDX")
-       AdsSetServerType(ADS_LOCAL_SERVER)
-       AdsSetFileType(ADS_CDX)
-    case nTIPODBF = 4
-       USOVIA := "ADSNTX"
-       rddSetDefault("ADSNTX")
-       AdsSetServerType(ADS_LOCAL_SERVER)
-       AdsSetFileType(ADS_NTX)
-    case nTIPODBF = 5
-       USOVIA := "ADSVFP"
-       rddSetDefault("ADSVFP")
-       AdsSetServerType(ADS_LOCAL_SERVER)
-       AdsSetFileType(ADS_VFP)
-    case nTIPODBF = 6
-       USOVIA   := "ADSADT"
-       TABLEEXT :="ADT"
-       rddSetDefault("ADSADT")
-       AdsSetServerType(ADS_LOCAL_SERVER)
-       AdsSetFileType(ADS_ADT)
-    case nTIPODBF = 7
-       USOVIA := "DBTCDX"
-       rddSetDefault("DBTCDX")
-    case nTIPODBF = 8
-       USOVIA := "SMTCDX"
-       rddSetDefault("SMTCDX")
-    case nTIPODBF = 9
-       USOVIA := "FPTCDX"
-       rddSetDefault("FPTCDX")
-    case nTIPODBF = 10
-       USOVIA := "SIXCDX"
-       rddSetDefault("SIXCDX")
-    case nTIPODBF = 11
-       USOVIA := "DBFNSX"
-       rddSetDefault("DBFNSX")
-    case nTIPODBF = 12
-       USOVIA := "DBFBLOB"
-       rddSetDefault("DBFBLOB")
-    case nTIPODBF = 13
-       USOVIA := "HSCDX"
-       rddSetDefault("HSCDX")
-    case nTIPODBF = 14
-       USOVIA := "RLCDX"
-       rddSetDefault("RLCDX")
-    case nTIPODBF = 15
-       USOVIA := "VFPCDX"
-       rddSetDefault("VFPCDX")
-    case nTIPODBF = 16
-       USOVIA := "BMDBFCDX"
-       rddSetDefault("BMDBFCDX")
-    case nTIPODBF = 17
-       USOVIA := "BMDBFNSX"
-       rddSetDefault("BMDBFNSX")
-    case nTIPODBF = 18
-       USOVIA := "BMDBFNTX"
-       rddSetDefault("BMDBFNTX")
-    case nTIPODBF = 19
-       zSENHACDX := INPUTBOX( PADR( zSENHACDX,30 ), "Senha" )
-       zSENHACDX :=ALLTRIM(zSENHACDX)
-       USOVIA := "DBFCDXEX"
-       rddSetDefault("DBFCDXEX")   
-       DbfcdxexSetup( "aes256", zSENHACDX )
-   case nTIPODBF = 20
-       TABLEEXT :="CSV"
-       USOVIA := "FCSVRDD"
-       rddSetDefault("FCSVRDD") 
-   case nTIPODBF = 21
-       TABLEEXT :="JSON"
-       USOVIA := "JSONRDD"
-       rddSetDefault("JSONRDD")      
-    case nTIPODBF = 22
-       USOVIA := "RMDBFCDX"
-       rddSetDefault("RMDBFCDX")        
+case nTIPODBF = 1
+   USOVIA := "DBFNTX"
+   rddSetDefault("DBFNTX")
+case nTIPODBF = 2
+   USOVIA := "DBFCDX"
+   rddsetdefault("DBFCDX")
+case nTIPODBF = 3
+   USOVIA := "ADSCDX"
+   rddSetDefault("ADSCDX")
+   AdsSetServerType(ADS_LOCAL_SERVER)
+   AdsSetFileType(ADS_CDX)
+case nTIPODBF = 4
+   USOVIA := "ADSNTX"
+   rddSetDefault("ADSNTX")
+   AdsSetServerType(ADS_LOCAL_SERVER)
+   AdsSetFileType(ADS_NTX)
+case nTIPODBF = 5
+   USOVIA := "ADSVFP"
+   rddSetDefault("ADSVFP")
+   AdsSetServerType(ADS_LOCAL_SERVER)
+   AdsSetFileType(ADS_VFP)
+case nTIPODBF = 6
+   USOVIA   := "ADSADT"
+   TABLEEXT := "ADT"
+   rddSetDefault("ADSADT")
+   AdsSetServerType(ADS_LOCAL_SERVER)
+   AdsSetFileType(ADS_ADT)
+case nTIPODBF = 7
+   USOVIA := "DBTCDX"
+   rddSetDefault("DBTCDX")
+case nTIPODBF = 8
+   USOVIA := "SMTCDX"
+   rddSetDefault("SMTCDX")
+case nTIPODBF = 9
+   USOVIA := "FPTCDX"
+   rddSetDefault("FPTCDX")
+case nTIPODBF = 10
+   USOVIA := "SIXCDX"
+   rddSetDefault("SIXCDX")
+case nTIPODBF = 11
+   USOVIA := "DBFNSX"
+   rddSetDefault("DBFNSX")
+case nTIPODBF = 12
+   USOVIA := "DBFBLOB"
+   rddSetDefault("DBFBLOB")
+case nTIPODBF = 13
+   USOVIA := "HSCDX"
+   rddSetDefault("HSCDX")
+case nTIPODBF = 14
+   USOVIA := "RLCDX"
+   rddSetDefault("RLCDX")
+case nTIPODBF = 15
+   USOVIA := "VFPCDX"
+   rddSetDefault("VFPCDX")
+case nTIPODBF = 16
+   USOVIA := "BMDBFCDX"
+   rddSetDefault("BMDBFCDX")
+case nTIPODBF = 17
+   USOVIA := "BMDBFNSX"
+   rddSetDefault("BMDBFNSX")
+case nTIPODBF = 18
+   USOVIA := "BMDBFNTX"
+   rddSetDefault("BMDBFNTX")
+case nTIPODBF = 19
+   zSENHACDX := INPUTBOX(PADR(zSENHACDX,30),"Senha")
+   zSENHACDX := ALLTRIM(zSENHACDX)
+   USOVIA    := "DBFCDXEX"
+   rddSetDefault("DBFCDXEX")
+   DbfcdxexSetup("aes256",zSENHACDX)
+case nTIPODBF = 20
+   TABLEEXT := "CSV"
+   USOVIA   := "FCSVRDD"
+   rddSetDefault("FCSVRDD")
+case nTIPODBF = 21
+   TABLEEXT := "JSON"
+   USOVIA   := "JSONRDD"
+   rddSetDefault("JSONRDD")
+case nTIPODBF = 22
+   USOVIA := "RMDBFCDX"
+   rddSetDefault("RMDBFCDX")
 #ifdef USE_PXRDD
-    case nTIPODBF = 30
-        TABLEEXT :="DB"
-        USOVIA := "PXRDD"
-        rddSetDefault("PXRDD")
+case nTIPODBF = 30
+   TABLEEXT := "DB"
+   USOVIA   := "PXRDD"
+   rddSetDefault("PXRDD")
 #endif
-    case nTIPODBF = 90   
-       USOVIA := "LETO"
-       rddSetDefault("LETO")
-    case nTIPODBF = 91  
-       USOVIA := "SQLMIX"
-       rddSetDefault("SQLMIX")
-    case nTIPODBF = 92  
-       USOVIA := "SQLRDD"
-       rddSetDefault("SQLRDD")
-    case nTIPODBF = 93  
-       USOVIA := "SQLEX"
-       rddSetDefault("SQLEX")
-    otherwise
-       USOVIA := "DBFCDX"
-       rddsetdefault("DBFCDX")
+case nTIPODBF = 90
+   USOVIA := "LETO"
+   rddSetDefault("LETO")
+case nTIPODBF = 91
+   USOVIA := "SQLMIX"
+   rddSetDefault("SQLMIX")
+case nTIPODBF = 92
+   USOVIA := "SQLRDD"
+   rddSetDefault("SQLRDD")
+case nTIPODBF = 93
+   USOVIA := "SQLEX"
+   rddSetDefault("SQLEX")
+otherwise
+   USOVIA := "DBFCDX"
+   rddsetdefault("DBFCDX")
 endcase
 zusovia := USOVIA
-//Algumas rdd nao tem hb_rddinfo usando try para ignonar 
+//Algumas rdd nao tem hb_rddinfo usando try para ignonar
 TRY
-  //TABLEEXT :=strtran(hb_rddInfo(RDDI_TABLEEXT),".","") Fixado nos case so tem dbf adt(ads) db(paradox)
+   //TABLEEXT :=strtran(hb_rddInfo(RDDI_TABLEEXT),".","") Fixado nos case so tem dbf adt(ads) db(paradox)
 END
 TRY
-   MEMOEXT:=strtran(hb_rddInfo(RDDI_MEMOEXT),".","") 
+   MEMOEXT := strtran(hb_rddInfo(RDDI_MEMOEXT),".","")
 END
 TRY
-   INDIEXT:=strtran(hb_rddInfo(RDDI_ORDBAGEXT),".","")       
+   INDIEXT := strtran(hb_rddInfo(RDDI_ORDBAGEXT),".","")
 END
 layout()
 RETURN USOVIA
@@ -573,7 +730,15 @@ RETURN USOVIA
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function pegtipodoc()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -581,7 +746,12 @@ RETURN USOVIA
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 Function pegtipodoc(lincdbf)
+
 
 LOCAL tDOC
 LOCAL aAMBIENTE
@@ -623,34 +793,34 @@ CASE tDOC = 2
 CASE tDOC = 3
    zEXPOREXT := "TEC"
 CASE tDOC = 4
-   zEXPOREXT := "DBE"  
-CASE tDOC = 5   
-   zEXPOREXT := "DLM" //-->5 delimitado pelo caracter escolhido
-CASE tDOC = 6   
-   zEXPOREXT := "SDF" //  espaco
+   zEXPOREXT := "DBE"
+CASE tDOC = 5
+   zEXPOREXT := "DLM"   //-->5 delimitado pelo caracter escolhido
+CASE tDOC = 6
+   zEXPOREXT := "SDF"   //  espaco
 CASE tDOC = 7
    zEXPOREXT := "XML"
 CASE tDOC = 8
    zEXPOREXT := "JSON"
-CASE tDOC = 9   
-   zEXPOREXT := "SSV" //-->5 delimitado ;
-CASE tDOC = 10   
-   zEXPOREXT := "CSV" //-->5 delimitado ,
-CASE tDOC = 11   
-   zEXPOREXT := "UNL" //-->5 delimitado | PIPE
-CASE tDOC = 12  
-   zEXPOREXT := "TSV" //-->5 delimitado TAB CHR(9)
-CASE tDOC = 13   
-   zEXPOREXT := "SQL" //-->5 delimitado , no insert into
+CASE tDOC = 9
+   zEXPOREXT := "SSV"   //-->5 delimitado ;
+CASE tDOC = 10
+   zEXPOREXT := "CSV"   //-->5 delimitado ,
+CASE tDOC = 11
+   zEXPOREXT := "UNL"   //-->5 delimitado | PIPE
+CASE tDOC = 12
+   zEXPOREXT := "TSV"   //-->5 delimitado TAB CHR(9)
+CASE tDOC = 13
+   zEXPOREXT := "SQL"   //-->5 delimitado , no insert into
 CASE tDOC = 14
-    zEXPOREXT :="MD"  //-->14 Mar&kdown MD   
+   zEXPOREXT := "MD"  //-->14 Mar&kdown MD
 CASE tDOC = 15
-    zEXPOREXT :="ODS"  //-->15 ODS 
+   zEXPOREXT := "ODS"   //-->15 ODS
 CASE tDOC = 16
-    zEXPOREXT :="YAML"  //-->16 yaml
+   zEXPOREXT := "YAML"  //-->16 yaml
 CASE tDOC = 17
-   zEXPOREXT := "DBF"  //como vao incluindos novos tipos o dbf fica travando no 90 evitando a cada novo tipo verre fontes para correcao da posicao
-   tdoc=90 
+   zEXPOREXT := "DBF"   //como vao incluindos novos tipos o dbf fica travando no 90 evitando a cada novo tipo verre fontes para correcao da posicao
+   tdoc      := 90
 ENDCASE
 IF tDOC >= 9 .AND. tDOC <= 13
    checkextEXP()  //pega o delimitador zDELIMITE:
@@ -665,7 +835,15 @@ return tDOC
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function pegparexp()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -673,7 +851,12 @@ return tDOC
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 function pegparexp
+
 
 local aAMBIENTE
 aAMBIENTE := SALVAA()
@@ -685,7 +868,7 @@ HB_dispbox(03,10,22,60,B_DOUBLE+" ")
 @ 05,12 say "CSV Colon      (,) Virgula         "         
 @ 06,12 say "UNL PSV        (|) Pipe            "         
 @ 07,12 say "TSV            TAB                 "         
-@ 08,12 say "XLS XML SQL JSON MD               "         
+@ 08,12 say "XLS XML SQL JSON MD               "          
 
 @ 09,12 say "Formato"                                 
 @ 10,12 say "Delimitador ,;|#~ 9=(TAB)"               
@@ -726,10 +909,10 @@ ENDIF
 IF zEXPOREXT = "SQL"
    zDELIMITE := ","
 ENDIF
-IF zEXPOREXT = "JSON" 
+IF zEXPOREXT = "JSON"
    zDELIMITE := ""
 ENDIF
-IF zEXPOREXT = "YAML" 
+IF zEXPOREXT = "YAML"
    zDELIMITE := ""
 ENDIF
 
@@ -743,7 +926,15 @@ return nil
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function checkanofor()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -751,7 +942,12 @@ return nil
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 function checkanofor()
+
 
 LOCAL lRETU
 LOCAL cANOFOR
@@ -776,7 +972,15 @@ RETURN lRETU
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function checkextEXP()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -784,37 +988,42 @@ RETURN lRETU
 *+
 *+
 *+
-function checkextEXP()  //",;|#~9" zEXPOREXT="DLM" .OR. zEXPOREXT="CVS" .OR. zEXPOREXT="UNL" 
-                     //.OR. zEXPOREXT="XLS" .OR. zEXPOREXT="XML" .OR. zEXPOREXT="SQL" .OR. zEXPOREXT="JSON"
-                    //.OR. zEXPOREXT="MD"
+*+
+*+
+*+
+*+
+function checkextEXP()  //",;|#~9" zEXPOREXT="DLM" .OR. zEXPOREXT="CVS" .OR. zEXPOREXT="UNL"
+
+//.OR. zEXPOREXT="XLS" .OR. zEXPOREXT="XML" .OR. zEXPOREXT="SQL" .OR. zEXPOREXT="JSON"
+//.OR. zEXPOREXT="MD"
 LOCAL lRETU
 zDELIMITE := " "
 zregSEP   := " "
 lRETU     := .T.
 DO CASE
-    CASE zEXPOREXT = "TXT"
-    CASE zEXPOREXT = "TEC"
-    CASE zEXPOREXT = "DBE"
-    CASE zEXPOREXT = "TAM"
-    CASE zEXPOREXT = "DBF"
-    CASE zEXPOREXT = "SDF"
-         zDELIMITE := ""  //pelo tamanho do campo sem delimitador
-    CASE zEXPOREXT = "DLM"
-    CASE zEXPOREXT = "SSV"
-       zDELIMITE := ";"
-    CASE zEXPOREXT = "CSV"
-       zDELIMITE := ","
-    CASE zEXPOREXT = "UNL" .OR. zEXPOREXT = "PSV"
-       zDELIMITE := "|"
-    CASE zEXPOREXT = "TSV" .OR. zEXPOREXT = "XLS"
-       zDELIMITE := "9"
-    CASE zEXPOREXT = "XML"
-    CASE zEXPOREXT = "SQL"
-       zDELIMITE := ","
-    CASE zEXPOREXT = "JSON"
-	CASE zEXPOREXT = "MD"
-    CASE zEXPOREXT = "YAML"
-    OTHERWISE
+CASE zEXPOREXT = "TXT"
+CASE zEXPOREXT = "TEC"
+CASE zEXPOREXT = "DBE"
+CASE zEXPOREXT = "TAM"
+CASE zEXPOREXT = "DBF"
+CASE zEXPOREXT = "SDF"
+   zDELIMITE := ""  //pelo tamanho do campo sem delimitador
+CASE zEXPOREXT = "DLM"
+CASE zEXPOREXT = "SSV"
+   zDELIMITE := ";"
+CASE zEXPOREXT = "CSV"
+   zDELIMITE := ","
+CASE zEXPOREXT = "UNL" .OR. zEXPOREXT = "PSV"
+   zDELIMITE := "|"
+CASE zEXPOREXT = "TSV" .OR. zEXPOREXT = "XLS"
+   zDELIMITE := "9"
+CASE zEXPOREXT = "XML"
+CASE zEXPOREXT = "SQL"
+   zDELIMITE := ","
+CASE zEXPOREXT = "JSON"
+CASE zEXPOREXT = "MD"
+CASE zEXPOREXT = "YAML"
+OTHERWISE
    lRETU := .F.
 ENDCASE
 RETURN lRETU
@@ -823,13 +1032,22 @@ RETURN lRETU
 
 *+--------------------------------------------------------------------
 *+
+*+
+*+
 *+    Function copiardbfpara()
+*+
+*+
 *+
 *+--------------------------------------------------------------------
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 function copiardbfpara(nTIPOPR)   //1 Copiar 2 anexar
+
 
 LOCAL aAMBIENTE
 LOCAL nOLDTIPO
@@ -857,7 +1075,7 @@ cORIDRIVER := RDDNOME(TIPODBF)
 
 //nao mostrar tipo 90 dbf na escolha nao spbrepor na copia passando falso aqui
 tDOC := pegtipodoc(.F.)
-IF nTIPOPR = 2 // append from somente nativo anexar
+IF nTIPOPR = 2  // append from somente nativo anexar
    IF zEXPOREXT = "DBF" .OR. zEXPOREXT = "SDF" .OR. zEXPOREXT = "DLM" .OR. zEXPOREXT = "CSV" .OR. zEXPOREXT = "UNL" .OR. zEXPOREXT = "PSV" .OR. zEXPOREXT = "TSV" .OR. zEXPOREXT = "SSV"
    ELSE
       MDT("Ainda nao disponivel para "+zEXPOREXT)
@@ -879,13 +1097,13 @@ altd()
 LCOPIANAT := .F.
 IF nTIPOPR = 1
    //     XML         TAM             TEC           dbe            xml            json            sql       md markdown    YAML
-   IF tDOC = 1  .OR. tDOC = 2  .OR. tDOC = 3  .OR. tDOC = 4  .OR. tDOC = 7  .OR. tDOC = 8  .OR. tDOC = 13  .OR. tDOC = 14 .OR. tDOC = 16
-     LCOPIANAT:=.F.
+   IF tDOC = 1 .OR. tDOC = 2 .OR. tDOC = 3 .OR. tDOC = 4 .OR. tDOC = 7 .OR. tDOC = 8 .OR. tDOC = 13 .OR. tDOC = 14 .OR. tDOC = 16
+      LCOPIANAT := .F.
    ELSE
-     LCOPIANAT := MDG("Copia Nativa(copy to)(SIM) Interna(gerada)(NAO)")
-   ENDIF  
+      LCOPIANAT := MDG("Copia Nativa(copy to)(SIM) Interna(gerada)(NAO)")
+   ENDIF
 ENDIF
-IF nTIPOPR = 2 //Extensoes tratadas acima fica so nativa quando o tipo 2 anexar
+IF nTIPOPR = 2  //Extensoes tratadas acima fica so nativa quando o tipo 2 anexar
    LCOPIANAT := .T.
 ENDIF
 
@@ -896,25 +1114,25 @@ IF nTIPOPR = 1
    ENDIF
 ENDIF
 
-IF nTIPOPR = 1 //Exportar copy to ou gerado
+IF nTIPOPR = 1  //Exportar copy to ou gerado
    IF LCOPIANAT
       cDESTINO := TROCAEXT(cARQORI,zEXPOREXT)
       MDT("abrindo arquivo de origem: "+cARQORI)
       //USE (cARQORI) ALIAS ORIGEM EXCLUSIVE NEW VIA (cORIDRIVER)
-      dbUseArea( .T., (cORIDRIVER), (cARQORI), "ORIGEM", .F. , .F. )
+      dbUseArea(.T.,(cORIDRIVER),(cARQORI),"ORIGEM",.F.,.F.)
       COPYTO(cDESTINO)
       dbcloseall()
    ELSE
       multidocs(tDOC,cARQORI)
    ENDIF
 ENDIF
-IF nTIPOPR = 2 //Importar append from so nativo
+IF nTIPOPR = 2  //Importar append from so nativo
    cARQORI := win_GetOpenFileName(,"Arquivos de Origem",HB_CWD(),"Arquivos de Origem","*."+zEXPOREXT,1)
-    MDT("abrindo arquivo de destino: "+cDESTINO)
-    //USE (cDESTINO) ALIAS DESTINO EXCLUSIVE NEW VIA (cORIDRIVER)
-    dbUseArea( .T., (cORIDRIVER), (cDESTINO), "DESTINO", .F. , .F. )
-    APPENDFROM(cARQORI)
-    dbcloseall()
+   MDT("abrindo arquivo de destino: "+cDESTINO)
+   //USE (cDESTINO) ALIAS DESTINO EXCLUSIVE NEW VIA (cORIDRIVER)
+   dbUseArea(.T.,(cORIDRIVER),(cDESTINO),"DESTINO",.F.,.F.)
+   APPENDFROM(cARQORI)
+   dbcloseall()
 ENDIF
 
 RESTAA(aAMBIENTE)
@@ -926,7 +1144,15 @@ RDDNOME(nOLDTIPO)   //retorna tipo anterio
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function COPYTO()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -934,7 +1160,12 @@ RDDNOME(nOLDTIPO)   //retorna tipo anterio
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 FUNCTION COPYTO(cDESTINO)
+
 
 nLASTREC := LASTREC()
 zei_fort(nLASTREC,,,0)
@@ -944,65 +1175,65 @@ DO CASE
    //
 CASE zREGSEP = chr(34) .OR. zREGSEP = chr(39)   //delimitador + aspas duplas aspas (") (')
    try
-   COPY to &cDESTINO. while zei_fort(nLASTREC,,,1) DELIMITED WITH ( { zDELIMITE, zREGSE } )
+      COPY to &cDESTINO. while zei_fort(nLASTREC,,,1) DELIMITED WITH ( { zDELIMITE, zREGSE } )
    catch oErR
-   MDT("Erro copiando dados")
-END
-//
-//tDOC=15
-//
+      MDT("Erro copiando dados")
+   END
+   //
+   //tDOC=15
+   //
 CASE zEXPOREXT = "DBF"
-try
-COPY to &cDESTINO. while zei_fort(nLASTREC,,,1)
-catch oErR
-MDT("Erro copiando dados")
-END
-//
-//tDOC=6
-//
+   try
+      COPY to &cDESTINO. while zei_fort(nLASTREC,,,1)
+   catch oErR
+      MDT("Erro copiando dados")
+   END
+   //
+   //tDOC=6
+   //
 CASE zEXPOREXT = "SDF"
-try
-COPY to &cDESTINO. while zei_fort(nLASTREC,,,1) SDF
-catch oErR
-MDT("Erro copiando dados")
-END
-//
-//tDOC=10
-//
+   try
+      COPY to &cDESTINO. while zei_fort(nLASTREC,,,1) SDF
+   catch oErR
+      MDT("Erro copiando dados")
+   END
+   //
+   //tDOC=10
+   //
 CASE zEXPOREXT = "DLM" .OR. zEXPOREXT = "CSV"
-TRY
-COPY to &cDESTINO. whILE zei_fort(nLASTREC,,,1) DELIMITED
-catch oErR
-MDT("Erro copiando dados")
+   TRY
+      COPY to &cDESTINO. whILE zei_fort(nLASTREC,,,1) DELIMITED
+   catch oErR
+      MDT("Erro copiando dados")
 
-END
-//
-//tDOC=11
-//
+   END
+   //
+   //tDOC=11
+   //
 CASE zEXPOREXT = "UNL" .OR. zEXPOREXT = "PSV"
-TRY
-COPY to &cDESTINO. whILE zei_fort(nLASTREC,,,1) DELIMITED WITH PIPE
-catch oErR
-MDT("Erro copiando dados")
-END
-//
-// tDOC=12
-//
+   TRY
+      COPY to &cDESTINO. whILE zei_fort(nLASTREC,,,1) DELIMITED WITH PIPE
+   catch oErR
+      MDT("Erro copiando dados")
+   END
+   //
+   // tDOC=12
+   //
 CASE zEXPOREXT = "TSV"
-TRY
-COPY to &cDESTINO. whILE zei_fort(nLASTREC,,,1) DELIMITED WITH TAB
-catch oErR
-MDT("Erro copiando dados")
-END
-//
-// SSV  zdelimite= ; e outro delimitador tDOC=9
-//
+   TRY
+      COPY to &cDESTINO. whILE zei_fort(nLASTREC,,,1) DELIMITED WITH TAB
+   catch oErR
+      MDT("Erro copiando dados")
+   END
+   //
+   // SSV  zdelimite= ; e outro delimitador tDOC=9
+   //
 OTHERWISE
-TRY
-COPY to &cDESTINO. while zei_fort(nLASTREC,,,1) DELIMITED WITH &zDELIMITE
-catch oErR
-MDT("Erro copiando dados")
-END
+   TRY
+      COPY to &cDESTINO. while zei_fort(nLASTREC,,,1) DELIMITED WITH &zDELIMITE
+   catch oErR
+      MDT("Erro copiando dados")
+   END
 ENDCASE
 RETURN NIL
 
@@ -1011,7 +1242,15 @@ RETURN NIL
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function APPENDFROM()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -1019,7 +1258,12 @@ RETURN NIL
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 FUNCTION APPENDFROM(cDESTINO)
+
 
 nLASTREC := LASTREC()
 zei_fort(nLASTREC,,,0)
@@ -1049,7 +1293,15 @@ RETURN NIL
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 *+    Function formatacpf()
+*+
+*+
+*+
+*+
 *+
 *+
 *+
@@ -1057,7 +1309,12 @@ RETURN NIL
 *+
 *+
 *+
+*+
+*+
+*+
+*+
 FUNCTION formatacpf(xCPF)
+
 
 XCPF := AllTrim(TIRAOUT(xCPF))
 IF VAL(xCPF) = 0 .OR. LEN(xCPF) <> 11
@@ -1065,6 +1322,7 @@ IF VAL(xCPF) = 0 .OR. LEN(xCPF) <> 11
 ENDIf
 xCPF := StrZero(Val(XCPF),11)
 RETUrn Transform(xCPF,"@R 999.999.999-99")
+
 
 
 *+ EOF: dbulib.prg
