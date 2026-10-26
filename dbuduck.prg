@@ -1395,15 +1395,12 @@ FUNCTION duckExecArqSql()
 
 LOCAL cCOMANDO := ""
 LOCAL cARQIMP  := ""
-LOCAL oServer
 
 cARQIMP := win_GetOPENFileName(,"Arquivos SQL",HB_CWD(),"Arquivos SQL","*.SQL",1)
 
 IF FILE(cARQIMP)
    cCOMANDO := MEMOREAD(cARQIMP)
-   oServer  := duckconnect()
    duckexecuteSQL(cCOMANDO)
-   oServer:Close()
 ENDIF
 
 RETURN .T.
